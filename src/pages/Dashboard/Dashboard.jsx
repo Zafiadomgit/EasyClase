@@ -45,10 +45,9 @@ const Dashboard = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true)
-      // Temporalmente comentamos la llamada API para probar
-      // const response = await claseService.obtenerMisClases()
-      // setClases(response.data?.clases || [])
-      setClases([]) // Array vacío temporal
+      // Obtener clases del usuario desde la API
+      const response = await claseService.obtenerMisClases()
+      setClases(response.data?.clases || [])
     } catch (error) {
       console.error('Error cargando datos:', error)
       setError('Error al cargar los datos del dashboard')

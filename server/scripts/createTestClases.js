@@ -44,22 +44,25 @@ const createTestClases = async () => {
     proximaSemana.setHours(16, 0, 0, 0);
 
     // Clase completada (para historial)
+    const fechaAyer = new Date(ahora.getTime() - 86400000);
     const claseCompletada = new Clase({
       estudiante: estudiante._id,
       profesor: profesor._id,
       materia: 'JavaScript Básico',
       descripcion: 'Introducción a JavaScript: variables, funciones y eventos',
-      modalidad: 'virtual',
-      fechaHora: new Date(ahora.getTime() - 86400000), // Ayer
-      duracion: 60,
+      modalidad: 'online',
+      fecha: fechaAyer,
+      horaInicio: '14:00',
+      duracion: 1,
       precio: 50000,
+      total: 50000,
       estado: 'completada',
       estadoPago: 'pagado',
-      notas: 'Excelente clase, el estudiante muestra gran interés en aprender',
-      calificacionProfesor: 5,
-      calificacionEstudiante: 5,
-      meetingId: `meeting_completed_${Date.now()}`,
-      ubicacion: 'Videollamada'
+      notasProfesor: 'Excelente clase, el estudiante muestra gran interés en aprender',
+      enlaceReunion: `https://meet.easyclase.com/room/meeting_completed_${Date.now()}`,
+      confirmadoPorProfesor: true,
+      confirmadoPorEstudiante: true,
+      fechaComplecion: fechaAyer
     });
 
     // Clase programada para mañana (confirmada y pagada)
@@ -68,19 +71,18 @@ const createTestClases = async () => {
       profesor: profesor._id,
       materia: 'React Hooks',
       descripcion: 'Aprender useState, useEffect y hooks personalizados en React',
-      modalidad: 'virtual',
-      fechaHora: mañana,
-      duracion: 90,
-      precio: 75000,
+      modalidad: 'online',
+      fecha: mañana,
+      horaInicio: '10:00',
+      duracion: 2,
+      precio: 50000,
+      total: 100000,
       estado: 'confirmada',
       estadoPago: 'pagado',
-      meetingId: `meeting_${mañana.getTime()}`,
-      ubicacion: 'Videollamada - Sala Virtual',
-      preparacion: [
-        'Tener Node.js instalado',
-        'Editor de código (VS Code recomendado)',
-        'Conocimientos básicos de JavaScript'
-      ]
+      enlaceReunion: `https://meet.easyclase.com/room/meeting_${mañana.getTime()}`,
+      confirmadoPorProfesor: true,
+      confirmadoPorEstudiante: true,
+      fechaConfirmacion: new Date()
     });
 
     // Clase pendiente de confirmación (pasado mañana)
@@ -89,14 +91,15 @@ const createTestClases = async () => {
       profesor: profesor._id,
       materia: 'Node.js y Express',
       descripcion: 'Creación de APIs REST con Node.js y Express.js',
-      modalidad: 'virtual',
-      fechaHora: pasadoMañana,
-      duracion: 120,
-      precio: 100000,
-      estado: 'pendiente',
+      modalidad: 'online',
+      fecha: pasadoMañana,
+      horaInicio: '14:00',
+      duracion: 2,
+      precio: 50000,
+      total: 100000,
+      estado: 'solicitada',
       estadoPago: 'pendiente',
-      meetingId: `meeting_${pasadoMañana.getTime()}`,
-      ubicacion: 'Videollamada'
+      enlaceReunion: `https://meet.easyclase.com/room/meeting_${pasadoMañana.getTime()}`
     });
 
     // Clase futura (próxima semana)
@@ -105,14 +108,18 @@ const createTestClases = async () => {
       profesor: profesor._id,
       materia: 'MongoDB y Bases de Datos',
       descripcion: 'Introducción a bases de datos NoSQL con MongoDB',
-      modalidad: 'virtual',
-      fechaHora: proximaSemana,
-      duracion: 90,
-      precio: 75000,
+      modalidad: 'online',
+      fecha: proximaSemana,
+      horaInicio: '16:00',
+      duracion: 2,
+      precio: 50000,
+      total: 100000,
       estado: 'confirmada',
       estadoPago: 'pagado',
-      meetingId: `meeting_${proximaSemana.getTime()}`,
-      ubicacion: 'Videollamada'
+      enlaceReunion: `https://meet.easyclase.com/room/meeting_${proximaSemana.getTime()}`,
+      confirmadoPorProfesor: true,
+      confirmadoPorEstudiante: true,
+      fechaConfirmacion: new Date()
     });
 
     // Guardar todas las clases
