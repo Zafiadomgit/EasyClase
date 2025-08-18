@@ -1,0 +1,268 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+// Importar rutas
+import authRoutes from "./routes/auth.js";
+import profesorRoutes from "./routes/profesores.js";
+import claseRoutes from "./routes/clases.js";
+import adminRoutes from "./routes/admin.js";
+
+// Importar modelos
+import User from "./models/User.js";
+import Clase from "./models/Clase.js";
+import Review from "./models/Review.js";
+
+// Importar servicios
+import { verificarPago } from "./services/mercadoPagoService.js";
+
+dotenv.config();
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    methods: ["GET", "POST"]
+  }
+});
+const PORT = process.env.PORT || 3000;
+
+// Middleware de seguridad
+app.use(helmet());
+
+// CORS configurado para el frontend
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP
+  message: {
+    success: false,
+    message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo en 15 minutos.'
+  }
+});
+app.use('/api/', limiter);
+
+// Parseo de JSON
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Conectar a MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/easyclase')
+  .then(() => {
+    console.log('✅ Conectado a MongoDB');
+  })
+  .catch((error) => {
+    console.error('❌ Error conectando a MongoDB:', error);
+    process.exit(1);
+  });
+
+// Rutas de la API
+app.use('/api/auth', authRoutes);
+app.use('/api/profesores', profesorRoutes);
+app.use('/api/clases', claseRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Ruta de estado de la API
+app.get('/api/status', (req, res) => {
+  res.json({
+    success: true,
+    message: 'EasyClase API funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Webhook de MercadoPago mejorado
+app.post("/webhook", async (req, res) => {
+  try {
+    console.log("Notificación de MercadoPago recibida:", req.body);
+
+    const { data, type } = req.body;
+
+    if (type === 'payment') {
+      const paymentId = data.id;
+      
+      // Verificar el pago con MercadoPago
+      const paymentData = await verificarPago(paymentId);
+      
+      if (paymentData.status === 'approved') {
+        // Buscar la clase por external_reference
+        const claseId = paymentData.external_reference;
+        const clase = await Clase.findById(claseId);
+        
+        if (clase) {
+          clase.estadoPago = 'pagado';
+          clase.pagoId = paymentId;
+          await clase.save();
+          
+          console.log(`✅ Pago confirmado para clase ${claseId}`);
+        }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error procesando webhook:", error);
+    res.sendStatus(500);
+  }
+});
+
+// Ruta legacy para crear pago (mantenida por compatibilidad)
+app.post("/crear-pago", async (req, res) => {
+  try {
+    const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            title: req.body.titulo,
+            quantity: 1,
+            currency_id: "COP",
+            unit_price: req.body.precio
+          }
+        ],
+        back_urls: {
+          success: process.env.FRONTEND_SUCCESS_URL || "http://localhost:3001/pago-exitoso",
+          failure: process.env.FRONTEND_FAILURE_URL || "http://localhost:3001/pago-fallido"
+        },
+        auto_return: "approved",
+        notification_url: `${process.env.WEBHOOK_URL || 'http://localhost:3000'}/webhook`
+      })
+    });
+
+    const data = await response.json();
+    res.json({ url: data.init_point });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error creando el pago");
+  }
+});
+
+// Middleware para manejar rutas no encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Ruta no encontrada'
+  });
+});
+
+// Middleware para manejo de errores
+app.use((error, req, res, next) => {
+  console.error('Error del servidor:', error);
+  
+  res.status(error.status || 500).json({
+    success: false,
+    message: error.message || 'Error interno del servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
+});
+
+// Iniciar servidor
+// Socket.io para videollamadas
+const activeRooms = new Map();
+
+io.on('connection', (socket) => {
+  console.log('Usuario conectado:', socket.id);
+
+  // Unirse a una sala de clase
+  socket.on('join-room', ({ roomId, userId, userType }) => {
+    socket.join(roomId);
+    socket.userId = userId;
+    socket.userType = userType;
+    socket.roomId = roomId;
+
+    // Actualizar sala activa
+    if (!activeRooms.has(roomId)) {
+      activeRooms.set(roomId, { users: [], started: false });
+    }
+    
+    const room = activeRooms.get(roomId);
+    room.users.push({ socketId: socket.id, userId, userType });
+    
+    // Notificar a otros usuarios en la sala
+    socket.to(roomId).emit('user-joined', { userId, userType });
+    
+    console.log(`Usuario ${userId} (${userType}) se unió a la sala ${roomId}`);
+  });
+
+  // Señalización WebRTC
+  socket.on('call-signal', ({ signal, roomId, userId }) => {
+    socket.to(roomId).emit('call-signal', { signal, userId });
+  });
+
+  // Iniciar llamada
+  socket.on('start-call', ({ roomId }) => {
+    const room = activeRooms.get(roomId);
+    if (room) {
+      room.started = true;
+      socket.to(roomId).emit('call-started');
+    }
+  });
+
+  // Terminar llamada
+  socket.on('end-call', ({ roomId }) => {
+    socket.to(roomId).emit('call-ended');
+    activeRooms.delete(roomId);
+  });
+
+  // Solicitud de compartir pantalla
+  socket.on('screen-share-request', ({ roomId, userId, userType }) => {
+    socket.to(roomId).emit('screen-share-request', { fromUserId: userId, fromUserType: userType });
+  });
+
+  // Respuesta de compartir pantalla
+  socket.on('screen-share-response', ({ toUserId, allowed, roomId }) => {
+    socket.to(roomId).emit('screen-share-response', { allowed });
+  });
+
+  // Chat en tiempo real
+  socket.on('chat-message', ({ roomId, message }) => {
+    socket.to(roomId).emit('chat-message', message);
+  });
+
+  // Anotaciones colaborativas (Premium)
+  socket.on('annotation-data', ({ roomId, annotationData }) => {
+    socket.to(roomId).emit('annotation-data', annotationData);
+  });
+
+  // Desconexión
+  socket.on('disconnect', () => {
+    console.log('Usuario desconectado:', socket.id);
+    
+    // Limpiar de salas activas
+    if (socket.roomId) {
+      const room = activeRooms.get(socket.roomId);
+      if (room) {
+        room.users = room.users.filter(user => user.socketId !== socket.id);
+        if (room.users.length === 0) {
+          activeRooms.delete(socket.roomId);
+        }
+      }
+      
+      socket.to(socket.roomId).emit('user-left', { userId: socket.userId });
+    }
+  });
+});
+
+// Inicializar servidor
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Servidor EasyClase corriendo en http://localhost:${PORT}`);
+  console.log(`📚 API disponible en http://localhost:${PORT}/api`);
+  console.log(`🎥 Socket.io para videollamadas habilitado`);
+  console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
+});
