@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { fabric } from 'fabric'
 import { 
   Pencil, 
   Square, 
@@ -9,21 +8,17 @@ import {
   Trash2, 
   Undo, 
   Redo,
-  Palette,
-  Settings,
   X,
   Crown
 } from 'lucide-react'
 
 const AnnotationCanvas = ({ className, onClose }) => {
   const canvasRef = useRef(null)
-  const fabricCanvasRef = useRef(null)
   const [tool, setTool] = useState('pen')
   const [color, setColor] = useState('#ff0000')
   const [brushSize, setBrushSize] = useState(3)
   const [isDrawing, setIsDrawing] = useState(false)
-  const [history, setHistory] = useState([])
-  const [historyStep, setHistoryStep] = useState(0)
+  const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
 
   const colors = [
     '#ff0000', '#00ff00', '#0000ff', '#ffff00', 
@@ -33,227 +28,80 @@ const AnnotationCanvas = ({ className, onClose }) => {
 
   const tools = [
     { id: 'pen', icon: <Pencil className="w-4 h-4" />, name: 'Lápiz' },
-    { id: 'line', icon: <div className="w-4 h-0.5 bg-current"></div>, name: 'Línea' },
-    { id: 'rectangle', icon: <Square className="w-4 h-4" />, name: 'Rectángulo' },
-    { id: 'circle', icon: <Circle className="w-4 h-4" />, name: 'Círculo' },
-    { id: 'text', icon: <Type className="w-4 h-4" />, name: 'Texto' },
     { id: 'eraser', icon: <Eraser className="w-4 h-4" />, name: 'Borrador' }
   ]
 
   useEffect(() => {
-    if (canvasRef.current) {
-      // Inicializar Fabric.js canvas
-      const canvas = new fabric.Canvas(canvasRef.current, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        backgroundColor: 'transparent',
-        selection: false
-      })
-
-      fabricCanvasRef.current = canvas
-
-      // Configurar canvas según la herramienta
-      setupTool(canvas, tool)
-
-      // Manejar cambios de tamaño de ventana
+    const canvas = canvasRef.current
+    if (canvas) {
+      const ctx = canvas.getContext('2d')
+      
+      // Configurar canvas
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      
+      // Manejar redimensionamiento
       const handleResize = () => {
-        canvas.setDimensions({
-          width: window.innerWidth,
-          height: window.innerHeight
-        })
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
       }
-
+      
       window.addEventListener('resize', handleResize)
-
-      // Guardar estado inicial
-      saveState(canvas)
-
+      
       return () => {
         window.removeEventListener('resize', handleResize)
-        canvas.dispose()
       }
     }
   }, [])
 
-  useEffect(() => {
-    if (fabricCanvasRef.current) {
-      setupTool(fabricCanvasRef.current, tool)
+  const startDrawing = (e) => {
+    setIsDrawing(true)
+    const rect = canvasRef.current.getBoundingClientRect()
+    setLastPos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    })
+  }
+
+  const draw = (e) => {
+    if (!isDrawing) return
+    
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    const rect = canvas.getBoundingClientRect()
+    
+    const currentPos = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
     }
-  }, [tool, color, brushSize])
 
-  const setupTool = (canvas, selectedTool) => {
-    // Limpiar eventos anteriores
-    canvas.off('mouse:down')
-    canvas.off('mouse:move')
-    canvas.off('mouse:up')
-    canvas.off('path:created')
-
-    canvas.isDrawingMode = false
-    canvas.selection = false
-
-    switch (selectedTool) {
-      case 'pen':
-        canvas.isDrawingMode = true
-        canvas.freeDrawingBrush.color = color
-        canvas.freeDrawingBrush.width = brushSize
-        canvas.on('path:created', () => saveState(canvas))
-        break
-
-      case 'eraser':
-        canvas.isDrawingMode = true
-        canvas.freeDrawingBrush = new fabric.EraserBrush(canvas)
-        canvas.freeDrawingBrush.width = brushSize * 3
-        canvas.on('path:created', () => saveState(canvas))
-        break
-
-      case 'line':
-        setupShapeTool(canvas, 'line')
-        break
-
-      case 'rectangle':
-        setupShapeTool(canvas, 'rectangle')
-        break
-
-      case 'circle':
-        setupShapeTool(canvas, 'circle')
-        break
-
-      case 'text':
-        setupTextTool(canvas)
-        break
-
-      default:
-        break
+    ctx.beginPath()
+    ctx.moveTo(lastPos.x, lastPos.y)
+    ctx.lineTo(currentPos.x, currentPos.y)
+    
+    if (tool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.lineWidth = brushSize * 3
+    } else {
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.strokeStyle = color
+      ctx.lineWidth = brushSize
     }
+    
+    ctx.stroke()
+    setLastPos(currentPos)
   }
 
-  const setupShapeTool = (canvas, shape) => {
-    let isDown = false
-    let origX, origY
-
-    canvas.on('mouse:down', (o) => {
-      isDown = true
-      const pointer = canvas.getPointer(o.e)
-      origX = pointer.x
-      origY = pointer.y
-    })
-
-    canvas.on('mouse:move', (o) => {
-      if (!isDown) return
-      
-      const pointer = canvas.getPointer(o.e)
-      
-      // Remover shape temporal si existe
-      const objects = canvas.getObjects()
-      if (objects.length > 0 && objects[objects.length - 1].temp) {
-        canvas.remove(objects[objects.length - 1])
-      }
-
-      let shapeObj
-      switch (shape) {
-        case 'line':
-          shapeObj = new fabric.Line([origX, origY, pointer.x, pointer.y], {
-            stroke: color,
-            strokeWidth: brushSize,
-            temp: true
-          })
-          break
-        
-        case 'rectangle':
-          shapeObj = new fabric.Rect({
-            left: Math.min(origX, pointer.x),
-            top: Math.min(origY, pointer.y),
-            width: Math.abs(pointer.x - origX),
-            height: Math.abs(pointer.y - origY),
-            fill: 'transparent',
-            stroke: color,
-            strokeWidth: brushSize,
-            temp: true
-          })
-          break
-        
-        case 'circle':
-          const radius = Math.sqrt(Math.pow(pointer.x - origX, 2) + Math.pow(pointer.y - origY, 2)) / 2
-          shapeObj = new fabric.Circle({
-            left: origX - radius,
-            top: origY - radius,
-            radius: radius,
-            fill: 'transparent',
-            stroke: color,
-            strokeWidth: brushSize,
-            temp: true
-          })
-          break
-      }
-
-      if (shapeObj) {
-        canvas.add(shapeObj)
-        canvas.renderAll()
-      }
-    })
-
-    canvas.on('mouse:up', () => {
-      isDown = false
-      // Hacer permanente el último objeto
-      const objects = canvas.getObjects()
-      if (objects.length > 0 && objects[objects.length - 1].temp) {
-        objects[objects.length - 1].temp = false
-        saveState(canvas)
-      }
-    })
-  }
-
-  const setupTextTool = (canvas) => {
-    canvas.on('mouse:down', (o) => {
-      const pointer = canvas.getPointer(o.e)
-      const text = new fabric.IText('Haz clic para editar', {
-        left: pointer.x,
-        top: pointer.y,
-        fontFamily: 'Arial',
-        fontSize: 20,
-        fill: color
-      })
-      
-      canvas.add(text)
-      canvas.setActiveObject(text)
-      text.enterEditing()
-      saveState(canvas)
-    })
-  }
-
-  const saveState = (canvas) => {
-    const state = JSON.stringify(canvas.toJSON())
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyStep + 1)
-      newHistory.push(state)
-      return newHistory
-    })
-    setHistoryStep(prev => prev + 1)
-  }
-
-  const undo = () => {
-    if (historyStep > 0) {
-      setHistoryStep(prev => prev - 1)
-      const previousState = history[historyStep - 1]
-      fabricCanvasRef.current.loadFromJSON(previousState, () => {
-        fabricCanvasRef.current.renderAll()
-      })
-    }
-  }
-
-  const redo = () => {
-    if (historyStep < history.length - 1) {
-      setHistoryStep(prev => prev + 1)
-      const nextState = history[historyStep + 1]
-      fabricCanvasRef.current.loadFromJSON(nextState, () => {
-        fabricCanvasRef.current.renderAll()
-      })
-    }
+  const stopDrawing = () => {
+    setIsDrawing(false)
   }
 
   const clearCanvas = () => {
-    fabricCanvasRef.current.clear()
-    saveState(fabricCanvasRef.current)
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
   }
 
   return (
@@ -261,11 +109,15 @@ const AnnotationCanvas = ({ className, onClose }) => {
       {/* Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-auto"
+        className="absolute inset-0 pointer-events-auto cursor-crosshair"
         style={{ zIndex: 10 }}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseLeave={stopDrawing}
       />
 
-      {/* Toolbar */}
+      {/* Toolbar Simplificado */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 flex items-center space-x-4 pointer-events-auto" style={{ zIndex: 20 }}>
         {/* Header Premium */}
         <div className="flex items-center space-x-2 border-r border-gray-200 pr-4">
@@ -332,24 +184,6 @@ const AnnotationCanvas = ({ className, onClose }) => {
         {/* Acciones */}
         <div className="flex items-center space-x-2">
           <button
-            onClick={undo}
-            disabled={historyStep <= 0}
-            className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-            title="Deshacer"
-          >
-            <Undo className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={redo}
-            disabled={historyStep >= history.length - 1}
-            className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-            title="Rehacer"
-          >
-            <Redo className="w-4 h-4" />
-          </button>
-          
-          <button
             onClick={clearCanvas}
             className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
             title="Limpiar todo"
@@ -375,6 +209,11 @@ const AnnotationCanvas = ({ className, onClose }) => {
           <span className="text-sm">{tools.find(t => t.id === tool)?.name}</span>
           <span className="text-xs opacity-75">• {color} • {brushSize}px</span>
         </div>
+      </div>
+
+      {/* Aviso de versión simplificada */}
+      <div className="absolute bottom-4 right-4 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-xs pointer-events-none" style={{ zIndex: 20 }}>
+        Versión simplificada - Mejoras próximamente
       </div>
     </div>
   )
