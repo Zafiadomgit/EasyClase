@@ -88,25 +88,40 @@ export const solicitarClase = async (req, res) => {
 export const obtenerMisClases = async (req, res) => {
   try {
     const { estado, tipo = 'todas' } = req.query;
+    console.log(`🔍 obtenerMisClases - userId: ${req.userId}, tipo: ${tipo}, estado: ${estado}`);
 
     // Construir filtros
-    const filtros = {};
+    let filtros = {};
     
-    if (tipo === 'estudiante' || tipo === 'todas') {
+    if (tipo === 'estudiante') {
       filtros.estudiante = req.userId;
-    }
-    if (tipo === 'profesor' || tipo === 'todas') {
+    } else if (tipo === 'profesor') {
       filtros.profesor = req.userId;
+    } else {
+      // tipo === 'todas' - buscar donde el usuario sea estudiante O profesor
+      filtros = {
+        $or: [
+          { estudiante: req.userId },
+          { profesor: req.userId }
+        ]
+      };
     }
 
     if (estado && estado !== 'todas') {
       filtros.estado = estado;
     }
 
+    console.log('🔎 Filtros aplicados:', JSON.stringify(filtros, null, 2));
+
     const clases = await Clase.find(filtros)
       .populate('estudiante', 'nombre email telefono')
       .populate('profesor', 'nombre email especialidades')
       .sort({ fecha: -1 });
+
+    console.log(`📚 Clases encontradas: ${clases.length}`);
+    clases.forEach(c => {
+      console.log(`  - ${c.materia} (${c.estado}) - Est: ${c.estudiante?._id} Prof: ${c.profesor?._id}`);
+    });
 
     res.json({
       success: true,
