@@ -342,7 +342,7 @@ const Dashboard = () => {
                 <p>No tienes clases programadas próximamente</p>
                 <button 
                   className="btn-primary mt-4"
-                  onClick={() => navigate(isEstudiante() ? '/buscar' : '/configurar-disponibilidad')}
+                  onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
                 >
                   {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
                 </button>

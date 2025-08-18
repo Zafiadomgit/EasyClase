@@ -9,6 +9,8 @@
     "dev": "nodemon server.js",
     "create-superadmin": "node scripts/createSuperAdmin.js",
     "create-test-users": "node scripts/createTestUsers.js",
+    "create-test-clases": "node scripts/createTestClases.js",
+    "setup-test-data": "npm run create-test-users && npm run create-test-clases",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
