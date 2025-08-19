@@ -37,12 +37,16 @@ function App() {
       <Router>
         <div className="min-h-screen bg-secondary-50">
           <Routes>
+            {/* Rutas independientes (sin Layout) */}
+            <Route path="/onboarding" element={<OnboardingFlow />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
             {/* Rutas públicas */}
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="/buscar" element={<BuscarClases />} />
               <Route path="/servicios" element={<BuscarServicios />} />
-              <Route path="/onboarding" element={<OnboardingFlow />} />
               <Route path="/profesor/:id" element={<PerfilProfesor />} />
               <Route path="/ser-profesor" element={<SerProfesor />} />
               <Route path="/reservar/:id" element={<ReservarClase />} />
