@@ -129,31 +129,20 @@ const Header = () => {
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="block">
               <img 
                 src="/Logo_reducido-removebg-preview.png" 
-                alt="EasyClase Logo" 
-                className="h-12 w-auto object-contain"
+                alt="EasyClase" 
+                className="h-12 w-auto object-contain hover:opacity-90 transition-opacity duration-200"
                 onError={(e) => {
                   // Fallback al logo reducido original
                   e.target.src = '/Logo reducido.png';
                   e.target.onerror = () => {
                     // Fallback al Logo1
                     e.target.src = '/Logo1.png';
-                    e.target.onerror = () => {
-                      // Último fallback al icono
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    };
                   };
                 }}
               />
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-primary-600 font-display">
-                EasyClase
-              </span>
             </Link>
           </div>
 
