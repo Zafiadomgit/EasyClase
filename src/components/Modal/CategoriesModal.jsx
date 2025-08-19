@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { X, Star, Users, Code, Calculator, Globe, Palette, TrendingUp, DollarSign, PieChart, BarChart, Target, Heart, Camera, Music, Pen, Briefcase, Wrench, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
+  console.log('CategoriesModal render:', { isOpen, onClose: !!onClose })
+  
   if (!isOpen) return null
 
   // Todas las categorías organizadas por popularidad
@@ -172,7 +174,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   }
 
   // Prevenir scroll del body cuando el modal está abierto
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
     } else {
@@ -186,7 +188,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   }, [isOpen])
 
   // Cerrar modal con tecla Escape
-  React.useEffect(() => {
+  useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
         onClose()
@@ -204,11 +206,12 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
       onClick={handleBackdropClick}
+      style={{ margin: 0 }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4 sm:m-6 md:m-8 shadow-2xl"
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
