@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown, Code, Calculator, Globe, FileText, Palette, TrendingUp, Clock, DollarSign } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import CategoriesModal from '../Modal/CategoriesModal'
 // import { useNotifications, getNotificationIcon, getNotificationColor } from '../../hooks/useNotifications'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const categoriesRef = useRef(null)
   const notificationsRef = useRef(null)
@@ -211,13 +213,15 @@ const Header = () => {
                   </div>
                   
                   <div className="px-4 py-2 border-t border-secondary-100">
-                    <Link
-                      to="/buscar"
+                    <button
+                      onClick={() => {
+                        setIsCategoriesOpen(false)
+                        setShowCategoriesModal(true)
+                      }}
                       className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                      onClick={() => setIsCategoriesOpen(false)}
                     >
                       Ver todas las categorías →
-                    </Link>
+                    </button>
                   </div>
                 </div>
               )}
@@ -536,6 +540,12 @@ const Header = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de Categorías */}
+      <CategoriesModal 
+        isOpen={showCategoriesModal} 
+        onClose={() => setShowCategoriesModal(false)} 
+      />
     </header>
   )
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp } from 'lucide-react'
+import CategoriesModal from '../components/Modal/CategoriesModal'
 
 // Componente de barra de búsqueda
 const SearchBar = () => {
@@ -135,6 +136,7 @@ const FAQItem = ({ question, answer }) => {
 
 const Home = () => {
   const navigate = useNavigate()
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   
   const categorias = [
     { 
@@ -415,12 +417,12 @@ const Home = () => {
           </div>
           
           <div className="text-center mt-12">
-            <Link
-              to="/buscar"
+            <button
+              onClick={() => setShowCategoriesModal(true)}
               className="inline-flex items-center px-8 py-4 border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105"
             >
               Ver todas las categorías
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -557,6 +559,12 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Modal de Categorías */}
+      <CategoriesModal 
+        isOpen={showCategoriesModal} 
+        onClose={() => setShowCategoriesModal(false)} 
+      />
     </div>
   )
 }
