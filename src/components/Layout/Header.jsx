@@ -133,7 +133,7 @@ const Header = () => {
               <img 
                 src="/Logo_reducido-removebg-preview.png" 
                 alt="EasyClase" 
-                className="h-12 w-auto object-contain hover:opacity-90 transition-opacity duration-200"
+                className="h-16 w-auto object-contain hover:opacity-90 transition-opacity duration-200"
                 onError={(e) => {
                   // Fallback al logo reducido original
                   e.target.src = '/Logo reducido.png';
