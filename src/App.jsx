@@ -11,7 +11,7 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import SerProfesor from './pages/SerProfesor'
 import ReservarClase from './pages/ReservarClase'
 import BuscarServicios from './pages/BuscarServicios'
-import OnboardingFlow from './components/Onboarding/OnboardingFlow'
+import OnboardingPage from './pages/OnboardingPage'
 import Pago from './pages/Pago'
 import ComoFunciona from './pages/ComoFunciona'
 import Terminos from './pages/Legal/Terminos'
@@ -38,7 +38,7 @@ function App() {
         <div className="min-h-screen bg-secondary-50">
           <Routes>
             {/* Rutas independientes (sin Layout) */}
-            <Route path="/onboarding" element={<OnboardingFlow />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             

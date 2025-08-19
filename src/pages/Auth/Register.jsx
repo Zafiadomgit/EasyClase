@@ -4,7 +4,7 @@ import { BookOpen, Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'luc
 import { useAuth } from '../../contexts/AuthContext'
 import TermsModal from '../../components/Modal/TermsModal'
 import PrivacyModal from '../../components/Modal/PrivacyModal'
-import OnboardingFlow from '../../components/Onboarding/OnboardingFlow'
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +23,7 @@ const Register = () => {
   const [error, setError] = useState('')
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false)
+
   const navigate = useNavigate()
   const location = useLocation()
   const { register, isAuthenticated } = useAuth()
@@ -98,11 +98,11 @@ const Register = () => {
       
       await register(registerData)
       
-      // Mostrar onboarding solo para estudiantes nuevos
+      // Redirigir según el tipo de usuario
       console.log('Registro exitoso, tipo de usuario:', formData.tipoUsuario)
       if (formData.tipoUsuario === 'estudiante') {
-        console.log('Mostrando onboarding para estudiante')
-        setShowOnboarding(true)
+        console.log('Redirigiendo estudiante a onboarding')
+        navigate('/onboarding', { replace: true })
       } else {
         // Profesores van directo al dashboard
         console.log('Redirigiendo profesor al dashboard')
@@ -113,30 +113,6 @@ const Register = () => {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleOnboardingComplete = (preferences) => {
-    // Guardar preferencias y redirigir
-    navigate('/buscar', { 
-      state: { preferences },
-      replace: true 
-    })
-  }
-
-  const handleOnboardingSkip = () => {
-    navigate('/dashboard', { replace: true })
-  }
-
-  // Mostrar onboarding si está activo
-  console.log('showOnboarding state:', showOnboarding)
-  if (showOnboarding) {
-    console.log('Renderizando OnboardingFlow')
-    return (
-      <OnboardingFlow 
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingSkip}
-      />
-    )
   }
 
   return (
