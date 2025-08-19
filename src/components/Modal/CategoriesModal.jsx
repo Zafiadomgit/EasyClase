@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { X, Star, Users, Code, Calculator, Globe, Palette, TrendingUp, DollarSign, PieChart, BarChart, Target, Heart, Camera, Music, Pen, Briefcase, Wrench, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -202,7 +203,8 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
     }
   }, [isOpen, onClose])
 
-  return (
+  // Crear el modal usando un portal para renderizarlo fuera del DOM del header
+  const modalContent = (
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
@@ -356,6 +358,9 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
       </div>
     </div>
   )
+
+  // Renderizar el modal usando un portal en el body
+  return ReactDOM.createPortal(modalContent, document.body)
 }
 
 export default CategoriesModal
