@@ -213,3 +213,77 @@ export const FlexibilityIcon = ({ className = "w-8 h-8", color = "currentColor" 
     </defs>
   </svg>
 )
+
+// Ícono personalizado para "Soporte Continuo"
+export const SupportIcon = ({ className = "w-8 h-8", color = "currentColor" }) => (
+  <svg 
+    className={className} 
+    viewBox="0 0 64 64" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Persona central */}
+    <circle 
+      cx="32" 
+      cy="24" 
+      r="10" 
+      fill={`url(#supportGradient-${Math.random().toString(36).substr(2, 9)})`}
+      stroke={color}
+      strokeWidth="2"
+    />
+    
+    {/* Cuerpo */}
+    <path 
+      d="M32 34C38 34 42 38 42 44V50H22V44C22 38 26 34 32 34Z"
+      fill={`url(#supportBodyGradient-${Math.random().toString(36).substr(2, 9)})`}
+      stroke={color}
+      strokeWidth="2"
+    />
+    
+    {/* Manos de apoyo de la izquierda */}
+    <path 
+      d="M8 38C10 36 14 36 16 38L20 42"
+      stroke="#10B981" 
+      strokeWidth="3" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+    <circle cx="12" cy="32" r="6" fill="#10B981" stroke="white" strokeWidth="2"/>
+    
+    {/* Manos de apoyo de la derecha */}
+    <path 
+      d="M56 38C54 36 50 36 48 38L44 42"
+      stroke="#10B981" 
+      strokeWidth="3" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+    <circle cx="52" cy="32" r="6" fill="#10B981" stroke="white" strokeWidth="2"/>
+    
+    {/* Corazón en el pecho para representar cuidado */}
+    <path 
+      d="M32 42C32 42 28 38 32 36C36 38 32 42 32 42Z"
+      fill="#EF4444" 
+      stroke="white" 
+      strokeWidth="1"
+    />
+    
+    {/* Líneas de conexión/energía */}
+    <g stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" opacity="0.7">
+      <path d="M16 28 L24 32" />
+      <path d="M48 28 L40 32" />
+      <path d="M32 16 L32 8" />
+    </g>
+    
+    <defs>
+      <linearGradient id={`supportGradient-${Math.random().toString(36).substr(2, 9)}`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#34D399" />
+        <stop offset="100%" stopColor="#10B981" />
+      </linearGradient>
+      <linearGradient id={`supportBodyGradient-${Math.random().toString(36).substr(2, 9)}`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#D1FAE5" />
+        <stop offset="100%" stopColor="#A7F3D0" />
+      </linearGradient>
+    </defs>
+  </svg>
+)

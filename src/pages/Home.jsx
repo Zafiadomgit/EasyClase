@@ -8,7 +8,8 @@ import {
   VerifiedTeacherIcon, 
   FastLearningIcon, 
   SecurityIcon, 
-  FlexibilityIcon 
+  FlexibilityIcon,
+  SupportIcon 
 } from '../components/Icons/CustomIcons'
 
 // Componente de barra de búsqueda
@@ -527,9 +528,7 @@ const Home = () => {
             {/* Soporte Continuo */}
             <div className="text-center group scale-in" style={{animationDelay: '1.4s'}}>
               <div className="mx-auto mb-6 hover-grow">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
-                  <Users className="w-10 h-10 text-white" />
-                </div>
+                <SupportIcon className="w-20 h-20 mx-auto" />
               </div>
               <h3 className="text-xl font-bold text-secondary-900 mb-4">
                 Soporte Continuo
