@@ -37,7 +37,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-        <div className="min-h-screen bg-secondary-50 dark:bg-gray-900 transition-colors duration-300">
+        <div className="min-h-screen transition-colors duration-300" style={{backgroundColor: 'rgb(var(--color-background))'}}>
           <Routes>
             {/* Rutas independientes (sin Layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />

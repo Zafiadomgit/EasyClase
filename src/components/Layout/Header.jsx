@@ -241,9 +241,6 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                {/* Theme Toggle */}
-                <ThemeToggle className="mr-2" />
-                
                 {/* Botón de Notificaciones */}
                 <div className="relative" ref={notificationsRef}>
                   <button
@@ -406,6 +403,13 @@ const Header = () => {
                       </>
                     )}
                     <hr className="my-1" />
+                    
+                    {/* Theme Toggle en menú de usuario */}
+                    <div className="px-4 py-2 flex items-center justify-between hover:bg-secondary-50">
+                      <span className="text-sm text-secondary-700">Modo Oscuro</span>
+                      <ThemeToggle />
+                    </div>
+                    
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
@@ -419,9 +423,6 @@ const Header = () => {
               </>
             ) : (
               <>
-                {/* Theme Toggle */}
-                <ThemeToggle className="mr-4" />
-                
                 <Link
                   to="/login"
                   className="text-secondary-700 hover:text-primary-600 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
@@ -434,6 +435,9 @@ const Header = () => {
                 >
                   Registrarse
                 </Link>
+                
+                {/* Theme Toggle para usuarios no logueados */}
+                <ThemeToggle className="ml-4" />
               </>
             )}
           </div>
