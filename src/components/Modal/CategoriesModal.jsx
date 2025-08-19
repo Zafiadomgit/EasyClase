@@ -233,10 +233,6 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
         {/* Content */}
         <div className="p-4 bg-white min-h-[400px]">
-          <div className="text-red-600 font-bold mb-4 p-2 bg-yellow-200 rounded">
-            🔥 CONTENIDO VISIBLE - Total categorías: {categorias.length}
-          </div>
-          
           {/* Categorías más buscadas */}
           <div className="mb-4">
             <h3 className="text-base font-semibold text-secondary-900 mb-2 flex items-center">
