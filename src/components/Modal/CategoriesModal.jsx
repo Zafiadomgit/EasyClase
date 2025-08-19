@@ -204,14 +204,13 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] p-4"
       onClick={handleBackdropClick}
     >
-      <div className="min-h-screen py-4 px-4 flex items-center justify-center">
-        <div 
-          className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-4"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div 
+        className="bg-white rounded-2xl max-w-4xl w-full h-[80vh] overflow-y-auto shadow-2xl mx-auto mt-10"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -233,7 +232,10 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 bg-white min-h-[400px]">
+          <div className="text-red-600 font-bold mb-4 p-2 bg-yellow-200 rounded">
+            🔥 CONTENIDO VISIBLE - Total categorías: {categorias.length}
+          </div>
           
           {/* Categorías más buscadas */}
           <div className="mb-4">
@@ -342,7 +344,6 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             </Link>
           </p>
         </div>
-      </div>
       </div>
     </div>
   )
