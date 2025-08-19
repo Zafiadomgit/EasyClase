@@ -4,6 +4,7 @@ import { BookOpen, Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'luc
 import { useAuth } from '../../contexts/AuthContext'
 import TermsModal from '../../components/Modal/TermsModal'
 import PrivacyModal from '../../components/Modal/PrivacyModal'
+import OnboardingFlow from '../../components/Onboarding/OnboardingFlow'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ const Register = () => {
   const [error, setError] = useState('')
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { register, isAuthenticated } = useAuth()
@@ -96,14 +98,40 @@ const Register = () => {
       
       await register(registerData)
       
-      // Redirigir al dashboard tras registro exitoso
-      const from = location.state?.from?.pathname || '/dashboard'
-      navigate(from, { replace: true })
+      // Mostrar onboarding solo para estudiantes nuevos
+      if (formData.tipoUsuario === 'estudiante') {
+        setShowOnboarding(true)
+      } else {
+        // Profesores van directo al dashboard
+        navigate('/dashboard', { replace: true })
+      }
     } catch (error) {
       setError(error.message || 'Error al crear la cuenta')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleOnboardingComplete = (preferences) => {
+    // Guardar preferencias y redirigir
+    navigate('/buscar', { 
+      state: { preferences },
+      replace: true 
+    })
+  }
+
+  const handleOnboardingSkip = () => {
+    navigate('/dashboard', { replace: true })
+  }
+
+  // Mostrar onboarding si está activo
+  if (showOnboarding) {
+    return (
+      <OnboardingFlow 
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    )
   }
 
   return (
