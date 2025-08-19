@@ -57,16 +57,113 @@
     @apply w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
   
-  /* Animaciones */
+  /* Animaciones avanzadas */
   .fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeIn 0.6s ease-out;
   }
   
   .slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  .slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+  }
+  
+  .scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+  
+  .bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+  
+  /* Hover effects mejorados */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .hover-lift:hover {
+    @apply transform -translate-y-1 shadow-lg;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-glow:hover {
+    @apply shadow-lg;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15), 0 10px 10px -5px rgba(59, 130, 246, 0.04);
+  }
+  
+  .hover-grow {
+    @apply transition-transform duration-200 ease-out;
+  }
+  
+  .hover-grow:hover {
+    @apply scale-105;
+  }
+  
+  /* Botones con efectos especiales */
+  .btn-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg;
+  }
+  
+  .btn-animated {
+    @apply relative overflow-hidden;
+  }
+  
+  .btn-animated::before {
+    content: '';
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity duration-300;
+  }
+  
+  .btn-animated:hover::before {
+    @apply opacity-10;
+  }
+  
+  /* Cards mejorados */
+  .card-interactive {
+    @apply card hover-lift cursor-pointer transition-all duration-300;
+  }
+  
+  .card-interactive:hover {
+    @apply border-primary-200 shadow-xl;
+  }
+  
+  /* Loading animations */
+  .pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  /* Microinteracciones */
+  .micro-bounce {
+    @apply transition-transform duration-150 ease-out;
+  }
+  
+  .micro-bounce:active {
+    @apply scale-95;
+  }
+  
+  .ripple {
+    @apply relative overflow-hidden;
+  }
+  
+  .ripple::after {
+    content: '';
+    @apply absolute rounded-full bg-white opacity-30;
+    transform: scale(0);
+    animation: ripple 0.6s linear;
   }
 }
 
+/* Keyframes para animaciones */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -78,11 +175,92 @@
 
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(30px);
     opacity: 0;
   }
   to {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Smooth scrolling mejorado */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Transiciones de página */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
 }

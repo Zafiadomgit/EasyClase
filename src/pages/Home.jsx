@@ -247,38 +247,38 @@ const Home = () => {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8 fade-in" style={{animationDelay: '0.2s'}}>
               <span className="w-2 h-2 bg-primary-500 rounded-full mr-2 animate-pulse"></span>
               Conectando estudiantes con profesores expertos
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-secondary-900 mb-6 font-display leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-secondary-900 mb-6 font-display leading-tight slide-up" style={{animationDelay: '0.4s'}}>
               Aprende habilidades útiles,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800 block">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800 block scale-in" style={{animationDelay: '0.6s'}}>
                 paga por hora
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-secondary-600 mb-10 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-secondary-600 mb-10 max-w-4xl mx-auto leading-relaxed fade-in" style={{animationDelay: '0.8s'}}>
               Conectamos personas que quieren aprender habilidades prácticas como Excel o programación 
               con <span className="font-semibold text-primary-600">profesores verificados</span>, de forma rápida, segura y flexible.
             </p>
             
             {/* Barra de búsqueda prominente */}
-            <div className="max-w-4xl mx-auto mb-8">
+            <div className="max-w-4xl mx-auto mb-8 slide-up" style={{animationDelay: '1s'}}>
               <SearchBar />
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 slide-up" style={{animationDelay: '1.2s'}}>
               <Link
                 to="/buscar"
-                className="border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white text-lg px-8 py-3 rounded-2xl font-semibold transition-all duration-300 w-full sm:w-auto"
+                className="btn-gradient text-lg px-8 py-3 rounded-2xl font-semibold w-full sm:w-auto micro-bounce"
               >
                 Ver Todos los Profesores
               </Link>
               <Link
                 to="/ser-profesor"
-                className="border-2 border-secondary-400 text-secondary-700 hover:bg-secondary-400 hover:text-white text-lg px-8 py-3 rounded-2xl font-semibold transition-all duration-300 w-full sm:w-auto"
+                className="border-2 border-secondary-400 text-secondary-700 hover:bg-secondary-400 hover:text-white text-lg px-8 py-3 rounded-2xl font-semibold transition-all duration-300 w-full sm:w-auto hover-lift micro-bounce"
               >
                 Ser Profesor
               </Link>
@@ -353,10 +353,10 @@ const Home = () => {
       <section className="py-20 bg-gradient-to-br from-secondary-50 to-primary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display">
+            <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display slide-up">
               Categorías Populares
             </h2>
-            <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
+            <p className="text-xl text-secondary-600 max-w-3xl mx-auto fade-in" style={{animationDelay: '0.2s'}}>
               Encuentra el profesor perfecto para lo que necesitas aprender
             </p>
           </div>
