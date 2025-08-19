@@ -1,7 +1,7 @@
 {
   "name": "easyclase-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,6 +21,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^4.1.1",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@vitejs/plugin-react": "^4.1.1",

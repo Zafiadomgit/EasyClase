@@ -1,0 +1,9 @@
+[defaults]
+org=easyclase
+project=javascript-react
+
+[auth]
+token=
+
+[http]
+verify_ssl=true
