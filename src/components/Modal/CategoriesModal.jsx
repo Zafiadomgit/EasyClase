@@ -204,14 +204,13 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div className="min-h-full flex items-center justify-center p-4">
-        <div 
-          className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl relative my-8"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div 
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -233,10 +232,10 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4 min-h-[300px]">
+        <div className="p-4 min-h-[300px] bg-gray-50">
           {/* Debug info */}
-          <div className="text-xs text-gray-500 mb-2">
-            Destacadas: {categoriasDestacadas.length}, Otras: {otrasCategories.length}
+          <div className="text-sm text-red-600 mb-4 p-2 bg-yellow-100 rounded">
+            ✅ MODAL FUNCIONANDO - Destacadas: {categoriasDestacadas.length}, Otras: {otrasCategories.length}
           </div>
           
           {/* Categorías más buscadas */}
@@ -246,7 +245,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
               Más Buscadas ({categoriasDestacadas.length})
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categoriasDestacadas.map((categoria, index) => {
+              {categoriasDestacadas.length > 0 ? categoriasDestacadas.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
                 <Link
@@ -285,7 +284,11 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-600/0 to-primary-600/0 group-hover:from-primary-600/5 group-hover:to-primary-600/10 rounded-xl transition-all duration-300"></div>
                 </Link>
                 )
-              })}
+              }) : (
+                <div className="col-span-full p-4 bg-red-100 text-red-700 rounded-lg">
+                  No hay categorías destacadas
+                </div>
+              )}
             </div>
           </div>
 
@@ -295,7 +298,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
               Otras Categorías ({otrasCategories.length})
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {otrasCategories.map((categoria, index) => {
+              {otrasCategories.length > 0 ? otrasCategories.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
                 <Link
@@ -320,7 +323,11 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   </div>
                 </Link>
                 )
-              })}
+              }) : (
+                <div className="col-span-full p-4 bg-red-100 text-red-700 rounded-lg">
+                  No hay otras categorías
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -338,7 +345,6 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             </Link>
           </p>
         </div>
-      </div>
       </div>
     </div>
   )
