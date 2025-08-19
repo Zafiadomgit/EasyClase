@@ -216,9 +216,78 @@ export const statusService = {
   },
 };
 
+// Servicios para servicios (valga la redundancia)
+export const servicioService = {
+  // Obtener todos los servicios con filtros
+  obtenerServicios: async (filtros = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(filtros).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    const url = `/servicios${queryString ? `?${queryString}` : ''}`;
+    
+    return await apiRequest(url);
+  },
+
+  // Obtener mis servicios
+  obtenerMisServicios: async (filtros = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(filtros).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    const url = `/servicios/usuario/mis-servicios${queryString ? `?${queryString}` : ''}`;
+    
+    return await apiRequest(url);
+  },
+
+  // Obtener un servicio específico
+  obtenerServicio: async (servicioId) => {
+    return await apiRequest(`/servicios/${servicioId}`);
+  },
+
+  // Crear un nuevo servicio
+  crearServicio: async (servicioData) => {
+    return await apiRequest('/servicios', {
+      method: 'POST',
+      body: JSON.stringify(servicioData),
+    });
+  },
+
+  // Actualizar un servicio
+  actualizarServicio: async (servicioId, servicioData) => {
+    return await apiRequest(`/servicios/${servicioId}`, {
+      method: 'PUT',
+      body: JSON.stringify(servicioData),
+    });
+  },
+
+  // Eliminar un servicio
+  eliminarServicio: async (servicioId) => {
+    return await apiRequest(`/servicios/${servicioId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Obtener categorías de servicios
+  obtenerCategorias: async () => {
+    return await apiRequest('/servicios/categorias');
+  },
+};
+
 export default {
   authService,
   profesorService,
   claseService,
+  servicioService,
   statusService,
 };

@@ -14,10 +14,12 @@ import {
   CheckCircle,
   AlertCircle,
   Settings,
-  Video
+  Video,
+  Briefcase,
+  Plus
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { claseService } from '../../services/api'
+import { claseService, servicioService } from '../../services/api'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 
 const Dashboard = () => {
@@ -25,6 +27,7 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [clases, setClases] = useState([])
+  const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showVideoCall, setShowVideoCall] = useState(false)
@@ -48,6 +51,16 @@ const Dashboard = () => {
       // Obtener clases del usuario desde la API
       const response = await claseService.obtenerMisClases()
       setClases(response.data?.clases || [])
+
+      // Obtener servicios si el usuario puede ofrecer servicios
+      try {
+        const serviciosResponse = await servicioService.obtenerMisServicios()
+        setServicios(serviciosResponse.data?.servicios || [])
+      } catch (serviciosError) {
+        // Si falla, solo logueamos, no es crítico
+        console.log('Error cargando servicios:', serviciosError)
+        setServicios([])
+      }
     } catch (error) {
       console.error('Error cargando datos:', error)
       setError('Error al cargar los datos del dashboard')
@@ -159,11 +172,14 @@ const Dashboard = () => {
   const clasesCompletadas = clases.filter(clase => clase.estado === 'completada')
 
   // Calcular estadísticas básicas
+  const serviciosActivos = servicios.filter(servicio => servicio.estado === 'activo')
   const estadisticas = {
     totalClases: clasesCompletadas.length,
     horasTotales: clasesCompletadas.reduce((total, clase) => total + clase.duracion, 0),
     gastoTotal: isEstudiante() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0,
-    ingresoTotal: isProfesor() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0
+    ingresoTotal: isProfesor() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0,
+    totalServicios: serviciosActivos.length,
+    ingresosServicios: servicios.reduce((total, servicio) => total + (servicio.precio * (servicio.totalVentas || 0)), 0)
   }
 
   if (loading) {
@@ -221,7 +237,7 @@ const Dashboard = () => {
       )}
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${isProfesor() ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6 mb-8`}>
         {isEstudiante() ? (
           <>
             <div className="card text-center">
@@ -266,6 +282,11 @@ const Dashboard = () => {
               <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
               <p className="text-2xl font-bold text-secondary-900">{user?.calificacionPromedio?.toFixed(1) || '0.0'}</p>
               <p className="text-secondary-600">Calificación Promedio</p>
+            </div>
+            <div className="card text-center">
+              <Briefcase className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+              <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalServicios}</p>
+              <p className="text-secondary-600">Servicios Activos</p>
             </div>
           </>
         )}
@@ -344,6 +365,80 @@ const Dashboard = () => {
                   onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
                 >
                   {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mis Servicios */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-secondary-900 flex items-center">
+                <Briefcase className="w-5 h-5 mr-2" />
+                Mis Servicios
+              </h2>
+              <button 
+                onClick={() => navigate('/servicios/crear')}
+                className="btn-primary text-sm flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Nuevo Servicio
+              </button>
+            </div>
+            
+            {serviciosActivos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {serviciosActivos.slice(0, 4).map((servicio, index) => (
+                  <div key={index} className="border border-secondary-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-secondary-900 text-sm">{servicio.titulo}</h3>
+                        <p className="text-secondary-600 text-xs">{servicio.categoria}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-primary-600">{formatPrecio(servicio.precio)}</p>
+                        <p className="text-xs text-secondary-500">{servicio.totalVentas || 0} ventas</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        servicio.estado === 'activo' ? 'bg-green-100 text-green-800' : 
+                        servicio.estado === 'pausado' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {servicio.estado}
+                      </span>
+                      <button 
+                        onClick={() => navigate(`/servicios/${servicio._id}`)}
+                        className="btn-primary text-xs px-3 py-1"
+                      >
+                        Ver Detalles
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-secondary-500">
+                <Briefcase className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                <p className="mb-2">No tienes servicios creados aún</p>
+                <p className="text-sm mb-4">Empieza a ofrecer servicios como desarrollo web, tesis, consultoría y más</p>
+                <button 
+                  onClick={() => navigate('/servicios/crear')}
+                  className="btn-primary"
+                >
+                  Crear Mi Primer Servicio
+                </button>
+              </div>
+            )}
+            
+            {serviciosActivos.length > 4 && (
+              <div className="text-center mt-4">
+                <button 
+                  onClick={() => navigate('/servicios/mis-servicios')}
+                  className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                >
+                  Ver todos mis servicios ({serviciosActivos.length})
                 </button>
               </div>
             )}
