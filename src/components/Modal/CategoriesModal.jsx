@@ -162,27 +162,37 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   const otrasCategories = categorias.filter(cat => !cat.destacada)
 
   const handleCategoryClick = (categoria) => {
+    // Restaurar scroll antes de cerrar
+    document.body.style.overflow = ''
     onClose()
   }
 
   const handleBackdropClick = (e) => {
     // Cerrar solo si se hace clic exactamente en el backdrop, no en el contenido
     if (e.target === e.currentTarget) {
+      // Restaurar scroll antes de cerrar
+      document.body.style.overflow = ''
       onClose()
     }
+  }
+
+  const handleCloseClick = () => {
+    // Restaurar scroll antes de cerrar
+    document.body.style.overflow = ''
+    onClose()
   }
 
   // Prevenir scroll del body cuando el modal está abierto
   useEffect(() => {
     if (isOpen) {
+      // Guardar el valor original
+      const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    
-    // Cleanup al desmontar
-    return () => {
-      document.body.style.overflow = 'unset'
+      
+      // Restaurar al cerrar o desmontar
+      return () => {
+        document.body.style.overflow = originalOverflow || ''
+      }
     }
   }, [isOpen])
 
@@ -190,6 +200,8 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
+        // Restaurar scroll antes de cerrar
+        document.body.style.overflow = ''
         onClose()
       }
     }
@@ -238,7 +250,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleCloseClick}
               className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
             >
               <X className="w-6 h-6 text-secondary-400" />
@@ -348,7 +360,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             ¿No encuentras lo que buscas? {' '}
             <Link 
               to="/buscar" 
-              onClick={onClose}
+              onClick={handleCloseClick}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               Busca profesores por palabras clave
