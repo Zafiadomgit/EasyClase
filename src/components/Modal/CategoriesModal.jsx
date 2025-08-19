@@ -204,13 +204,14 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] overflow-y-auto"
       onClick={handleBackdropClick}
     >
-      <div 
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="min-h-screen py-4 px-4 flex items-center justify-center">
+        <div 
+          className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-4"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -232,19 +233,15 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4 min-h-[300px] bg-gray-50">
-          {/* Debug info */}
-          <div className="text-sm text-red-600 mb-4 p-2 bg-yellow-100 rounded">
-            ✅ MODAL FUNCIONANDO - Destacadas: {categoriasDestacadas.length}, Otras: {otrasCategories.length}
-          </div>
+        <div className="p-4">
           
           {/* Categorías más buscadas */}
-          <div className="mb-6">
-            <h3 className="text-base font-semibold text-secondary-900 mb-3 flex items-center">
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-secondary-900 mb-2 flex items-center">
               <Star className="w-4 h-4 text-yellow-500 mr-2" />
-              Más Buscadas ({categoriasDestacadas.length})
+              Más Buscadas
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {categoriasDestacadas.length > 0 ? categoriasDestacadas.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
@@ -252,7 +249,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   key={index}
                   to={`/buscar?categoria=${encodeURIComponent(categoria.nombre)}`}
                   onClick={() => handleCategoryClick(categoria)}
-                  className={`group relative bg-white border-2 ${isHighlighted ? 'border-primary-300 bg-primary-50' : 'border-secondary-100 hover:border-primary-200'} rounded-xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-primary-200' : ''}`}
+                  className={`group relative bg-white border-2 ${isHighlighted ? 'border-primary-300 bg-primary-50' : 'border-secondary-100 hover:border-primary-200'} rounded-xl p-3 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-primary-200' : ''}`}
                 >
                   <div className="flex items-start space-x-3">
                     <div className={`p-2 bg-gradient-to-r ${categoria.color} rounded-lg text-white`}>
@@ -294,8 +291,8 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
           {/* Otras categorías */}
           <div>
-            <h3 className="text-base font-semibold text-secondary-900 mb-3">
-              Otras Categorías ({otrasCategories.length})
+            <h3 className="text-base font-semibold text-secondary-900 mb-2">
+              Otras Categorías
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {otrasCategories.length > 0 ? otrasCategories.map((categoria, index) => {
@@ -345,6 +342,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   )
