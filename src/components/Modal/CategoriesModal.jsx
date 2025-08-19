@@ -204,12 +204,25 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-[10000] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
+      style={{ 
+        zIndex: 999999, 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+        className="bg-white rounded-2xl w-full overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        style={{ 
+          maxWidth: '1000px',
+          maxHeight: '90vh',
+          zIndex: 999999
+        }}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
