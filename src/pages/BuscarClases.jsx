@@ -8,7 +8,8 @@ const BuscarClases = () => {
   const [profesoresFiltrados, setProfesoresFiltrados] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState('')
   const location = useLocation()
 
   // Obtener parámetros de la URL
@@ -16,6 +17,22 @@ const BuscarClases = () => {
   const queryParam = searchParams.get('q')
   const ubicacionParam = searchParams.get('ubicacion')
   const ordenarParam = searchParams.get('ordenar')
+
+  // Función para manejar la búsqueda
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const newParams = new URLSearchParams(searchParams)
+      newParams.set('q', searchQuery.trim())
+      setSearchParams(newParams)
+    }
+  }
+
+  // Inicializar searchQuery con el parámetro de la URL
+  useEffect(() => {
+    if (queryParam) {
+      setSearchQuery(queryParam)
+    }
+  }, [queryParam])
 
   useEffect(() => {
     // Datos de ejemplo ampliados con profesores premium
@@ -249,9 +266,34 @@ const BuscarClases = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4 font-display">
           Buscar Clases
         </h1>
-        <p className="text-lg text-secondary-600">
+        <p className="text-lg text-secondary-600 mb-6">
           Encuentra el profesor perfecto para lo que necesitas aprender
         </p>
+
+        {/* Barra de búsqueda */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-secondary-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar por profesor, especialidad, tecnología..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="block w-full pl-10 pr-12 py-3 border border-secondary-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
+            />
+            <button
+              onClick={handleSearch}
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+            >
+              <div className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                Buscar
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && (

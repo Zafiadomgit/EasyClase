@@ -11,6 +11,7 @@ import { Server } from "socket.io";
 import authRoutes from "./routes/auth.js";
 import profesorRoutes from "./routes/profesores.js";
 import claseRoutes from "./routes/clases.js";
+import servicioRoutes from "./routes/servicios.js";
 import adminRoutes from "./routes/admin.js";
 
 // Importar modelos
@@ -71,6 +72,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/easyclase
 app.use('/api/auth', authRoutes);
 app.use('/api/profesores', profesorRoutes);
 app.use('/api/clases', claseRoutes);
+app.use('/api/servicios', servicioRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Ruta de estado de la API

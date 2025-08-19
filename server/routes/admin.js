@@ -6,7 +6,11 @@ import {
   toggleUserStatus,
   getAllClasses,
   resolveDispute,
-  createAdminUser
+  createAdminUser,
+  exportarUsuarios,
+  exportarClases,
+  exportarServicios,
+  exportarReporteFinanciero
 } from '../controllers/adminController.js';
 import {
   requireAuth,
@@ -91,5 +95,18 @@ router.get('/system', requireSuperAdmin, (req, res) => {
     }
   });
 });
+
+// ===== REPORTES Y EXPORTACIÓN =====
+// Exportar usuarios (CSV/Excel)
+router.get('/reportes/usuarios', requirePermission('read_reports'), exportarUsuarios);
+
+// Exportar clases (CSV/Excel)  
+router.get('/reportes/clases', requirePermission('read_reports'), exportarClases);
+
+// Exportar servicios (CSV/Excel)
+router.get('/reportes/servicios', requirePermission('read_reports'), exportarServicios);
+
+// Reporte financiero general (CSV/Excel)
+router.get('/reportes/financiero', requirePermission('read_reports'), exportarReporteFinanciero);
 
 export default router;
