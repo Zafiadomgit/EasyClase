@@ -8,7 +8,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
     {
       id: 'programacion',
       nombre: 'Programación',
-      icon: <Code className="w-8 h-8" />,
+      icon: <Code className="w-6 h-6" />,
       descripcion: 'JavaScript, Python, React, etc.',
       color: 'from-blue-500 to-blue-600',
       popular: true
@@ -16,7 +16,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
     {
       id: 'excel',
       nombre: 'Excel & Office',
-      icon: <Calculator className="w-8 h-8" />,
+      icon: <Calculator className="w-6 h-6" />,
       descripcion: 'Fórmulas, tablas dinámicas, VBA',
       color: 'from-green-500 to-green-600',
       popular: true
@@ -24,7 +24,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
     {
       id: 'diseno',
       nombre: 'Diseño Gráfico',
-      icon: <Palette className="w-8 h-8" />,
+      icon: <Palette className="w-6 h-6" />,
       descripcion: 'Photoshop, Illustrator, Figma',
       color: 'from-purple-500 to-purple-600',
       popular: true
@@ -32,7 +32,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
     {
       id: 'marketing',
       nombre: 'Marketing Digital',
-      icon: <TrendingUp className="w-8 h-8" />,
+      icon: <TrendingUp className="w-6 h-6" />,
       descripcion: 'SEO, redes sociales, publicidad',
       color: 'from-orange-500 to-orange-600',
       popular: true
@@ -40,28 +40,28 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
     {
       id: 'idiomas',
       nombre: 'Idiomas',
-      icon: <Globe className="w-8 h-8" />,
+      icon: <Globe className="w-6 h-6" />,
       descripcion: 'Inglés, francés, alemán, etc.',
       color: 'from-cyan-500 to-cyan-600'
     },
     {
       id: 'academico',
       nombre: 'Apoyo Académico',
-      icon: <BookOpen className="w-8 h-8" />,
+      icon: <BookOpen className="w-6 h-6" />,
       descripcion: 'Matemáticas, física, química',
       color: 'from-indigo-500 to-indigo-600'
     },
     {
       id: 'musica',
       nombre: 'Música',
-      icon: <Music className="w-8 h-8" />,
+      icon: <Music className="w-6 h-6" />,
       descripcion: 'Piano, guitarra, canto, teoría',
       color: 'from-pink-500 to-pink-600'
     },
     {
       id: 'fotografia',
       nombre: 'Fotografía',
-      icon: <Camera className="w-8 h-8" />,
+      icon: <Camera className="w-6 h-6" />,
       descripcion: 'Técnica, edición, composición',
       color: 'from-yellow-500 to-yellow-600'
     }
@@ -82,7 +82,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="text-center space-y-4">
         <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 font-display">
@@ -109,7 +109,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
             <button
               key={categoria.id}
               onClick={() => handleCategorySelect(categoria)}
-              className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+              className={`group relative p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                 isSelected
                   ? 'border-primary-500 bg-primary-50 shadow-lg scale-105'
                   : 'border-secondary-200 bg-white hover:border-primary-300'
@@ -130,7 +130,7 @@ const CategoryStep = ({ formData, updateFormData, onNext }) => {
               )}
 
               {/* Icon */}
-              <div className={`w-16 h-16 bg-gradient-to-br ${categoria.color} rounded-2xl flex items-center justify-center mx-auto mb-4 text-white transition-transform duration-300 ${
+              <div className={`w-12 h-12 bg-gradient-to-br ${categoria.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-white transition-transform duration-300 ${
                 isSelected ? 'scale-110' : 'group-hover:scale-110'
               }`}>
                 {categoria.icon}

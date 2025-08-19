@@ -96,9 +96,9 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-primary-50 via-white to-secondary-50 z-50 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 overflow-y-auto">
       {/* Header */}
-      <div className="relative bg-white/80 backdrop-blur-sm border-b border-secondary-200 px-4 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-secondary-200 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           {/* Progress */}
           <div className="flex items-center space-x-3">
@@ -148,8 +148,8 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
+      <div className="flex-1 py-8 px-4">
+        <div className="w-full max-w-2xl mx-auto">
           <CurrentStepComponent
             formData={formData}
             updateFormData={updateFormData}
@@ -162,7 +162,7 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
       </div>
 
       {/* Navigation */}
-      <div className="bg-white/80 backdrop-blur-sm border-t border-secondary-200 px-4 py-4">
+      <div className="bg-white border-t border-secondary-200 px-4 py-4 mt-8">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button
             onClick={prevStep}
