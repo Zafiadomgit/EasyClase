@@ -99,10 +99,13 @@ const Register = () => {
       await register(registerData)
       
       // Mostrar onboarding solo para estudiantes nuevos
+      console.log('Registro exitoso, tipo de usuario:', formData.tipoUsuario)
       if (formData.tipoUsuario === 'estudiante') {
+        console.log('Mostrando onboarding para estudiante')
         setShowOnboarding(true)
       } else {
         // Profesores van directo al dashboard
+        console.log('Redirigiendo profesor al dashboard')
         navigate('/dashboard', { replace: true })
       }
     } catch (error) {
@@ -125,7 +128,9 @@ const Register = () => {
   }
 
   // Mostrar onboarding si está activo
+  console.log('showOnboarding state:', showOnboarding)
   if (showOnboarding) {
+    console.log('Renderizando OnboardingFlow')
     return (
       <OnboardingFlow 
         onComplete={handleOnboardingComplete}

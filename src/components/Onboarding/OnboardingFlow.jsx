@@ -8,6 +8,7 @@ import AvailabilityStep from './steps/AvailabilityStep'
 import FinalStep from './steps/FinalStep'
 
 const OnboardingFlow = ({ onComplete, onSkip }) => {
+  console.log('OnboardingFlow renderizado')
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     categoria: '',
