@@ -241,6 +241,9 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                {/* Theme Toggle */}
+                <ThemeToggle className="mr-2" />
+                
                 {/* Botón de Notificaciones */}
                 <div className="relative" ref={notificationsRef}>
                   <button
@@ -416,6 +419,9 @@ const Header = () => {
               </>
             ) : (
               <>
+                {/* Theme Toggle */}
+                <ThemeToggle className="mr-4" />
+                
                 <Link
                   to="/login"
                   className="text-secondary-700 hover:text-primary-600 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
@@ -475,6 +481,15 @@ const Header = () => {
               >
                 Ser Profesor
               </Link>
+              
+              {/* Theme Toggle Mobile */}
+              <div className="px-3 py-2 mt-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-medium text-secondary-600">Modo Oscuro</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+              
               <div className="border-t border-secondary-200 pt-3 mt-3">
                 {isAuthenticated ? (
                   <>

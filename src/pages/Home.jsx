@@ -524,18 +524,18 @@ const Home = () => {
               </p>
             </div>
             
-            {/* Tecnología */}
+            {/* Soporte Continuo */}
             <div className="text-center group scale-in" style={{animationDelay: '1.4s'}}>
               <div className="mx-auto mb-6 hover-grow">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <Zap className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
+                  <Users className="w-10 h-10 text-white" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-secondary-900 mb-4">
-                Tecnología Moderna
+                Soporte Continuo
               </h3>
               <p className="text-secondary-600 leading-relaxed">
-                Plataforma intuitiva con videoconferencias integradas y herramientas de colaboración.
+                Acompañamiento personalizado y seguimiento de tu progreso durante todo el proceso de aprendizaje.
               </p>
             </div>
           </div>
