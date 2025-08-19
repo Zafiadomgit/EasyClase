@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
@@ -33,9 +34,10 @@ import './App.css'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-secondary-50">
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+        <div className="min-h-screen bg-secondary-50 dark:bg-gray-900 transition-colors duration-300">
           <Routes>
             {/* Rutas independientes (sin Layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />
@@ -105,8 +107,9 @@ function App() {
             <Route path="/registro" element={<Register />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
