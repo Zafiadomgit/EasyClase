@@ -251,9 +251,9 @@ const Dashboard = () => {
               <p className="text-secondary-600">Horas de Estudio</p>
             </div>
             <div className="card text-center">
-              <DollarSign className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{formatPrecio(estadisticas.gastoTotal)}</p>
-              <p className="text-secondary-600">Invertido en Aprendizaje</p>
+              <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+              <p className="text-2xl font-bold text-secondary-900">{user?.calificacionPromedio?.toFixed(1) || '0.0'}</p>
+              <p className="text-secondary-600">Tu Progreso</p>
             </div>
             <div className="card text-center">
               <Calendar className="w-8 h-8 text-primary-600 mx-auto mb-3" />
