@@ -233,12 +233,17 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 min-h-[300px]">
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 mb-2">
+            Destacadas: {categoriasDestacadas.length}, Otras: {otrasCategories.length}
+          </div>
+          
           {/* Categorías más buscadas */}
           <div className="mb-6">
             <h3 className="text-base font-semibold text-secondary-900 mb-3 flex items-center">
               <Star className="w-4 h-4 text-yellow-500 mr-2" />
-              Más Buscadas
+              Más Buscadas ({categoriasDestacadas.length})
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categoriasDestacadas.map((categoria, index) => {
@@ -287,7 +292,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
           {/* Otras categorías */}
           <div>
             <h3 className="text-base font-semibold text-secondary-900 mb-3">
-              Otras Categorías
+              Otras Categorías ({otrasCategories.length})
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {otrasCategories.map((categoria, index) => {
