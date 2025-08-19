@@ -157,21 +157,32 @@ servicioSchema.index({ precio: 1 });
 servicioSchema.index({ titulo: 'text', descripcion: 'text', etiquetas: 'text' });
 
 // Middleware para calcular comisión
-servicioSchema.methods.calcularComision = function() {
-  return this.precio * 0.10; // 10% de comisión
+servicioSchema.methods.calcularComision = async function() {
+  // Obtener el usuario proveedor para verificar si es premium
+  await this.populate('proveedor', 'premium');
+  const esPremium = this.proveedor?.premium || false;
+  
+  // Comisión: 7% para premium, 10% para usuarios regulares
+  const porcentajeComision = esPremium ? 0.07 : 0.10;
+  return this.precio * porcentajeComision;
 };
 
-servicioSchema.methods.calcularPrecioFinal = function() {
-  return this.precio - this.calcularComision();
+servicioSchema.methods.calcularPrecioFinal = async function() {
+  const comision = await this.calcularComision();
+  return this.precio - comision;
 };
 
 // Método para obtener datos públicos del servicio
-servicioSchema.methods.getPublicData = function() {
+servicioSchema.methods.getPublicData = async function() {
   const servicio = this.toObject();
+  const comision = await this.calcularComision();
+  const precioFinal = await this.calcularPrecioFinal();
+  
   return {
     ...servicio,
-    comision: this.calcularComision(),
-    precioFinal: this.calcularPrecioFinal()
+    comision,
+    precioFinal,
+    esPremium: this.proveedor?.premium || false
   };
 };
 

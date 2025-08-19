@@ -75,10 +75,15 @@ export const obtenerServicios = async (req, res) => {
     // Contar total para paginación
     const total = await Servicio.countDocuments(filtros);
 
+    // Generar datos públicos de servicios con comisiones calculadas
+    const serviciosConDatos = await Promise.all(
+      servicios.map(async (servicio) => await servicio.getPublicData())
+    );
+
     res.json({
       success: true,
       data: {
-        servicios: servicios.map(servicio => servicio.getPublicData()),
+        servicios: serviciosConDatos,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -112,9 +117,11 @@ export const obtenerServicio = async (req, res) => {
       });
     }
 
+    const servicioConDatos = await servicio.getPublicData();
+    
     res.json({
       success: true,
-      data: { servicio: servicio.getPublicData() }
+      data: { servicio: servicioConDatos }
     });
 
   } catch (error) {
@@ -160,10 +167,12 @@ export const crearServicio = async (req, res) => {
     const servicioCompleto = await Servicio.findById(nuevoServicio._id)
       .populate('proveedor', 'nombre foto calificacionPromedio totalReviews verificado premium');
 
+    const servicioConDatos = await servicioCompleto.getPublicData();
+    
     res.status(201).json({
       success: true,
       message: 'Servicio creado exitosamente',
-      data: { servicio: servicioCompleto.getPublicData() }
+      data: { servicio: servicioConDatos }
     });
 
   } catch (error) {
@@ -206,10 +215,12 @@ export const actualizarServicio = async (req, res) => {
       { new: true, runValidators: true }
     ).populate('proveedor', 'nombre foto calificacionPromedio totalReviews verificado premium');
 
+    const servicioConDatos = await servicioActualizado.getPublicData();
+    
     res.json({
       success: true,
       message: 'Servicio actualizado exitosamente',
-      data: { servicio: servicioActualizado.getPublicData() }
+      data: { servicio: servicioConDatos }
     });
 
   } catch (error) {
@@ -269,10 +280,15 @@ export const obtenerMisServicios = async (req, res) => {
 
     const total = await Servicio.countDocuments(filtros);
 
+    // Generar datos públicos de servicios con comisiones calculadas
+    const serviciosConDatos = await Promise.all(
+      servicios.map(async (servicio) => await servicio.getPublicData())
+    );
+    
     res.json({
       success: true,
       data: {
-        servicios: servicios.map(servicio => servicio.getPublicData()),
+        servicios: serviciosConDatos,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),

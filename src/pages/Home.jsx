@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
 
 // Componente de barra de búsqueda
@@ -423,6 +423,135 @@ const Home = () => {
             >
               Ver todas las categorías
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Nueva sección de Servicios */}
+      <section className="py-20 bg-gradient-to-br from-white to-secondary-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display">
+              ¿Necesitas Algo Más Que Clases?
+            </h2>
+            <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
+              Descubre nuestros servicios profesionales: desde desarrollo web hasta tesis universitarias
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {/* Servicios destacados */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Code className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4 text-center">
+                Desarrollo Web & Apps
+              </h3>
+              <p className="text-secondary-600 text-center mb-6">
+                Sitios web profesionales, aplicaciones móviles y sistemas personalizados
+              </p>
+              <div className="text-center">
+                <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <Crown className="w-4 h-4 mr-1" />
+                  Premium: 7% comisión
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4 text-center">
+                Tesis & Trabajos Académicos
+              </h3>
+              <p className="text-secondary-600 text-center mb-6">
+                Asesoría completa para tesis, proyectos de grado y trabajos universitarios
+              </p>
+              <div className="text-center">
+                <span className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <Zap className="w-4 h-4 mr-1" />
+                  Más demandado
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4 text-center">
+                Consultoría & Marketing
+              </h3>
+              <p className="text-secondary-600 text-center mb-6">
+                Estrategias de negocio, marketing digital y consultoría especializada
+              </p>
+              <div className="text-center">
+                <span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <Target className="w-4 h-4 mr-1" />
+                  Alto ROI
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Beneficios para proveedores Premium */}
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-8 mb-12">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center bg-amber-100 text-amber-800 px-4 py-2 rounded-full font-semibold mb-4">
+                <Crown className="w-5 h-5 mr-2" />
+                Beneficios Premium para Servicios
+              </div>
+              <h3 className="text-2xl font-bold text-secondary-900 mb-4">
+                Maximiza tus Ganancias con Premium
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-6 h-6 text-amber-600" />
+                </div>
+                <h4 className="font-semibold text-secondary-900 mb-2">Solo 7% Comisión</h4>
+                <p className="text-sm text-secondary-600">vs 10% estándar</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Eye className="w-6 h-6 text-amber-600" />
+                </div>
+                <h4 className="font-semibold text-secondary-900 mb-2">Mayor Visibilidad</h4>
+                <p className="text-sm text-secondary-600">Aparece primero en búsquedas</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-6 h-6 text-amber-600" />
+                </div>
+                <h4 className="font-semibold text-secondary-900 mb-2">Publicación Instant.</h4>
+                <p className="text-sm text-secondary-600">Sin espera de aprobación</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+              <button
+                onClick={() => navigate('/servicios')}
+                className="inline-flex items-center px-8 py-4 bg-primary-600 text-white font-semibold rounded-2xl hover:bg-primary-700 transition-all duration-300 hover:scale-105 shadow-lg"
+              >
+                <Briefcase className="w-5 h-5 mr-2" />
+                Explorar Servicios
+              </button>
+              <button
+                onClick={() => navigate('/premium')}
+                className="inline-flex items-center px-8 py-4 border-2 border-amber-400 text-amber-700 hover:bg-amber-400 hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-105"
+              >
+                <Crown className="w-5 h-5 mr-2" />
+                Ser Premium
+              </button>
+            </div>
           </div>
         </div>
       </section>

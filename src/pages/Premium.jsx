@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Star, TrendingUp, Eye, Shield, Clock, Award, ArrowRight } from 'lucide-react'
+import { CheckCircle, Star, TrendingUp, Eye, Shield, Clock, Award, ArrowRight, Briefcase, Zap, Target } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Premium = () => {
@@ -45,6 +45,21 @@ const Premium = () => {
       icon: <Clock className="w-6 h-6 text-amber-600" />,
       titulo: "Respuesta Prioritaria",
       descripcion: "Soporte técnico y resolución de incidencias en menos de 4 horas"
+    },
+    {
+      icon: <Briefcase className="w-6 h-6 text-amber-600" />,
+      titulo: "Servicios Premium",
+      descripcion: "Crea servicios destacados con mayor visibilidad y posicionamiento"
+    },
+    {
+      icon: <Zap className="w-6 h-6 text-amber-600" />,
+      titulo: "Publicación Instantánea",
+      descripcion: "Tus servicios se publican sin revisión manual y aparecen inmediatamente"
+    },
+    {
+      icon: <Target className="w-6 h-6 text-amber-600" />,
+      titulo: "Comisión Reducida",
+      descripcion: "Solo 7% de comisión en servicios (vs 10% estándar)"
     },
     {
       icon: <span className="text-2xl">✏️</span>,

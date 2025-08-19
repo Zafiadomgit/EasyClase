@@ -165,6 +165,12 @@ const Header = () => {
             >
               Buscar Clases
             </Link>
+            <Link
+              to="/servicios"
+              className="text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+            >
+              Servicios
+            </Link>
             
             {/* Dropdown de Categorías */}
             <div className="relative" ref={categoriesRef}>
@@ -457,6 +463,13 @@ const Header = () => {
                 onClick={toggleMenu}
               >
                 Buscar Clases
+              </Link>
+              <Link
+                to="/servicios"
+                className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50"
+                onClick={toggleMenu}
+              >
+                Servicios
               </Link>
               <Link
                 to="/como-funciona"
