@@ -131,9 +131,9 @@ const Header = () => {
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
               <img 
-                src="/Logo_sin_letras-removebg-preview.png" 
+                src="/Logo_reducido-removebg-preview.png" 
                 alt="EasyClase Logo" 
-                className="w-16 h-16 object-contain"
+                className="h-12 w-auto object-contain"
                 onError={(e) => {
                   // Fallback al logo reducido original
                   e.target.src = '/Logo reducido.png';
