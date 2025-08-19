@@ -2,6 +2,13 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
+import { 
+  PayPerHourIcon, 
+  VerifiedTeacherIcon, 
+  FastLearningIcon, 
+  SecurityIcon, 
+  FlexibilityIcon 
+} from '../components/Icons/CustomIcons'
 
 // Componente de barra de búsqueda
 const SearchBar = () => {
@@ -423,6 +430,102 @@ const Home = () => {
             >
               Ver todas las categorías
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Por qué EasyClase es diferente */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display slide-up">
+              ¿Por qué elegir EasyClase?
+            </h2>
+            <p className="text-xl text-secondary-600 max-w-3xl mx-auto fade-in" style={{animationDelay: '0.2s'}}>
+              Una experiencia de aprendizaje diseñada para la vida moderna
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Paga por hora */}
+            <div className="text-center group scale-in" style={{animationDelay: '0.4s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <PayPerHourIcon className="w-20 h-20 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Paga Solo por lo que Necesitas
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Sin suscripciones ni compromisos largos. Paga únicamente por las horas de clase que tomes.
+              </p>
+            </div>
+            
+            {/* Profesores verificados */}
+            <div className="text-center group scale-in" style={{animationDelay: '0.6s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <VerifiedTeacherIcon className="w-20 h-20 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Profesores Verificados
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Todos nuestros profesores pasan por un proceso de verificación para garantizar calidad y experiencia.
+              </p>
+            </div>
+            
+            {/* Aprendizaje rápido */}
+            <div className="text-center group scale-in" style={{animationDelay: '0.8s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <FastLearningIcon className="w-20 h-20 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Resultados Rápidos
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Aprende habilidades prácticas en sesiones personalizadas que se adaptan a tu ritmo y objetivos.
+              </p>
+            </div>
+            
+            {/* Seguridad */}
+            <div className="text-center group scale-in" style={{animationDelay: '1s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <SecurityIcon className="w-20 h-20 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Pagos Seguros
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Transacciones protegidas y sistema de calificaciones para una experiencia confiable.
+              </p>
+            </div>
+            
+            {/* Flexibilidad */}
+            <div className="text-center group scale-in" style={{animationDelay: '1.2s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <FlexibilityIcon className="w-20 h-20 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Horarios Flexibles
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Encuentra clases que se ajusten a tu agenda, incluso en horarios no convencionales.
+              </p>
+            </div>
+            
+            {/* Tecnología */}
+            <div className="text-center group scale-in" style={{animationDelay: '1.4s'}}>
+              <div className="mx-auto mb-6 hover-grow">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                  <Zap className="w-10 h-10 text-white" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Tecnología Moderna
+              </h3>
+              <p className="text-secondary-600 leading-relaxed">
+                Plataforma intuitiva con videoconferencias integradas y herramientas de colaboración.
+              </p>
+            </div>
           </div>
         </div>
       </section>
