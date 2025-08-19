@@ -15,6 +15,12 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Por favor ingresa un email válido']
   },
+  codigoPais: {
+    type: String,
+    required: [true, 'El código de país es obligatorio'],
+    trim: true,
+    default: '+57'
+  },
   telefono: {
     type: String,
     required: [true, 'El teléfono es obligatorio'],
@@ -151,6 +157,11 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Virtual para obtener el teléfono completo con código de país
+userSchema.virtual('telefonoCompleto').get(function() {
+  return `${this.codigoPais} ${this.telefono}`;
+});
 
 // Método para obtener datos públicos del usuario
 userSchema.methods.getPublicProfile = function() {

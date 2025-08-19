@@ -20,10 +20,14 @@ const registerValidation = [
     .isEmail()
     .normalizeEmail()
     .withMessage('Debe ser un email válido'),
+  body('codigoPais')
+    .trim()
+    .matches(/^\+\d{1,4}$/)
+    .withMessage('El código de país debe tener el formato +XX o +XXX'),
   body('telefono')
     .trim()
-    .isLength({ min: 10, max: 15 })
-    .withMessage('El teléfono debe tener entre 10 y 15 caracteres'),
+    .isLength({ min: 7, max: 15 })
+    .withMessage('El teléfono debe tener entre 7 y 15 caracteres'),
   body('password')
     .isLength({ min: 6 })
     .withMessage('La contraseña debe tener al menos 6 caracteres'),

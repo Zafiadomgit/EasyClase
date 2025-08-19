@@ -5,11 +5,39 @@ import { useAuth } from '../../contexts/AuthContext'
 import TermsModal from '../../components/Modal/TermsModal'
 import PrivacyModal from '../../components/Modal/PrivacyModal'
 
+// Lista de códigos de países principales para Latinoamérica y otros
+const CODIGOS_PAISES = [
+  { codigo: '+57', pais: 'Colombia', bandera: '🇨🇴' },
+  { codigo: '+58', pais: 'Venezuela', bandera: '🇻🇪' },
+  { codigo: '+54', pais: 'Argentina', bandera: '🇦🇷' },
+  { codigo: '+52', pais: 'México', bandera: '🇲🇽' },
+  { codigo: '+51', pais: 'Perú', bandera: '🇵🇪' },
+  { codigo: '+56', pais: 'Chile', bandera: '🇨🇱' },
+  { codigo: '+593', pais: 'Ecuador', bandera: '🇪🇨' },
+  { codigo: '+591', pais: 'Bolivia', bandera: '🇧🇴' },
+  { codigo: '+595', pais: 'Paraguay', bandera: '🇵🇾' },
+  { codigo: '+598', pais: 'Uruguay', bandera: '🇺🇾' },
+  { codigo: '+55', pais: 'Brasil', bandera: '🇧🇷' },
+  { codigo: '+507', pais: 'Panamá', bandera: '🇵🇦' },
+  { codigo: '+506', pais: 'Costa Rica', bandera: '🇨🇷' },
+  { codigo: '+503', pais: 'El Salvador', bandera: '🇸🇻' },
+  { codigo: '+502', pais: 'Guatemala', bandera: '🇬🇹' },
+  { codigo: '+504', pais: 'Honduras', bandera: '🇭🇳' },
+  { codigo: '+505', pais: 'Nicaragua', bandera: '🇳🇮' },
+  { codigo: '+1', pais: 'Estados Unidos', bandera: '🇺🇸' },
+  { codigo: '+1', pais: 'Canadá', bandera: '🇨🇦' },
+  { codigo: '+34', pais: 'España', bandera: '🇪🇸' },
+  { codigo: '+33', pais: 'Francia', bandera: '🇫🇷' },
+  { codigo: '+49', pais: 'Alemania', bandera: '🇩🇪' },
+  { codigo: '+44', pais: 'Reino Unido', bandera: '🇬🇧' },
+  { codigo: '+39', pais: 'Italia', bandera: '🇮🇹' }
+]
 
 const Register = () => {
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
+    codigoPais: '+57', // Colombia por defecto
     telefono: '',
     password: '',
     confirmPassword: '',
@@ -238,21 +266,44 @@ const Register = () => {
               <label htmlFor="telefono" className="block text-sm font-medium text-secondary-700 mb-2">
                 Teléfono
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-secondary-400" />
+              <div className="flex space-x-2">
+                {/* Selector de código de país */}
+                <div className="relative">
+                  <select
+                    name="codigoPais"
+                    value={formData.codigoPais}
+                    onChange={handleChange}
+                    className="input-field pr-8 w-32 text-sm font-medium"
+                    required
+                  >
+                    {CODIGOS_PAISES.map((pais) => (
+                      <option key={`${pais.codigo}-${pais.pais}`} value={pais.codigo}>
+                        {pais.bandera} {pais.codigo}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <input
-                  id="telefono"
-                  name="telefono"
-                  type="tel"
-                  required
-                  className="input-field pl-10"
-                  placeholder="300 123 4567"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                />
+                
+                {/* Campo de teléfono */}
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-secondary-400" />
+                  </div>
+                  <input
+                    id="telefono"
+                    name="telefono"
+                    type="tel"
+                    required
+                    className="input-field pl-10"
+                    placeholder="300 123 4567"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
+              <p className="text-xs text-secondary-500 mt-1">
+                Selecciona tu país y escribe tu número sin el código
+              </p>
             </div>
 
             {/* Password */}

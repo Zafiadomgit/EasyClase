@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       });
     }
 
-    const { nombre, email, telefono, password, tipoUsuario } = req.body;
+    const { nombre, email, codigoPais, telefono, password, tipoUsuario } = req.body;
 
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
@@ -37,6 +37,7 @@ export const register = async (req, res) => {
     const newUser = new User({
       nombre,
       email,
+      codigoPais: codigoPais || '+57', // Colombia por defecto
       telefono,
       password,
       tipoUsuario
