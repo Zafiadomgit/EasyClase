@@ -57,7 +57,7 @@ const Login = () => {
             <img 
               src="/Logo_reducido-removebg-preview.png" 
               alt="EasyClase" 
-              className="h-16 w-auto"
+              className="h-24 w-auto"
             />
           </Link>
           <h2 className="text-3xl font-bold text-secondary-900 font-display">

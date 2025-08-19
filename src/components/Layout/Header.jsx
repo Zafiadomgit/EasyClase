@@ -126,14 +126,14 @@ const Header = () => {
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-lg border-b border-secondary-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
               <img 
                 src="/Logo_sin_letras-removebg-preview.png" 
                 alt="EasyClase Logo" 
-                className="w-12 h-12 object-contain"
+                className="w-16 h-16 object-contain"
                 onError={(e) => {
                   // Fallback al logo reducido original
                   e.target.src = '/Logo reducido.png';
