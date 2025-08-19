@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import * as Sentry from "@sentry/react"
 import App from './App.jsx'
 import './index.css'
@@ -15,11 +15,13 @@ Sentry.init({
     Sentry.browserTracingIntegration(),
   ],
   // Capturar un porcentaje de transacciones para performance monitoring
-  tracesSampleRate: 1.0,
+  tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0, // 10% en prod, 100% en dev
 })
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const container = document.getElementById('root')
+const root = createRoot(container)
+root.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 )
