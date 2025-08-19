@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
+import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
   PayPerHourIcon, 
   VerifiedTeacherIcon, 
@@ -144,6 +145,17 @@ const FAQItem = ({ question, answer }) => {
 const Home = () => {
   const navigate = useNavigate()
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
+  
+  // Refs para scroll reveal
+  const categoriesRef = useScrollReveal()
+  const whyEasyClaseRef = useScrollReveal()
+  const servicesRef = useScrollReveal()
+  const statsRef = useScrollReveal()
+  const faqRef = useScrollReveal()
+  const ctaRef = useScrollReveal()
+  
+  // Ref para animación escalonada de categorías
+  const categoriesGridRef = useScrollRevealStagger(150)
   
   const categorias = [
     { 
@@ -357,7 +369,7 @@ const Home = () => {
       </section>
 
       {/* Categorías populares */}
-      <section className="py-20 bg-gradient-to-br from-secondary-50 to-primary-50">
+      <section ref={categoriesRef} className="py-20 bg-gradient-to-br from-secondary-50 to-primary-50 scroll-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display slide-up">
@@ -435,7 +447,7 @@ const Home = () => {
       </section>
 
       {/* Por qué EasyClase es diferente */}
-      <section className="py-20 bg-white">
+      <section ref={whyEasyClaseRef} className="py-20 bg-white scroll-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display slide-up">
@@ -531,7 +543,7 @@ const Home = () => {
       </section>
 
       {/* Nueva sección de Servicios */}
-      <section className="py-20 bg-gradient-to-br from-white to-secondary-50">
+      <section ref={servicesRef} className="py-20 bg-gradient-to-br from-white to-secondary-50 scroll-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display">

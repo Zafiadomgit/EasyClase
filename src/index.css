@@ -264,3 +264,58 @@ html {
   opacity: 0;
   transition: opacity 300ms;
 }
+
+/* Scroll Reveal Animations */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-reveal.animate-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-reveal-left.animate-reveal {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-reveal-right.animate-reveal {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-reveal-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-reveal-scale.animate-reveal {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Smooth section transitions */
+section {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Parallax-like effect for backgrounds */
+.parallax-bg {
+  transition: transform 0.1s ease-out;
+}
