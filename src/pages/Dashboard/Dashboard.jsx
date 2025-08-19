@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { 
   Calendar, 
   Clock, 
@@ -16,11 +17,27 @@ import {
   Settings,
   Video,
   Briefcase,
-  Plus
+  Plus,
+  Bug
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { claseService, servicioService } from '../../services/api'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
+
+// Componente de prueba para Sentry
+const ErrorButton = () => {
+  return (
+    <button
+      onClick={() => {
+        throw new Error('¡Prueba de Sentry - Error generado intencionalmente!')
+      }}
+      className="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+    >
+      <Bug className="w-4 h-4 mr-2" />
+      Probar Error Sentry
+    </button>
+  )
+}
 
 const Dashboard = () => {
   const { user, isProfesor, isEstudiante } = useAuth()
@@ -213,15 +230,26 @@ const Dashboard = () => {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-secondary-900 font-display">
-          ¡Hola, {user?.nombre?.split(' ')[0]}! 👋
-        </h1>
-        <p className="text-secondary-600 mt-2">
-          {isEstudiante() 
-            ? 'Gestiona tus clases y revisa tu progreso de aprendizaje'
-            : 'Gestiona tus clases y revisa tus estadísticas de enseñanza'
-          }
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900 font-display">
+              ¡Hola, {user?.nombre?.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-secondary-600 mt-2">
+              {isEstudiante() 
+                ? 'Gestiona tus clases y revisa tu progreso de aprendizaje'
+                : 'Gestiona tus clases y revisa tus estadísticas de enseñanza'
+              }
+            </p>
+          </div>
+          {/* Botón de prueba Sentry (solo en desarrollo) */}
+          {import.meta.env.DEV && (
+            <div className="text-right">
+              <p className="text-xs text-gray-500 mb-2">Herramientas de desarrollo</p>
+              <ErrorButton />
+            </div>
+          )}
+        </div>
       </div>
 
       {error && (
