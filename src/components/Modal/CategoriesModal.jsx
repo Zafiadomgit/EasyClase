@@ -204,11 +204,12 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center p-4"
       onClick={handleBackdropClick}
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-4xl w-full h-[80vh] overflow-y-auto shadow-2xl mx-auto mt-10"
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -232,7 +233,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4 bg-white min-h-[400px]">
+        <div className="p-4 bg-white min-h-[400px]" style={{ backgroundColor: '#ffffff' }}>
           {/* Categorías más buscadas */}
           <div className="mb-4">
             <h3 className="text-base font-semibold text-secondary-900 mb-2 flex items-center">
