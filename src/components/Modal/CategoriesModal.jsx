@@ -3,8 +3,6 @@ import { X, Star, Users, Code, Calculator, Globe, Palette, TrendingUp, DollarSig
 import { Link } from 'react-router-dom'
 
 const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
-  console.log('CategoriesModal render:', { isOpen, onClose: !!onClose })
-  
   if (!isOpen) return null
 
   // Todas las categorías organizadas por popularidad
@@ -206,22 +204,22 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] overflow-y-auto"
       onClick={handleBackdropClick}
-      style={{ margin: 0 }}
     >
-      <div 
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl relative"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="min-h-full flex items-center justify-center p-4">
+        <div 
+          className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl relative my-8"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-secondary-200 px-6 py-4 rounded-t-2xl">
+        <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-secondary-900 font-display">
+              <h2 className="text-xl font-bold text-secondary-900 font-display">
                 Todas las Categorías
               </h2>
-              <p className="text-secondary-600 mt-1">
+              <p className="text-secondary-600 text-sm mt-1">
                 Encuentra el profesor perfecto para lo que necesitas aprender
               </p>
             </div>
@@ -235,11 +233,11 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           {/* Categorías más buscadas */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4 flex items-center">
-              <Star className="w-5 h-5 text-yellow-500 mr-2" />
+          <div className="mb-6">
+            <h3 className="text-base font-semibold text-secondary-900 mb-3 flex items-center">
+              <Star className="w-4 h-4 text-yellow-500 mr-2" />
               Más Buscadas
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -288,7 +286,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
           {/* Otras categorías */}
           <div>
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+            <h3 className="text-base font-semibold text-secondary-900 mb-3">
               Otras Categorías
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -323,7 +321,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-secondary-200 px-6 py-4 bg-secondary-50 rounded-b-2xl">
+        <div className="border-t border-secondary-200 px-4 py-3 bg-secondary-50 rounded-b-2xl">
           <p className="text-sm text-secondary-600 text-center">
             ¿No encuentras lo que buscas? {' '}
             <Link 
@@ -335,6 +333,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   )
