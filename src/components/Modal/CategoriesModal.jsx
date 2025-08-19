@@ -165,17 +165,52 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   }
 
   const handleBackdropClick = (e) => {
+    // Cerrar solo si se hace clic exactamente en el backdrop, no en el contenido
     if (e.target === e.currentTarget) {
       onClose()
     }
   }
 
+  // Prevenir scroll del body cuando el modal está abierto
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    // Cleanup al desmontar
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  // Cerrar modal con tecla Escape
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center overflow-y-auto"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div 
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4 sm:m-6 md:m-8 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-secondary-200 px-6 py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -204,7 +239,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
               <Star className="w-5 h-5 text-yellow-500 mr-2" />
               Más Buscadas
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categoriasDestacadas.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
@@ -253,7 +288,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
             <h3 className="text-lg font-semibold text-secondary-900 mb-4">
               Otras Categorías
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {otrasCategories.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
