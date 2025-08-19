@@ -148,13 +148,12 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link to="/" className="flex items-center justify-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-primary-600 font-display">
-              EasyClase
-            </span>
+          <Link to="/" className="flex items-center justify-center mb-6">
+            <img 
+              src="/Logo_reducido-removebg-preview.png" 
+              alt="EasyClase" 
+              className="h-16 w-auto"
+            />
           </Link>
           <h2 className="text-3xl font-bold text-secondary-900 font-display">
             Crear Cuenta
