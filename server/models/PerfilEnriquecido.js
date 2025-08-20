@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const perfilEnriquecidoSchema = new mongoose.Schema({
   usuario: {
@@ -218,4 +218,4 @@ perfilEnriquecidoSchema.methods.registrarBusqueda = function(categoria, termino)
 
 const PerfilEnriquecido = mongoose.model('PerfilEnriquecido', perfilEnriquecidoSchema)
 
-module.exports = PerfilEnriquecido
+export default PerfilEnriquecido

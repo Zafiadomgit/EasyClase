@@ -1,6 +1,6 @@
-const PerfilEnriquecido = require('../models/PerfilEnriquecido')
-const User = require('../models/User')
-const { validationResult } = require('express-validator')
+import PerfilEnriquecido from '../models/PerfilEnriquecido.js'
+import User from '../models/User.js'
+import { validationResult } from 'express-validator'
 
 // Obtener perfil enriquecido del usuario
 const obtenerPerfil = async (req, res) => {
@@ -271,7 +271,7 @@ const actualizarPrivacidad = async (req, res) => {
   }
 }
 
-module.exports = {
+export {
   obtenerPerfil,
   actualizarIntereses,
   actualizarObjetivos,

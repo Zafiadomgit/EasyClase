@@ -25,6 +25,15 @@ const ReservarClase = () => {
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ]
 
+  // Función para formatear precios
+  const formatPrecio = (precio) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }).format(precio)
+  }
+
   useEffect(() => {
     // Verificar autenticación
     if (!isAuthenticated) {
@@ -174,7 +183,7 @@ const ReservarClase = () => {
                 </div>
                 <div className="flex items-center">
                   <DollarSign className="w-4 h-4 mr-1" />
-                  <span className="font-semibold">${profesor.tarifa}/hora</span>
+                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}/hora</span>
                 </div>
               </div>
             </div>
@@ -287,7 +296,7 @@ const ReservarClase = () => {
                   disabled={reservando}
                   className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {reservando ? 'Procesando...' : `Continuar al Pago ($${costoTotal})`}
+                  {reservando ? 'Procesando...' : `Continuar al Pago (${formatPrecio(costoTotal)})`}
                 </button>
               </form>
             </div>
@@ -311,7 +320,7 @@ const ReservarClase = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Tarifa por hora:</span>
-                  <span className="font-semibold">${profesor.tarifa}</span>
+                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Duración:</span>
@@ -320,7 +329,7 @@ const ReservarClase = () => {
                 <hr className="my-3" />
                 <div className="flex justify-between text-lg font-bold text-primary-600">
                   <span>Total:</span>
-                  <span>${costoTotal}</span>
+                  <span>{formatPrecio(costoTotal)}</span>
                 </div>
               </div>
             </div>

@@ -1,186 +1,157 @@
-import React, { useState } from 'react'
-import { User, Users, Video, CheckCircle, Clock, DollarSign, Star } from 'lucide-react'
+import React from 'react'
+import { BookOpen, Users, Video, Clock, Star } from 'lucide-react'
 
-const LearningModeStep = ({ formData, updateFormData, onNext }) => {
-  const [selectedMode, setSelectedMode] = useState(formData.modalidad || '')
-
-  const modalidades = [
+const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
+  const learningModes = [
     {
       id: 'individual',
-      nombre: 'Clase Individual',
-      icon: <User className="w-10 h-10" />,
-      descripcion: 'Atención personalizada 1 a 1',
-      beneficios: [
-        'Atención personalizada completa',
-        'Ritmo adaptado a ti',
-        'Flexibilidad total de horarios',
-        'Enfoque en tus necesidades específicas'
-      ],
-      precio: 'Desde $30,000/hora',
-      popularidad: 'Más popular',
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-300',
-      textColor: 'text-blue-700',
-      popular: true
+      title: 'Clases Individuales',
+      description: 'Atención personalizada 1 a 1 con el profesor',
+      icon: BookOpen,
+      features: [
+        'Atención completamente personalizada',
+        'Horario flexible según tu disponibilidad',
+        'Ritmo de aprendizaje adaptado a ti',
+        'Feedback inmediato y directo'
+      ]
     },
     {
-      id: 'grupo',
-      nombre: 'Grupo Pequeño',
-      icon: <Users className="w-10 h-10" />,
-      descripcion: 'Aprende con 2-4 estudiantes más',
-      beneficios: [
+      id: 'grupal',
+      title: 'Clases Grupales',
+      description: 'Aprende con otros estudiantes (máximo 5 personas)',
+      icon: Users,
+      features: [
         'Interacción con otros estudiantes',
-        'Costo compartido más económico',
+        'Precio más económico',
         'Aprendizaje colaborativo',
-        'Ambiente dinámico y divertido'
-      ],
-      precio: 'Desde $15,000/hora',
-      popularidad: 'Económico',
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-300',
-      textColor: 'text-green-700'
+        'Máximo 5 estudiantes por grupo'
+      ]
     },
     {
-      id: 'grabada',
-      nombre: 'Sesión Grabada',
-      icon: <Video className="w-10 h-10" />,
-      descripcion: 'Contenido pre-grabado de calidad',
-      beneficios: [
-        'Ve las clases cuando quieras',
-        'Repite el contenido las veces que necesites',
-        'Precio fijo más accesible',
-        'Ideal para aprender a tu ritmo'
-      ],
-      precio: 'Desde $10,000/curso',
-      popularidad: 'Flexible',
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-300',
-      textColor: 'text-purple-700'
+      id: 'pregrabada',
+      title: 'Clases Pregrabadas',
+      description: 'Videos disponibles 24/7 para aprender a tu ritmo',
+      icon: Video,
+      features: [
+        'Acceso ilimitado 24/7',
+        'Aprende a tu propio ritmo',
+        'Puedes pausar y repetir',
+        'Contenido de alta calidad'
+      ]
     }
   ]
 
-  const handleModeSelect = (modalidad) => {
-    setSelectedMode(modalidad.id)
-    updateFormData({ modalidad: modalidad.id })
+  const handleModeSelect = (modeId) => {
+    onUpdate({ ...preferences, learningMode: modeId })
   }
 
-  const handleContinue = () => {
-    onNext()
+  const handleNext = () => {
+    if (preferences.learningMode) {
+      onNext()
+    }
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 font-display">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-secondary-900 mb-4">
           ¿Cómo prefieres aprender?
         </h2>
-        <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-          Cada modalidad tiene sus ventajas. Elige la que mejor se adapte a tu estilo y disponibilidad
+        <p className="text-lg text-secondary-600">
+          Selecciona el modo de aprendizaje que mejor se adapte a tu estilo
         </p>
       </div>
 
-      {/* Modes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {modalidades.map((modalidad) => {
-          const isSelected = selectedMode === modalidad.id
-          
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {learningModes.map((mode) => {
+          const Icon = mode.icon
+          const isSelected = preferences.learningMode === mode.id
+
           return (
-            <button
-              key={modalidad.id}
-              onClick={() => handleModeSelect(modalidad)}
-              className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-left ${
+            <div
+              key={mode.id}
+              onClick={() => handleModeSelect(mode.id)}
+              className={`relative p-6 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${
                 isSelected
-                  ? `${modalidad.borderColor} ${modalidad.bgColor} shadow-xl scale-105`
-                  : 'border-secondary-200 bg-white hover:border-primary-300'
+                  ? 'border-primary-500 bg-primary-50 shadow-lg'
+                  : 'border-secondary-300 hover:border-primary-300 hover:shadow-md'
               }`}
             >
-              {/* Popular badge */}
-              {modalidad.popular && (
-                <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                  ⭐ Más popular
-                </div>
-              )}
-
-              {/* Selected indicator */}
               {isSelected && (
-                <div className="absolute -top-2 -left-2 bg-primary-600 text-white rounded-full p-1.5">
-                  <CheckCircle className="w-5 h-5" />
+                <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                  <Star className="w-5 h-5 text-white" />
                 </div>
               )}
 
-              {/* Icon and header */}
-              <div className="mb-4">
-                <div className={`w-16 h-16 bg-gradient-to-br ${modalidad.color} rounded-2xl flex items-center justify-center text-white mb-4 transition-transform duration-300 ${
-                  isSelected ? 'scale-110' : 'group-hover:scale-110'
+              <div className="text-center mb-4">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
+                  isSelected ? 'bg-primary-100' : 'bg-secondary-100'
                 }`}>
-                  {modalidad.icon}
+                  <Icon className={`w-8 h-8 ${isSelected ? 'text-primary-600' : 'text-secondary-600'}`} />
                 </div>
-                
-                <h3 className={`text-xl font-bold mb-2 transition-colors ${
-                  isSelected ? modalidad.textColor : 'text-secondary-900 group-hover:text-primary-600'
-                }`}>
-                  {modalidad.nombre}
+                <h3 className="text-xl font-bold text-secondary-900 mb-2">
+                  {mode.title}
                 </h3>
-                
-                <p className="text-secondary-600 text-sm mb-3">
-                  {modalidad.descripcion}
+                <p className="text-secondary-600 text-sm">
+                  {mode.description}
                 </p>
-
-                {/* Popularidad badge */}
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  modalidad.popular ? 'bg-yellow-100 text-yellow-800' :
-                  modalidad.id === 'grupo' ? 'bg-green-100 text-green-800' :
-                  'bg-purple-100 text-purple-800'
-                }`}>
-                  <Star className="w-3 h-3 mr-1" />
-                  {modalidad.popularidad}
-                </span>
               </div>
 
-              {/* Price */}
-              <div className="mb-4 p-3 bg-secondary-50 rounded-lg">
-                <div className="flex items-center text-secondary-700">
-                  <DollarSign className="w-4 h-4 mr-1" />
-                  <span className="font-semibold text-sm">{modalidad.precio}</span>
-                </div>
-              </div>
-
-              {/* Benefits */}
-              <div className="space-y-2">
-                {modalidad.beneficios.map((beneficio, index) => (
-                  <div key={index} className="flex items-start text-sm text-secondary-600">
-                    <CheckCircle className="w-4 h-4 text-primary-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>{beneficio}</span>
-                  </div>
+              <ul className="space-y-2">
+                {mode.features.map((feature, index) => (
+                  <li key={index} className="flex items-start text-sm text-secondary-700">
+                    <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    {feature}
+                  </li>
                 ))}
-              </div>
-            </button>
+              </ul>
+            </div>
           )
         })}
       </div>
 
-      {/* Continue button */}
-      {selectedMode && (
-        <div className="text-center animate-fade-in">
-          <button
-            onClick={handleContinue}
-            className="inline-flex items-center px-8 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-300 hover:scale-105 shadow-lg"
-          >
-            Continuar
-            <CheckCircle className="w-5 h-5 ml-2" />
-          </button>
-        </div>
-      )}
-
-      {/* Help text */}
-      <div className="text-center">
-        <p className="text-sm text-secondary-500">
-          💡 Tip: Siempre puedes probar diferentes modalidades según el tema
+      {/* Información adicional */}
+      <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6 mb-8">
+        <h4 className="text-lg font-semibold text-secondary-900 mb-3 flex items-center">
+          <Clock className="w-5 h-5 mr-2 text-primary-600" />
+          ¿No estás seguro?
+        </h4>
+        <p className="text-secondary-700 mb-4">
+          Puedes cambiar tu preferencia en cualquier momento desde tu perfil. 
+          También puedes combinar diferentes modos de aprendizaje según tus necesidades.
         </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <span>Clases individuales: Mayor personalización</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+            <span>Clases grupales: Mejor precio</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+            <span>Pregrabadas: Máxima flexibilidad</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navegación */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={onBack}
+          className="px-6 py-3 text-secondary-700 hover:text-secondary-900 transition-colors"
+        >
+          ← Anterior
+        </button>
+        
+        <button
+          onClick={handleNext}
+          disabled={!preferences.learningMode}
+          className="px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          Continuar
+        </button>
       </div>
     </div>
   )

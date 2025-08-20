@@ -23,6 +23,15 @@ const Pago = () => {
     cvv: ''
   })
 
+  // Función para formatear precios
+  const formatPrecio = (precio) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }).format(precio)
+  }
+
   useEffect(() => {
     // Obtener datos de la reserva desde el state de navegación
     if (location.state && location.state.reserva && location.state.profesor) {
@@ -287,7 +296,7 @@ const Pago = () => {
                 ) : (
                   <>
                     <Lock className="w-5 h-5 mr-2" />
-                    Pagar ${reserva.costo} de forma segura
+                    Pagar {formatPrecio(reserva.costo)} de forma segura
                   </>
                 )}
               </button>
@@ -363,7 +372,7 @@ const Pago = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Tarifa por hora:</span>
-                  <span className="font-semibold">${profesor.tarifa}</span>
+                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Duración:</span>
@@ -371,7 +380,7 @@ const Pago = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Subtotal:</span>
-                  <span className="font-semibold">${reserva.costo}</span>
+                  <span className="font-semibold">{formatPrecio(reserva.costo)}</span>
                 </div>
                 <div className="flex justify-between text-green-600">
                   <span>Comisión de plataforma:</span>
@@ -380,7 +389,7 @@ const Pago = () => {
                 <hr className="my-3" />
                 <div className="flex justify-between text-lg font-bold text-primary-600">
                   <span>Total a pagar:</span>
-                  <span>${reserva.costo}</span>
+                  <span>{formatPrecio(reserva.costo)}</span>
                 </div>
               </div>
             </div>

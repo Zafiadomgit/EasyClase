@@ -12,6 +12,7 @@ import authRoutes from "./routes/auth.js";
 import profesorRoutes from "./routes/profesores.js";
 import claseRoutes from "./routes/clases.js";
 import servicioRoutes from "./routes/servicios.js";
+import perfilEnriquecidoRoutes from "./routes/perfilEnriquecido.js";
 import adminRoutes from "./routes/admin.js";
 
 // Importar modelos
@@ -73,6 +74,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profesores', profesorRoutes);
 app.use('/api/clases', claseRoutes);
 app.use('/api/servicios', servicioRoutes);
+app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Ruta de estado de la API

@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import SerProfesor from './pages/SerProfesor'
 import ReservarClase from './pages/ReservarClase'
 import BuscarServicios from './pages/BuscarServicios'
+import CrearServicio from './pages/CrearServicio'
 import OnboardingPage from './pages/OnboardingPage'
 import Pago from './pages/Pago'
 import ComoFunciona from './pages/ComoFunciona'
@@ -49,6 +50,7 @@ function App() {
               <Route index element={<Home />} />
               <Route path="/buscar" element={<BuscarClases />} />
               <Route path="/servicios" element={<BuscarServicios />} />
+              <Route path="/servicios/crear" element={<CrearServicio />} />
               <Route path="/profesor/:id" element={<PerfilProfesor />} />
               <Route path="/ser-profesor" element={<SerProfesor />} />
               <Route path="/reservar/:id" element={<ReservarClase />} />
