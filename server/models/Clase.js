@@ -64,6 +64,65 @@ const claseSchema = new mongoose.Schema({
     enum: ['pendiente', 'pagado', 'reembolsado', 'liberado'],
     default: 'pendiente'
   },
+  montoPagado: {
+    type: Number,
+    default: 0
+  },
+  fechaPago: {
+    type: Date,
+    default: null
+  },
+  transactionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Transaction',
+    default: null
+  },
+  // Sistema de Escrow
+  escrowStatus: {
+    type: String,
+    enum: ['pending', 'released', 'refunded', 'disputed', 'expired'],
+    default: null
+  },
+  escrowCreatedAt: {
+    type: Date,
+    default: null
+  },
+  escrowExpiresAt: {
+    type: Date,
+    default: null
+  },
+  escrowReleasedAt: {
+    type: Date,
+    default: null
+  },
+  escrowReleasedBy: {
+    type: String,
+    default: null
+  },
+  escrowRefundedAt: {
+    type: Date,
+    default: null
+  },
+  escrowRefundReason: {
+    type: String,
+    default: null
+  },
+  escrowDisputedAt: {
+    type: Date,
+    default: null
+  },
+  escrowDisputedBy: {
+    type: String,
+    default: null
+  },
+  escrowDisputeReason: {
+    type: String,
+    default: null
+  },
+  escrowExpiredAt: {
+    type: Date,
+    default: null
+  },
   // Enlaces para clase online
   enlaceReunion: {
     type: String,
@@ -108,6 +167,9 @@ claseSchema.index({ profesor: 1 });
 claseSchema.index({ fecha: 1 });
 claseSchema.index({ estado: 1 });
 claseSchema.index({ estadoPago: 1 });
+claseSchema.index({ escrowStatus: 1 });
+claseSchema.index({ escrowExpiresAt: 1 });
+claseSchema.index({ transactionId: 1 });
 
 // Middleware para calcular el total antes de guardar
 claseSchema.pre('save', function(next) {

@@ -3,6 +3,7 @@ import { verificarPago } from './mercadoPagoService.js';
 import Clase from '../models/Clase.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
+import { crearEscrow } from './escrowService.js';
 
 // Verificar la firma del webhook de MercadoPago
 const verificarFirmaWebhook = (req) => {
@@ -97,8 +98,17 @@ const procesarPagoAprobado = async (paymentData) => {
     
     await clase.save();
 
+    // Crear escrow automáticamente
+    try {
+      await crearEscrow(external_reference, transaction._id);
+      console.log(`🔒 Escrow creado automáticamente para clase: ${external_reference}`);
+    } catch (escrowError) {
+      console.error('Error creando escrow:', escrowError);
+      // No fallar el webhook por error en escrow
+    }
+
     // Notificar al profesor (aquí podrías enviar email/notificación)
-    console.log(`✅ Clase confirmada y pagada: ${external_reference}`);
+    console.log(`✅ Clase confirmada, pagada y escrow creado: ${external_reference}`);
     
     return { 
       success: true, 
