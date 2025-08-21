@@ -50,8 +50,8 @@ const procesarPagoAprobado = async (paymentData) => {
       return { success: true, message: 'Pago ya procesado' };
     }
 
-    // Calcular comisión (10%)
-    const comision = transaction_amount * 0.10;
+    // Calcular comisión (20%)
+    const comision = transaction_amount * 0.20;
     const montoNeto = transaction_amount - comision;
 
     // Crear registro de transacción

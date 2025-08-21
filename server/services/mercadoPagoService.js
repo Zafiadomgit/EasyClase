@@ -78,8 +78,8 @@ export const verificarPago = async (paymentId) => {
 // Nueva función para crear retiro de dinero para profesores
 export const crearRetiroProfesor = async ({ profesorId, monto, email }) => {
   try {
-    // Calcular el monto después de la comisión (asumiendo 10% de comisión)
-    const comision = 0.10; // 10% de comisión
+    // Calcular el monto después de la comisión (asumiendo 20% de comisión)
+const comision = 0.20; // 20% de comisión
     const montoNeto = monto * (1 - comision);
     
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -146,7 +146,7 @@ export const obtenerBalanceProfesor = async (profesorId) => {
     // Por ahora retornamos datos de ejemplo
     return {
       balanceDisponible: 150000, // Este valor vendría de la base de datos
-      comision: 0.10,
+      comision: 0.20,
       montoMinimoRetiro: 50000
     };
   } catch (error) {

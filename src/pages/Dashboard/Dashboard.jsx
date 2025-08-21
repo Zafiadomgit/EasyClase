@@ -352,7 +352,7 @@ const Dashboard = () => {
               {balanceDisponible > 0 && (
                 <div className="mt-2 text-xs text-secondary-500">
                   <p>Disponible: {formatPrecio(balanceDisponible)}</p>
-                  <p>Comisión: 10%</p>
+                  <p>Comisión: 20%</p>
                 </div>
               )}
               {isProfesor() && (
@@ -743,13 +743,13 @@ const Dashboard = () => {
                     <span className="font-semibold">{formatPrecio(montoRetiro)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-secondary-600">Comisión (10%):</span>
-                    <span className="text-red-600">-{formatPrecio(montoRetiro * 0.10)}</span>
+                    <span className="text-secondary-600">Comisión (20%):</span>
+                    <span className="text-red-600">-{formatPrecio(montoRetiro * 0.20)}</span>
                   </div>
                   <hr className="border-gray-300" />
                   <div className="flex justify-between font-bold">
                     <span className="text-secondary-900">Monto neto:</span>
-                    <span className="text-green-600">{formatPrecio(montoRetiro * 0.90)}</span>
+                    <span className="text-green-600">{formatPrecio(montoRetiro * 0.80)}</span>
                   </div>
                 </div>
               </div>

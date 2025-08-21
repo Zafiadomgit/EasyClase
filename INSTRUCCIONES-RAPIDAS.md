@@ -59,7 +59,7 @@ npm run dev
 1. **Accede al Dashboard** como profesor
 2. **Ve la tarjeta "Ingresos Totales"** 
 3. **Haz clic en "Retirar Dinero"**
-4. **Confirma en el modal** (monto - 10% comisión = neto)
+4. **Confirma en el modal** (monto - 20% comisión = neto)
 5. **Completa en MercadoPago**
 
 ### **Configuración MercadoPago:**
@@ -98,7 +98,7 @@ git push origin main
 - ✅ Gestión de perfil
 - ✅ Dashboard con estadísticas
 - ✅ **🆕 Retiro de ganancias**
-- ✅ **🆕 Comisión automática 10%**
+- ✅ **🆕 Comisión automática 20%**
 
 ## 🚨 Solución de Problemas
 

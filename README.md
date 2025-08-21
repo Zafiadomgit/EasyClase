@@ -16,7 +16,7 @@ Una plataforma moderna para conectar estudiantes con profesores verificados. Des
 - ✅ Gestión de solicitudes de clases
 - ✅ Dashboard con estadísticas
 - ✅ **🆕 Sistema de retiro de ganancias**
-- ✅ **🆕 Comisión automática del 10%**
+- ✅ **🆕 Comisión automática del 20%**
 - ✅ **🆕 Integración directa con MercadoPago**
 
 ## 🚀 Instalación Rápida
@@ -40,7 +40,7 @@ npm run dev
 ## 💰 Sistema de Monetización
 
 ### **Retiro de Ganancias para Profesores:**
-- **Comisión**: 10% automática por transacción
+- **Comisión**: 20% automática por transacción
 - **Retiro mínimo**: $50.000 COP
 - **Proceso**: Integración directa con MercadoPago
 - **Tiempo**: 24-48 horas de procesamiento

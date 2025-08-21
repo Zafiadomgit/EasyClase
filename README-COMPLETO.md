@@ -39,7 +39,7 @@ Una plataforma moderna y completa para conectar estudiantes con profesores verif
 - ✅ Sistema de calificaciones
 - ✅ Notificaciones de estado
 - ✅ **Retiro de ganancias para profesores** 🆕
-- ✅ **Comisión automática del 10%** 🆕
+- ✅ **Comisión automática del 20%** 🆕
 - ✅ **Integración directa con MercadoPago** 🆕
 
 ## 📁 Estructura del Proyecto
@@ -132,7 +132,7 @@ El sistema creará automáticamente las colecciones necesarias al ejecutarse por
 - **Base de Datos NoSQL** - MongoDB con Mongoose
 - **Pagos Seguros** - MercadoPago con webhook verification
 - **🆕 Retiros Automáticos** - Integración directa con MercadoPago
-- **🆕 Cálculo de Comisiones** - 10% automático en retiros
+- **🆕 Cálculo de Comisiones** - 20% automático en retiros
 - **Responsive Design** - Optimizado para móvil y desktop
 - **Estado en Tiempo Real** - Actualizaciones automáticas
 - **Validaciones** - Cliente y servidor
@@ -141,7 +141,7 @@ El sistema creará automáticamente las colecciones necesarias al ejecutarse por
 ## 💰 **Sistema de Monetización**
 
 ### **Comisiones y Retiros:**
-- **Comisión por transacción**: 10% automática
+- **Comisión por transacción**: 20% automática
 - **Retiro mínimo**: $50.000 COP
 - **Proceso de retiro**: Integración directa con MercadoPago
 - **Tiempo de procesamiento**: 24-48 horas
@@ -255,7 +255,7 @@ npm start
 ### **Sistema de Retiro de Dinero:**
 - ✅ Botón "Retirar Dinero" en dashboard de profesores
 - ✅ Modal de confirmación con desglose de comisiones
-- ✅ Cálculo automático: monto - 10% comisión = neto
+- ✅ Cálculo automático: monto - 20% comisión = neto
 - ✅ Integración directa con MercadoPago
 - ✅ Estados de carga y manejo de errores
 - ✅ Información de balance disponible en tiempo real
