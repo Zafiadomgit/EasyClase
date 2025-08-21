@@ -1,136 +1,88 @@
-# EasyClase Frontend
+# 🎓 EasyClase - Plataforma de Clases Particulares
 
-Frontend moderno para la plataforma EasyClase - Conectando estudiantes con profesores verificados.
+Una plataforma moderna para conectar estudiantes con profesores verificados. Desarrollada con React, Node.js, Express, MongoDB y MercadoPago.
 
-## 🚀 Características
+## ✨ Características Principales
 
-- **Diseño Moderno**: Interfaz limpia y responsive con Tailwind CSS
-- **Navegación Intuitiva**: Flujos de usuario optimizados para estudiantes y profesores
-- **Componentes Reutilizables**: Arquitectura modular y escalable
-- **Autenticación**: Sistema completo de login y registro
-- **Dashboard Personalizado**: Paneles específicos para estudiantes y profesores
-- **Sistema de Búsqueda**: Filtros avanzados para encontrar clases y profesores
-- **Responsive Design**: Optimizado para móviles, tablets y desktop
+### 🎯 **Para Estudiantes:**
+- ✅ Búsqueda avanzada de profesores
+- ✅ Sistema de reservas integrado
+- ✅ Pagos seguros con MercadoPago
+- ✅ Sistema de calificaciones
+- ✅ Dashboard personal
+
+### 👨‍🏫 **Para Profesores:**
+- ✅ Perfil profesional personalizable
+- ✅ Gestión de solicitudes de clases
+- ✅ Dashboard con estadísticas
+- ✅ **🆕 Sistema de retiro de ganancias**
+- ✅ **🆕 Comisión automática del 10%**
+- ✅ **🆕 Integración directa con MercadoPago**
+
+## 🚀 Instalación Rápida
+
+```bash
+# Clonar repositorio
+git clone https://github.com/tu-usuario/easyclase.git
+cd easyclase
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp env.example .env
+# Editar .env con tus credenciales
+
+# Ejecutar en desarrollo
+npm run dev
+```
+
+## 💰 Sistema de Monetización
+
+### **Retiro de Ganancias para Profesores:**
+- **Comisión**: 10% automática por transacción
+- **Retiro mínimo**: $50.000 COP
+- **Proceso**: Integración directa con MercadoPago
+- **Tiempo**: 24-48 horas de procesamiento
+
+### **Flujo de Retiro:**
+1. Profesor ve sus ingresos en el dashboard
+2. Hace clic en "Retirar Dinero"
+3. Modal muestra desglose de comisiones
+4. Confirma y se redirige a MercadoPago
+5. Completa el retiro de forma segura
 
 ## 🛠 Tecnologías
 
-- **React 18** - Biblioteca de interfaz de usuario
-- **Vite** - Herramienta de desarrollo rápida
-- **Tailwind CSS** - Framework de CSS utility-first
-- **React Router** - Navegación y rutas
-- **Lucide React** - Iconos modernos
-- **HeadlessUI** - Componentes accesibles
+- **Frontend**: React 18, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, MongoDB
+- **Pagos**: MercadoPago
+- **Autenticación**: JWT
+- **Deploy**: Vercel
 
-## 📋 Requisitos Previos
+## 📱 Funcionalidades
 
-- Node.js 18+ 
-- npm o yarn
+- 🔐 Autenticación segura
+- 🔍 Búsqueda avanzada con filtros
+- 💳 Pagos y retiros automáticos
+- 📊 Dashboard con estadísticas
+- ⭐ Sistema de calificaciones
+- 📱 Diseño responsive
+- 🔔 Notificaciones en tiempo real
 
-## 🚀 Instalación y Configuración
+## 🚀 Deploy
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone [url-del-repositorio]
-   cd easyclase-frontend
-   ```
+El proyecto está configurado para deploy automático en Vercel:
 
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+1. Conecta tu repositorio a Vercel
+2. Configura las variables de entorno
+3. ¡Listo! Deploy automático en cada push
 
-3. **Configurar variables de entorno** (opcional)
-   ```bash
-   cp .env.example .env
-   ```
+## 📄 Licencia
 
-4. **Ejecutar en modo desarrollo**
-   ```bash
-   npm run dev
-   ```
+MIT License - ver [LICENSE](LICENSE) para más detalles.
 
-5. **Abrir en el navegador**
-   ```
-   http://localhost:3001
-   ```
-
-## 📁 Estructura del Proyecto
-
-```
-src/
-├── components/          # Componentes reutilizables
-│   └── Layout/         # Componentes de layout (Header, Footer)
-├── pages/              # Páginas principales
-│   ├── Auth/           # Páginas de autenticación
-│   ├── Dashboard/      # Panel de usuario
-│   └── ...             # Otras páginas
-├── styles/             # Estilos globales
-├── utils/              # Utilidades y helpers
-└── App.jsx             # Componente principal
-```
-
-## 🎨 Sistema de Diseño
-
-El proyecto utiliza un sistema de diseño consistente con:
-
-- **Colores Primarios**: Azules (#0ea5e9, #0284c7)
-- **Colores Secundarios**: Grises (#64748b, #475569)
-- **Tipografía**: Inter (texto) y Poppins (títulos)
-- **Espaciado**: Sistema basado en rem/px de Tailwind
-- **Componentes**: Botones, tarjetas, formularios estandarizados
-
-## 📱 Páginas Implementadas
-
-- ✅ **Página de Inicio** - Landing page con propuesta de valor
-- ✅ **Buscar Clases** - Sistema de búsqueda con filtros
-- ✅ **Perfil de Profesor** - Vista detallada del profesor
-- ✅ **Login/Registro** - Autenticación de usuarios
-- ✅ **Dashboard** - Panel personalizado para estudiantes y profesores
-
-## 🔗 Integración con Backend
-
-El frontend está configurado para conectarse con el backend en:
-- **Desarrollo**: `http://localhost:3000`
-- **Producción**: [URL del backend en producción]
-
-Las rutas de API están proxy configuradas en Vite para facilitar el desarrollo.
-
-## 🚀 Scripts Disponibles
-
-```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build para producción
-npm run preview      # Preview del build
-npm run lint         # Linter de código
-```
-
-## 📝 Próximos Pasos
-
-- [ ] Integrar con API real del backend
-- [ ] Implementar sistema de pagos (MercadoPago)
-- [ ] Añadir notificaciones en tiempo real
-- [ ] Implementar chat en vivo
-- [ ] Agregar sistema de calificaciones
-- [ ] Optimizar para SEO
-- [ ] Añadir tests unitarios
-
-## 🎯 Flujos de Usuario Implementados
-
-### Estudiante
-1. Registro/Login
-2. Búsqueda de clases
-3. Vista de perfil de profesor
-4. Reserva de clases
-5. Dashboard personal
-
-### Profesor
-1. Registro/Login como profesor
-2. Configuración de perfil
-3. Gestión de disponibilidad
-4. Dashboard con estadísticas
-5. Gestión de solicitudes
-
-## 🤝 Contribución
+## 🤝 Contribuir
 
 1. Fork el proyecto
 2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
@@ -138,15 +90,13 @@ npm run lint         # Linter de código
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+## 📞 Soporte
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE.md](LICENSE.md) para detalles.
-
-## 📞 Contacto
-
-- Email: hola@easyclase.com
-- Website: [easyclase.com](https://easyclase.com)
+- 📧 Email: hola@easyclase.com
+- 📱 WhatsApp: +57 300 123 4567
 
 ---
 
-**EasyClase** - Aprende habilidades útiles, paga por hora, sin riesgos.
+**EasyClase** - Aprende habilidades útiles, paga por hora, sin riesgos. 🎓✨
+
+**¡Ahora con sistema completo de retiro de ganancias!** 💰🚀
