@@ -37,6 +37,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app = express();
+
+// Configurar trust proxy para Vercel
+app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -55,13 +59,19 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting configurado para Vercel
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100, // máximo 100 requests por IP
   message: {
     success: false,
     message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo en 15 minutos.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Configurar para funcionar con proxies de Vercel
+  keyGenerator: (req) => {
+    return req.ip || req.connection.remoteAddress || 'unknown';
   }
 });
 app.use('/api/', limiter);

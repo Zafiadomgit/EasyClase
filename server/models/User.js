@@ -133,8 +133,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índices para búsquedas eficientes
-userSchema.index({ email: 1 });
+// Índices para búsquedas eficientes (email ya tiene índice único por unique: true)
 userSchema.index({ tipoUsuario: 1 });
 userSchema.index({ especialidades: 1 });
 userSchema.index({ calificacionPromedio: -1 });

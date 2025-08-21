@@ -134,8 +134,7 @@ const transactionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índices para optimizar consultas
-transactionSchema.index({ transactionId: 1 });
+// Índices para optimizar consultas (transactionId ya tiene índice único por unique: true)
 transactionSchema.index({ mercadoPagoId: 1 });
 transactionSchema.index({ externalReference: 1 });
 transactionSchema.index({ type: 1, status: 1 });
