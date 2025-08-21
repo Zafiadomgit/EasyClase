@@ -142,7 +142,7 @@ const SerProfesor = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-lg">
-              <div className="text-4xl font-bold text-primary-600 mb-2">$25-80</div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">$25.000 - $80.000</div>
               <p className="text-secondary-600">Ganancia promedio por hora</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-lg">

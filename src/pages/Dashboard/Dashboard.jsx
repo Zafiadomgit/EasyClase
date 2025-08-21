@@ -21,7 +21,7 @@ import {
   Bug
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { claseService, servicioService } from '../../services/api'
+import { claseService, servicioService, profesorService } from '../../services/api'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 
 // Componente de prueba para Sentry
@@ -50,6 +50,10 @@ const Dashboard = () => {
   const [showVideoCall, setShowVideoCall] = useState(false)
   const [selectedClaseId, setSelectedClaseId] = useState(null)
   const [mensajeExito, setMensajeExito] = useState('')
+  const [balanceDisponible, setBalanceDisponible] = useState(0)
+  const [loadingRetiro, setLoadingRetiro] = useState(false)
+  const [showRetiroModal, setShowRetiroModal] = useState(false)
+  const [montoRetiro, setMontoRetiro] = useState(0)
 
   useEffect(() => {
     cargarDatos()
@@ -77,6 +81,17 @@ const Dashboard = () => {
         // Si falla, solo logueamos, no es crítico
         console.log('Error cargando servicios:', serviciosError)
         setServicios([])
+      }
+
+      // Obtener balance si es profesor
+      if (isProfesor()) {
+        try {
+          const balanceResponse = await profesorService.obtenerBalance()
+          setBalanceDisponible(balanceResponse.data?.balanceDisponible || 0)
+        } catch (balanceError) {
+          console.log('Error cargando balance:', balanceError)
+          setBalanceDisponible(0)
+        }
       }
     } catch (error) {
       console.error('Error cargando datos:', error)
@@ -178,6 +193,35 @@ const Dashboard = () => {
   const salirDeVideoLlamada = () => {
     setShowVideoCall(false)
     setSelectedClaseId(null)
+  }
+
+  const handleRetirarDinero = (monto) => {
+    setMontoRetiro(monto)
+    setShowRetiroModal(true)
+  }
+
+  const confirmarRetiro = async () => {
+    try {
+      setLoadingRetiro(true)
+      setShowRetiroModal(false)
+
+      // Crear el retiro
+      const response = await profesorService.crearRetiro(montoRetiro)
+      
+      if (response.success && response.data.init_point) {
+        // Redirigir a MercadoPago
+        window.open(response.data.init_point, '_blank')
+        
+        setMensajeExito('Retiro iniciado correctamente. Completa el proceso en MercadoPago.')
+      } else {
+        throw new Error('Error al crear el retiro')
+      }
+    } catch (error) {
+      console.error('Error retirando dinero:', error)
+      setError('Error al procesar el retiro. Intenta nuevamente.')
+    } finally {
+      setLoadingRetiro(false)
+    }
   }
 
   // Filtrar clases por estado
@@ -301,10 +345,39 @@ const Dashboard = () => {
               <p className="text-2xl font-bold text-secondary-900">{new Set(clasesCompletadas.map(c => c.estudiante)).size}</p>
               <p className="text-secondary-600">Estudiantes Únicos</p>
             </div>
-            <div className="card text-center">
+            <div className="card text-center relative">
               <TrendingUp className="w-8 h-8 text-primary-600 mx-auto mb-3" />
               <p className="text-2xl font-bold text-secondary-900">{formatPrecio(estadisticas.ingresoTotal)}</p>
               <p className="text-secondary-600">Ingresos Totales</p>
+              {balanceDisponible > 0 && (
+                <div className="mt-2 text-xs text-secondary-500">
+                  <p>Disponible: {formatPrecio(balanceDisponible)}</p>
+                  <p>Comisión: 10%</p>
+                </div>
+              )}
+              {estadisticas.ingresoTotal > 0 && (
+                <button 
+                  onClick={() => handleRetirarDinero(estadisticas.ingresoTotal)}
+                  disabled={loadingRetiro}
+                  className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${
+                    loadingRetiro 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                >
+                  {loadingRetiro ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Retirar Dinero
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div className="card text-center">
               <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
@@ -651,6 +724,69 @@ const Dashboard = () => {
           claseId={selectedClaseId} 
           onLeave={salirDeVideoLlamada}
         />
+      )}
+
+      {/* Modal de Confirmación de Retiro */}
+      {showRetiroModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <div className="text-center">
+              <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                Confirmar Retiro de Dinero
+              </h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-secondary-600">Monto a retirar:</span>
+                    <span className="font-semibold">{formatPrecio(montoRetiro)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-secondary-600">Comisión (10%):</span>
+                    <span className="text-red-600">-{formatPrecio(montoRetiro * 0.10)}</span>
+                  </div>
+                  <hr className="border-gray-300" />
+                  <div className="flex justify-between font-bold">
+                    <span className="text-secondary-900">Monto neto:</span>
+                    <span className="text-green-600">{formatPrecio(montoRetiro * 0.90)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-secondary-600 mb-6">
+                Serás redirigido a MercadoPago para completar el retiro de forma segura.
+              </p>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowRetiroModal(false)}
+                  className="flex-1 px-4 py-2 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarRetiro}
+                  disabled={loadingRetiro}
+                  className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+                    loadingRetiro 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                >
+                  {loadingRetiro ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
+                      Procesando...
+                    </>
+                  ) : (
+                    'Confirmar Retiro'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

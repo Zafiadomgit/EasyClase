@@ -149,6 +149,19 @@ export const profesorService = {
   obtenerCategorias: async () => {
     return await apiRequest('/profesores/categorias');
   },
+
+  // Obtener balance disponible para retiro
+  obtenerBalance: async () => {
+    return await apiRequest('/profesores/balance');
+  },
+
+  // Crear retiro de dinero
+  crearRetiro: async (monto) => {
+    return await apiRequest('/profesores/retirar', {
+      method: 'POST',
+      body: JSON.stringify({ monto }),
+    });
+  },
 };
 
 // Servicios de clases
