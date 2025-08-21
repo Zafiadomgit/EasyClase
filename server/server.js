@@ -25,24 +25,33 @@ import Review from "./models/Review.js";
 // Importar servicios
 import { verificarPago } from "./services/mercadoPagoService.js";
 
+// Configuración específica para Vercel
+import { vercelConfig, validateConfig } from './vercel-config.js';
+
+// Cargar variables de entorno
 dotenv.config();
+
+// Validar configuración en producción
+if (process.env.NODE_ENV === 'production') {
+  validateConfig();
+}
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    origin: vercelConfig.FRONTEND_URL || process.env.FRONTEND_URL || "http://localhost:3001",
     methods: ["GET", "POST"]
   }
 });
-const PORT = process.env.PORT || 3000;
+const PORT = vercelConfig.PORT || process.env.PORT || 3000;
 
 // Middleware de seguridad
 app.use(helmet());
 
 // CORS configurado para el frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  origin: vercelConfig.FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3001',
   credentials: true
 }));
 
@@ -62,12 +71,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Conectar a MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/easyclase')
+mongoose.connect(vercelConfig.MONGODB_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/easyclase')
   .then(() => {
     console.log('✅ Conectado a MongoDB');
+    console.log('🌍 Entorno:', vercelConfig.NODE_ENV);
+    console.log('🔗 Base de datos:', vercelConfig.MONGODB_URI ? 'MongoDB Atlas' : 'Local');
   })
   .catch((error) => {
     console.error('❌ Error conectando a MongoDB:', error);
+    if (process.env.NODE_ENV === 'production') {
+      console.error('🚨 Error crítico en producción - Verificar variables de entorno en Vercel');
+    }
     process.exit(1);
   });
 
