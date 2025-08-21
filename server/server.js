@@ -14,6 +14,7 @@ import claseRoutes from "./routes/clases.js";
 import servicioRoutes from "./routes/servicios.js";
 import perfilEnriquecidoRoutes from "./routes/perfilEnriquecido.js";
 import adminRoutes from "./routes/admin.js";
+import transactionRoutes from "./routes/transactions.js";
 
 // Importar modelos
 import User from "./models/User.js";
@@ -76,6 +77,7 @@ app.use('/api/clases', claseRoutes);
 app.use('/api/servicios', servicioRoutes);
 app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Ruta de estado de la API
 app.get('/api/status', (req, res) => {
@@ -87,40 +89,11 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Importar el servicio de webhooks
+import { procesarWebhook } from './services/webhookService.js';
+
 // Webhook de MercadoPago mejorado
-app.post("/webhook", async (req, res) => {
-  try {
-    console.log("Notificación de MercadoPago recibida:", req.body);
-
-    const { data, type } = req.body;
-
-    if (type === 'payment') {
-      const paymentId = data.id;
-      
-      // Verificar el pago con MercadoPago
-      const paymentData = await verificarPago(paymentId);
-      
-      if (paymentData.status === 'approved') {
-        // Buscar la clase por external_reference
-        const claseId = paymentData.external_reference;
-        const clase = await Clase.findById(claseId);
-        
-        if (clase) {
-          clase.estadoPago = 'pagado';
-          clase.pagoId = paymentId;
-          await clase.save();
-          
-          console.log(`✅ Pago confirmado para clase ${claseId}`);
-        }
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("Error procesando webhook:", error);
-    res.sendStatus(500);
-  }
-});
+app.post("/webhook", procesarWebhook);
 
 // Ruta legacy para crear pago (mantenida por compatibilidad)
 app.post("/crear-pago", async (req, res) => {
