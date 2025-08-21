@@ -355,12 +355,12 @@ const Dashboard = () => {
                   <p>Comisión: 10%</p>
                 </div>
               )}
-              {estadisticas.ingresoTotal > 0 && (
+              {isProfesor() && (
                 <button 
-                  onClick={() => handleRetirarDinero(estadisticas.ingresoTotal)}
-                  disabled={loadingRetiro}
+                  onClick={() => handleRetirarDinero(estadisticas.ingresoTotal || balanceDisponible)}
+                  disabled={loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)}
                   className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${
-                    loadingRetiro 
+                    loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)
                       ? 'bg-gray-400 cursor-not-allowed' 
                       : 'bg-green-600 hover:bg-green-700'
                   }`}
@@ -373,7 +373,7 @@ const Dashboard = () => {
                   ) : (
                     <>
                       <DollarSign className="w-4 h-4 mr-2" />
-                      Retirar Dinero
+                      {estadisticas.ingresoTotal === 0 && balanceDisponible === 0 ? 'Sin fondos disponibles' : 'Retirar Dinero'}
                     </>
                   )}
                 </button>
