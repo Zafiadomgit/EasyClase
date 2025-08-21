@@ -3,6 +3,7 @@ import Clase from '../models/Clase.js';
 import Review from '../models/Review.js';
 import Servicio from '../models/Servicio.js';
 import mongoose from 'mongoose';
+import { COMISIONES } from '../config/comisiones.js';
 
 // Dashboard principal del admin
 export const getDashboardStats = async (req, res) => {
@@ -524,7 +525,7 @@ export const exportarClases = async (req, res) => {
       modalidad: clase.modalidad,
       duracion: clase.duracion,
       fechaSolicitud: clase.fechaSolicitud.toISOString().split('T')[0],
-      comision: (clase.precio * 0.10).toFixed(0)
+      comision: (clase.precio * COMISIONES.CLASES).toFixed(0)
     }));
 
     if (formato === 'csv') {
@@ -583,7 +584,7 @@ export const exportarServicios = async (req, res) => {
       totalVentas: servicio.totalVentas || 0,
       calificacionPromedio: servicio.calificacionPromedio || 0,
       fechaCreacion: servicio.createdAt.toISOString().split('T')[0],
-      comisionTotal: ((servicio.precio * 0.10) * (servicio.totalVentas || 0)).toFixed(0)
+      comisionTotal: ((servicio.precio * COMISIONES.SERVICIOS.ESTANDAR) * (servicio.totalVentas || 0)).toFixed(0)
     }));
 
     if (formato === 'csv') {
@@ -658,8 +659,8 @@ export const exportarReporteFinanciero = async (req, res) => {
         cliente: clase.estudiante?.nombre || 'N/A',
         proveedor: clase.profesor?.nombre || 'N/A',
         monto: clase.precio,
-        comision: (clase.precio * 0.10).toFixed(0),
-        ganancia: (clase.precio * 0.10).toFixed(0),
+        comision: (clase.precio * COMISIONES.CLASES).toFixed(0),
+        ganancia: (clase.precio * COMISIONES.CLASES).toFixed(0),
         fecha: clase.fechaClase.toISOString().split('T')[0]
       });
     });
@@ -667,7 +668,7 @@ export const exportarReporteFinanciero = async (req, res) => {
     // Agregar servicios
     serviciosVendidos.forEach(servicio => {
       const montoTotal = servicio.precio * servicio.totalVentas;
-      const comisionTotal = montoTotal * 0.10;
+      const comisionTotal = montoTotal * COMISIONES.SERVICIOS.ESTANDAR;
       
       data.push({
         tipo: 'Servicio',

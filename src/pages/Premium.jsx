@@ -59,7 +59,7 @@ const Premium = () => {
     {
       icon: <Target className="w-6 h-6 text-amber-600" />,
       titulo: "Comisión Reducida",
-      descripcion: "Solo 7% de comisión en servicios (vs 10% estándar)"
+      descripcion: "Solo 15% de comisión en servicios (vs 20% estándar)"
     },
     {
       icon: <span className="text-2xl">✏️</span>,

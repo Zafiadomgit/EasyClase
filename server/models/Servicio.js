@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { COMISIONES } from '../config/comisiones.js';
 
 const servicioSchema = new mongoose.Schema({
   titulo: {
@@ -162,8 +163,8 @@ servicioSchema.methods.calcularComision = async function() {
   await this.populate('proveedor', 'premium');
   const esPremium = this.proveedor?.premium || false;
   
-  // Comisión: 7% para premium, 10% para usuarios regulares
-  const porcentajeComision = esPremium ? 0.07 : 0.10;
+  // Comisión: 15% para premium, 20% para usuarios regulares
+  const porcentajeComision = esPremium ? COMISIONES.PREMIUM : COMISIONES.ESTANDAR;
   return this.precio * porcentajeComision;
 };
 

@@ -10,12 +10,12 @@ import {
   registrarBusqueda,
   actualizarPrivacidad
 } from '../controllers/perfilEnriquecidoController.js'
-import { requireAuth } from '../middleware/auth.js'
+import { verifyToken } from '../controllers/authController.js'
 
 const router = express.Router()
 
 // Middleware de autenticación para todas las rutas
-router.use(requireAuth)
+router.use(verifyToken)
 
 // Validaciones
 const interesesValidation = [

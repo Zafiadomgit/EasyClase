@@ -628,7 +628,7 @@ const Home = () => {
                   <Target className="w-6 h-6 text-amber-600" />
                 </div>
                 <h4 className="font-semibold text-secondary-900 mb-2">Solo 7% Comisión</h4>
-                <p className="text-sm text-secondary-600">vs 10% estándar</p>
+                <p className="text-sm text-secondary-600">vs 20% estándar</p>
               </div>
               
               <div className="text-center">

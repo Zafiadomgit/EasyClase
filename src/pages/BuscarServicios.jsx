@@ -377,7 +377,7 @@ const BuscarServicios = () => {
                           </p>
                           {esPremium && (
                             <p className="text-xs text-green-600">
-                              Solo 7% comisión (vs 10% estándar)
+                              Solo 15% comisión (vs 20% estándar)
                             </p>
                           )}
                         </div>
