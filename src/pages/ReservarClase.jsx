@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Star, Clock, DollarSign, Shield, Calendar, User, CheckCircle, AlertCircle } from 'lucide-react'
+import { Star, Clock, DollarSign, Shield, Calendar, User, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import ChatModal from '../components/Chat/ChatModal'
 
 const ReservarClase = () => {
   const { profesorId } = useParams()
@@ -11,6 +12,7 @@ const ReservarClase = () => {
   const [loading, setLoading] = useState(true)
   const [reservando, setReservando] = useState(false)
   const [error, setError] = useState('')
+  const [showChat, setShowChat] = useState(false)
 
   const [reservaData, setReservaData] = useState({
     fecha: '',
@@ -37,7 +39,9 @@ const ReservarClase = () => {
   useEffect(() => {
     // Verificar autenticación
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/login', { 
+        state: { from: { pathname: `/reservar/${profesorId}` } }
+      })
       return
     }
 
@@ -123,6 +127,18 @@ const ReservarClase = () => {
       ...reservaData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleSendMessage = async (message) => {
+    try {
+      // Aquí se implementaría el envío real del mensaje a la API
+      console.log('Mensaje enviado:', message)
+      // Por ahora solo simulamos el envío exitoso
+      return Promise.resolve()
+    } catch (error) {
+      console.error('Error enviando mensaje:', error)
+      throw error
+    }
   }
 
   if (loading) {
@@ -362,7 +378,7 @@ const ReservarClase = () => {
               <h3 className="text-lg font-bold text-secondary-900 mb-4">Sobre el profesor</h3>
               <p className="text-sm text-secondary-600 mb-4">{profesor.descripcion}</p>
               
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm mb-4">
                 <div>
                   <span className="font-semibold text-secondary-700">Certificaciones:</span>
                   <p className="text-secondary-600">{profesor.certificaciones.join(', ')}</p>
@@ -372,10 +388,29 @@ const ReservarClase = () => {
                   <p className="text-secondary-600">{profesor.idiomas.join(', ')}</p>
                 </div>
               </div>
+
+              {/* Botón de Chat */}
+              <button
+                onClick={() => setShowChat(true)}
+                className="w-full flex items-center justify-center space-x-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 px-4 py-3 rounded-lg transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Enviar mensaje al profesor</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      {showChat && (
+        <ChatModal
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+          onSendMessage={handleSendMessage}
+          profesor={profesor}
+        />
+      )}
     </div>
   )
 }

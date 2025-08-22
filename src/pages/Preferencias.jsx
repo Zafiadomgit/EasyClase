@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { userService } from '../services/api'
 import { Settings, Bell, Globe, Palette, CheckCircle, AlertCircle } from 'lucide-react'
@@ -6,6 +6,7 @@ import { Settings, Bell, Globe, Palette, CheckCircle, AlertCircle } from 'lucide
 const Preferencias = () => {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
   
@@ -34,12 +35,58 @@ const Preferencias = () => {
     colorScheme: 'default'
   })
 
+  // Cargar preferencias al montar el componente
+  useEffect(() => {
+    if (user) {
+      cargarPreferencias()
+    }
+  }, [user])
+
+  const cargarPreferencias = async () => {
+    try {
+      setInitialLoading(true)
+      const response = await userService.obtenerPreferencias()
+      
+      if (response.data) {
+        const { notifications, language, theme } = response.data
+        
+        if (notifications) {
+          setNotificationSettings(prev => ({ ...prev, ...notifications }))
+        }
+        if (language) {
+          setLanguageSettings(prev => ({ ...prev, ...language }))
+        }
+        if (theme) {
+          setThemeSettings(prev => ({ ...prev, ...theme }))
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando preferencias:', error)
+      // Si no se pueden cargar, usamos los valores por defecto
+    } finally {
+      setInitialLoading(false)
+    }
+  }
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-secondary-900 mb-4">Acceso Denegado</h2>
           <p className="text-secondary-600">Debes iniciar sesión para acceder a tus preferencias.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-secondary-600">Cargando preferencias...</p>
+          </div>
         </div>
       </div>
     )
@@ -72,20 +119,46 @@ const Preferencias = () => {
       setError('')
       setSuccess('')
       
-      // Aquí iría la llamada a la API para guardar las preferencias
-      // await userService.actualizarPreferencias({
-      //   notifications: notificationSettings,
-      //   language: languageSettings,
-      //   theme: themeSettings
-      // })
+      const preferencias = {
+        notifications: notificationSettings,
+        language: languageSettings,
+        theme: themeSettings
+      }
+      
+      await userService.actualizarPreferencias(preferencias)
       
       setSuccess('Preferencias guardadas exitosamente')
+      
+      // Limpiar mensaje de éxito después de 3 segundos
+      setTimeout(() => setSuccess(''), 3000)
     } catch (error) {
       setError(error.message || 'Error al guardar las preferencias')
+      
+      // Limpiar mensaje de error después de 5 segundos
+      setTimeout(() => setError(''), 5000)
     } finally {
       setLoading(false)
     }
   }
+
+  // Aplicar cambios de tema en tiempo real
+  useEffect(() => {
+    if (themeSettings.theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [themeSettings.theme])
+
+  useEffect(() => {
+    if (themeSettings.fontSize === 'small') {
+      document.documentElement.style.fontSize = '14px'
+    } else if (themeSettings.fontSize === 'large') {
+      document.documentElement.style.fontSize = '18px'
+    } else {
+      document.documentElement.style.fontSize = '16px'
+    }
+  }, [themeSettings.fontSize])
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

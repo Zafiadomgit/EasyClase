@@ -144,6 +144,19 @@ export const userService = {
   obtenerEstadisticas: async () => {
     return await apiRequest('/auth/estadisticas');
   },
+
+  // Obtener preferencias del usuario
+  obtenerPreferencias: async () => {
+    return await apiRequest('/auth/preferencias');
+  },
+
+  // Actualizar preferencias del usuario
+  actualizarPreferencias: async (preferencias) => {
+    return await apiRequest('/auth/preferencias', {
+      method: 'PUT',
+      body: JSON.stringify(preferencias),
+    });
+  },
 };
 
 // Servicios de profesores
