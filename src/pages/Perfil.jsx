@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { userService } from '../services/api'
 import { User, Edit, Calendar, Star, Crown, Shield, Settings, LogOut } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const Perfil = () => {
   const { user, logout } = useAuth()
@@ -153,44 +154,50 @@ const Perfil = () => {
 
       {/* Acciones Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <Calendar className="w-8 h-8 text-primary-600 mr-3" />
-            <h3 className="text-lg font-semibold text-secondary-900">Mis Clases</h3>
+        <Link to="/mis-clases" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center mb-4">
+              <Calendar className="w-8 h-8 text-primary-600 mr-3" />
+              <h3 className="text-lg font-semibold text-secondary-900">Mis Clases</h3>
+            </div>
+            <p className="text-secondary-600 text-sm mb-4">
+              Revisa el historial de tus clases y próximas sesiones
+            </p>
+            <span className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+              Ver Clases →
+            </span>
           </div>
-          <p className="text-secondary-600 text-sm mb-4">
-            Revisa el historial de tus clases y próximas sesiones
-          </p>
-          <button className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-            Ver Clases →
-          </button>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <Shield className="w-8 h-8 text-green-600 mr-3" />
-            <h3 className="text-lg font-semibold text-secondary-900">Seguridad</h3>
+        <Link to="/seguridad" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center mb-4">
+              <Shield className="w-8 h-8 text-green-600 mr-3" />
+              <h3 className="text-lg font-semibold text-secondary-900">Seguridad</h3>
+            </div>
+            <p className="text-secondary-600 text-sm mb-4">
+              Gestiona tu contraseña y configuraciones de seguridad
+            </p>
+            <span className="text-green-600 hover:text-green-700 font-medium text-sm">
+              Configurar →
+            </span>
           </div>
-          <p className="text-secondary-600 text-sm mb-4">
-            Gestiona tu contraseña y configuraciones de seguridad
-          </p>
-          <button className="text-green-600 hover:text-green-700 font-medium text-sm">
-            Configurar →
-          </button>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <Settings className="w-8 h-8 text-secondary-600 mr-3" />
-            <h3 className="text-lg font-semibold text-secondary-900">Preferencias</h3>
+        <Link to="/preferencias" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="flex items-center mb-4">
+              <Settings className="w-8 h-8 text-secondary-600 mr-3" />
+              <h3 className="text-lg font-semibold text-secondary-900">Preferencias</h3>
+            </div>
+            <p className="text-secondary-600 text-sm mb-4">
+              Personaliza tu experiencia y notificaciones
+            </p>
+            <span className="text-secondary-600 hover:text-secondary-700 font-medium text-sm">
+              Configurar →
+            </span>
           </div>
-          <p className="text-secondary-600 text-sm mb-4">
-            Personaliza tu experiencia y notificaciones
-          </p>
-          <button className="text-secondary-600 hover:text-secondary-700 font-medium text-sm">
-            Configurar →
-          </button>
-        </div>
+        </Link>
       </div>
     </div>
   )
