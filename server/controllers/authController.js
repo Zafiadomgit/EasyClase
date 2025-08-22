@@ -240,3 +240,98 @@ export const verifyToken = async (req, res, next) => {
     });
   }
 };
+
+// Obtener preferencias del usuario
+export const obtenerPreferencias = async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Estructura de preferencias por defecto
+    const preferenciasPorDefecto = {
+      notifications: {
+        emailNotifications: true,
+        pushNotifications: true,
+        smsNotifications: false,
+        classReminders: true,
+        paymentNotifications: true,
+        marketingEmails: false
+      },
+      language: {
+        language: 'es',
+        timezone: 'America/Bogota',
+        currency: 'COP',
+        dateFormat: 'DD/MM/YYYY'
+      },
+      theme: {
+        theme: 'light',
+        fontSize: 'medium',
+        colorScheme: 'default'
+      }
+    };
+
+    // Combinar preferencias guardadas con las por defecto
+    const preferencias = {
+      notifications: { ...preferenciasPorDefecto.notifications, ...user.preferencias?.notifications },
+      language: { ...preferenciasPorDefecto.language, ...user.preferencias?.language },
+      theme: { ...preferenciasPorDefecto.theme, ...user.preferencias?.theme }
+    };
+
+    res.json({
+      success: true,
+      data: preferencias
+    });
+  } catch (error) {
+    console.error('Error obteniendo preferencias:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+// Actualizar preferencias del usuario
+export const actualizarPreferencias = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { notifications, language, theme } = req.body;
+
+    // Validar que vengan las preferencias
+    if (!notifications && !language && !theme) {
+      return res.status(400).json({ message: 'Debes proporcionar al menos un tipo de preferencia' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Inicializar preferencias si no existen
+    if (!user.preferencias) {
+      user.preferencias = {};
+    }
+
+    // Actualizar preferencias
+    if (notifications) {
+      user.preferencias.notifications = { ...user.preferencias.notifications, ...notifications };
+    }
+    if (language) {
+      user.preferencias.language = { ...user.preferencias.language, ...language };
+    }
+    if (theme) {
+      user.preferencias.theme = { ...user.preferencias.theme, ...theme };
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Preferencias actualizadas exitosamente',
+      data: user.preferencias
+    });
+  } catch (error) {
+    console.error('Error actualizando preferencias:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};

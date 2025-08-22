@@ -5,7 +5,9 @@ import {
   login, 
   getProfile, 
   updateProfile, 
-  verifyToken 
+  verifyToken,
+  obtenerPreferencias,
+  actualizarPreferencias
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -82,5 +84,7 @@ router.post('/login', loginValidation, login);
 // Rutas protegidas
 router.get('/profile', verifyToken, getProfile);
 router.put('/profile', verifyToken, updateProfileValidation, updateProfile);
+router.get('/preferencias', verifyToken, obtenerPreferencias);
+router.put('/preferencias', verifyToken, actualizarPreferencias);
 
 export default router;

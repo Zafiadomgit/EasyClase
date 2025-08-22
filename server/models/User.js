@@ -163,7 +163,29 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Clase'
     }
-  }]
+  }],
+  // Preferencias del usuario
+  preferencias: {
+    notifications: {
+      emailNotifications: { type: Boolean, default: true },
+      pushNotifications: { type: Boolean, default: true },
+      smsNotifications: { type: Boolean, default: false },
+      classReminders: { type: Boolean, default: true },
+      paymentNotifications: { type: Boolean, default: true },
+      marketingEmails: { type: Boolean, default: false }
+    },
+    language: {
+      language: { type: String, enum: ['es', 'en', 'pt'], default: 'es' },
+      timezone: { type: String, default: 'America/Bogota' },
+      currency: { type: String, enum: ['COP', 'USD', 'EUR', 'MXN'], default: 'COP' },
+      dateFormat: { type: String, enum: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'], default: 'DD/MM/YYYY' }
+    },
+    theme: {
+      theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'light' },
+      fontSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+      colorScheme: { type: String, enum: ['default', 'highContrast', 'colorBlind'], default: 'default' }
+    }
+  }
 }, {
   timestamps: true
 });
