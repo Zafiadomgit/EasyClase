@@ -117,6 +117,35 @@ export const authService = {
   },
 };
 
+// Servicios de usuario
+export const userService = {
+  // Obtener perfil del usuario
+  obtenerPerfil: async () => {
+    return await apiRequest('/auth/profile');
+  },
+
+  // Actualizar perfil del usuario
+  actualizarPerfil: async (profileData) => {
+    return await apiRequest('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
+  // Cambiar contraseña
+  cambiarContrasena: async (passwordData) => {
+    return await apiRequest('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData),
+    });
+  },
+
+  // Obtener estadísticas del usuario
+  obtenerEstadisticas: async () => {
+    return await apiRequest('/auth/estadisticas');
+  },
+};
+
 // Servicios de profesores
 export const profesorService = {
   // Buscar profesores
@@ -338,6 +367,7 @@ export const servicioService = {
 
 export default {
   authService,
+  userService,
   profesorService,
   claseService,
   servicioService,
