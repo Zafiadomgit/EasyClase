@@ -682,7 +682,7 @@ const Home = () => {
               <div className="text-center">
                 <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                   <Crown className="w-4 h-4 mr-1" />
-                  Premium: 7% comisión
+                  Premium: 10% comisión
                 </span>
               </div>
             </div>
@@ -741,7 +741,7 @@ const Home = () => {
                 <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Target className="w-6 h-6 text-amber-600" />
                 </div>
-                <h4 className="font-semibold text-secondary-900 mb-2">Solo 7% Comisión</h4>
+                <h4 className="font-semibold text-secondary-900 mb-2">Solo 10% Comisión</h4>
                 <p className="text-sm text-secondary-600">vs 20% estándar</p>
               </div>
               
