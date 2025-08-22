@@ -295,9 +295,9 @@ const BuscarServicios = () => {
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   <span className="text-sm text-blue-700 font-medium">Todas las modalidades son Online</span>
                 </div>
-                <p className="text-xs text-blue-600 mt-1">
-                  Garantizamos tu seguridad y control financiero
-                </p>
+                                 <p className="text-xs text-blue-600 mt-1">
+                   Garantizamos tu seguridad y prevenimos fraudes
+                 </p>
               </div>
             </div>
 
