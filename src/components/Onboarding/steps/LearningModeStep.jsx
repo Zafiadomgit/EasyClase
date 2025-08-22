@@ -1,7 +1,7 @@
 import React from 'react'
 import { BookOpen, Users, Video, Clock, Star } from 'lucide-react'
 
-const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
+const LearningModeStep = ({ formData, updateFormData, onNext, onPrev }) => {
   const learningModes = [
     {
       id: 'individual',
@@ -42,11 +42,11 @@ const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
   ]
 
   const handleModeSelect = (modeId) => {
-    onUpdate({ ...preferences, learningMode: modeId })
+    updateFormData({ modalidad: modeId })
   }
 
   const handleNext = () => {
-    if (preferences.learningMode) {
+    if (formData.modalidad) {
       onNext()
     }
   }
@@ -65,7 +65,7 @@ const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {learningModes.map((mode) => {
           const Icon = mode.icon
-          const isSelected = preferences.learningMode === mode.id
+          const isSelected = formData.modalidad === mode.id
 
           return (
             <div
@@ -139,7 +139,7 @@ const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
       {/* Navegación */}
       <div className="flex justify-between items-center">
         <button
-          onClick={onBack}
+          onClick={onPrev}
           className="px-6 py-3 text-secondary-700 hover:text-secondary-900 transition-colors"
         >
           ← Anterior
@@ -147,7 +147,7 @@ const LearningModeStep = ({ preferences, onUpdate, onNext, onBack }) => {
         
         <button
           onClick={handleNext}
-          disabled={!preferences.learningMode}
+          disabled={!formData.modalidad}
           className="px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           Continuar
