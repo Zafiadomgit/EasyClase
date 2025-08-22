@@ -8,6 +8,8 @@ import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import BuscarClases from './pages/BuscarClases'
 import PerfilProfesor from './pages/PerfilProfesor'
+import Perfil from './pages/Perfil'
+import MisClases from './pages/MisClases'
 import Dashboard from './pages/Dashboard/Dashboard'
 import SerProfesor from './pages/SerProfesor'
 import ReservarClase from './pages/ReservarClase'
@@ -65,6 +67,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/perfil" 
+                element={
+                  <ProtectedRoute>
+                    <Perfil />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/mis-clases" 
+                element={
+                  <ProtectedRoute>
+                    <MisClases />
                   </ProtectedRoute>
                 } 
               />
