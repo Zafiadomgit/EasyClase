@@ -14,13 +14,17 @@ const BuscarServicios = () => {
   // Filtros
   const [filtros, setFiltros] = useState({
     categoria: '',
-    modalidad: '',
     precioMin: '',
     precioMax: '',
     premium: false
   })
 
   const [ordenamiento, setOrdenamiento] = useState('recientes')
+
+  // Estado para paginación
+  const [currentPage, setCurrentPage] = useState(1)
+  const [serviciosPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
 
   useEffect(() => {
     // Inicializar con parámetros de la URL
@@ -69,11 +73,6 @@ const BuscarServicios = () => {
       resultado = resultado.filter(servicio => servicio.categoria === filtros.categoria)
     }
 
-    // Filtro por modalidad
-    if (filtros.modalidad) {
-      resultado = resultado.filter(servicio => servicio.modalidad === filtros.modalidad)
-    }
-
     // Filtro por precio
     if (filtros.precioMin) {
       resultado = resultado.filter(servicio => servicio.precio >= parseInt(filtros.precioMin))
@@ -110,6 +109,65 @@ const BuscarServicios = () => {
     })
 
     setServiciosFiltrados(resultado)
+    
+    // Calcular total de páginas para paginación
+    const nuevasPaginas = Math.ceil(resultado.length / serviciosPerPage)
+    setTotalPages(nuevasPaginas)
+    
+    // Siempre ir a la primera página al aplicar filtros
+    setCurrentPage(1)
+  }
+
+  // Calcular servicios para la página actual
+  const getServiciosPaginaActual = () => {
+    const startIndex = (currentPage - 1) * serviciosPerPage
+    const endIndex = startIndex + serviciosPerPage
+    return serviciosFiltrados.slice(startIndex, endIndex)
+  }
+
+  // Función para cambiar de página
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+      // Scroll hacia arriba para mejor UX
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  // Función para generar números de página
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i)
+        }
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
   }
 
   const handleSearch = () => {
@@ -203,6 +261,11 @@ const BuscarServicios = () => {
             <h3 className="text-lg font-semibold text-secondary-900 mb-4 flex items-center">
               <Filter className="w-5 h-5 mr-2" />
               Filtros
+              {((filtros.categoria || filtros.precioMin || filtros.precioMax || filtros.premium) && (
+                <span className="ml-2 bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full">
+                  Activos
+                </span>
+              ))}
             </h3>
 
             {/* Categoría */}
@@ -227,16 +290,15 @@ const BuscarServicios = () => {
               <label className="block text-sm font-medium text-secondary-700 mb-2">
                 Modalidad
               </label>
-              <select
-                value={filtros.modalidad}
-                onChange={(e) => setFiltros({ ...filtros, modalidad: e.target.value })}
-                className="w-full p-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Todas</option>
-                <option value="virtual">Virtual</option>
-                <option value="presencial">Presencial</option>
-                <option value="mixta">Mixta</option>
-              </select>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-blue-700 font-medium">Todas las modalidades son Online</span>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  Garantizamos tu seguridad y control financiero
+                </p>
+              </div>
             </div>
 
             {/* Rango de precios */}
@@ -275,6 +337,32 @@ const BuscarServicios = () => {
                 <span className="text-sm text-secondary-700">Solo Premium</span>
               </label>
             </div>
+
+            {/* Botones de Acción */}
+            <div className="space-y-3 pt-4 border-t border-secondary-200">
+              <button
+                onClick={() => aplicarFiltros()}
+                className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+              >
+                🔍 Aplicar Filtros
+              </button>
+              <button
+                onClick={() => {
+                  setFiltros({
+                    categoria: '',
+                    precioMin: '',
+                    precioMax: '',
+                    premium: false
+                  })
+                  setSearchQuery('')
+                  setSearchParams({})
+                  setCurrentPage(1) // Resetear a la primera página
+                }}
+                className="w-full border border-secondary-300 text-secondary-700 py-3 px-4 rounded-lg hover:bg-secondary-50 transition-all duration-200 font-medium hover:border-secondary-400"
+              >
+                🗑️ Limpiar Filtros
+              </button>
+            </div>
           </div>
         </div>
 
@@ -283,7 +371,7 @@ const BuscarServicios = () => {
           {/* Controles de ordenamiento */}
           <div className="flex justify-between items-center mb-6">
             <p className="text-secondary-600">
-              {serviciosFiltrados.length} servicios encontrados
+              Mostrando {((currentPage - 1) * serviciosPerPage) + 1} - {Math.min(currentPage * serviciosPerPage, serviciosFiltrados.length)} de {serviciosFiltrados.length} servicios encontrados
             </p>
             <select
               value={ordenamiento}
@@ -302,7 +390,7 @@ const BuscarServicios = () => {
           {/* Grid de servicios */}
           {serviciosFiltrados.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {serviciosFiltrados.map((servicio) => {
+              {getServiciosPaginaActual().map((servicio) => {
                 const esPremium = servicio.premium || servicio.proveedor?.premium || false
                 
                 return (
@@ -413,18 +501,67 @@ const BuscarServicios = () => {
                 onClick={() => {
                   setFiltros({
                     categoria: '',
-                    modalidad: '',
                     precioMin: '',
                     precioMax: '',
                     premium: false
                   })
                   setSearchQuery('')
                   setSearchParams({})
+                  setCurrentPage(1) // Resetear a la primera página
                 }}
                 className="btn-primary"
               >
                 Limpiar Filtros
               </button>
+            </div>
+          )}
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center">
+              <nav className="flex items-center space-x-2">
+                {/* Botón anterior */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Anterior
+                </button>
+
+                {/* Números de página */}
+                {getPageNumbers().map((page, index) => (
+                  <button
+                    key={index}
+                    onClick={() => typeof page === 'number' && handlePageChange(page)}
+                    disabled={page === '...'}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg border ${
+                      page === currentPage
+                        ? 'bg-primary-600 text-white border-primary-600'
+                        : page === '...'
+                        ? 'text-gray-400 border-gray-200 cursor-default'
+                        : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50 hover:text-gray-700'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {/* Botón siguiente */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </nav>
             </div>
           )}
         </div>
