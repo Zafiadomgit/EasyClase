@@ -128,7 +128,42 @@ const userSchema = new mongoose.Schema({
   totalReviews: {
     type: Number,
     default: 0
-  }
+  },
+  // Sistema de Premium y Descuentos
+  premium: {
+    activo: {
+      type: Boolean,
+      default: false
+    },
+    fechaInicio: {
+      type: Date,
+      default: null
+    },
+    fechaFin: {
+      type: Date,
+      default: null
+    },
+    plan: {
+      type: String,
+      enum: ['mensual', 'anual'],
+      default: null
+    }
+  },
+  // Historial de descuentos por categoría
+  descuentosUtilizados: [{
+    categoria: {
+      type: String,
+      required: true
+    },
+    fechaUtilizacion: {
+      type: Date,
+      default: Date.now
+    },
+    claseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Clase'
+    }
+  }]
 }, {
   timestamps: true
 });
@@ -214,6 +249,48 @@ userSchema.methods.getAllPermissions = function() {
     ];
   }
   return this.permisos;
+};
+
+// Método para verificar si el usuario tiene premium activo
+userSchema.methods.tienePremiumActivo = function() {
+  if (!this.premium.activo) return false;
+  
+  const ahora = new Date();
+  return this.premium.fechaFin && ahora <= this.premium.fechaFin;
+};
+
+// Método para verificar si puede usar descuento en una categoría
+userSchema.methods.puedeUsarDescuento = function(categoria) {
+  // Si tiene premium activo, siempre puede usar descuento
+  if (this.tienePremiumActivo()) return true;
+  
+  // Si no tiene premium, verificar si ya usó descuento en esta categoría
+  const descuentoUsado = this.descuentosUtilizados.find(
+    desc => desc.categoria === categoria
+  );
+  
+  return !descuentoUsado;
+};
+
+// Método para registrar uso de descuento
+userSchema.methods.registrarDescuento = function(categoria, claseId) {
+  this.descuentosUtilizados.push({
+    categoria,
+    claseId,
+    fechaUtilizacion: new Date()
+  });
+  return this.save();
+};
+
+// Método para obtener descuentos utilizados por categoría
+userSchema.methods.getDescuentosUtilizados = function() {
+  return this.descuentosUtilizados.reduce((acc, desc) => {
+    if (!acc[desc.categoria]) {
+      acc[desc.categoria] = [];
+    }
+    acc[desc.categoria].push(desc);
+    return acc;
+  }, {});
 };
 
 export default mongoose.model('User', userSchema);

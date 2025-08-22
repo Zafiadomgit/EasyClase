@@ -16,6 +16,7 @@ import perfilEnriquecidoRoutes from "./routes/perfilEnriquecido.js";
 import adminRoutes from "./routes/admin.js";
 import transactionRoutes from "./routes/transactions.js";
 import escrowRoutes from "./routes/escrow.js";
+import reviewRoutes from "./routes/reviews.js";
 
 // Importar modelos
 import User from "./models/User.js";
@@ -104,6 +105,7 @@ app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/escrow', escrowRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Ruta de estado de la API
 app.get('/api/status', (req, res) => {

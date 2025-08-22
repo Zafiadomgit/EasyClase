@@ -220,6 +220,45 @@ export const claseService = {
       method: 'POST',
     });
   },
+
+  // Obtener información de descuentos
+  obtenerInfoDescuentos: async (categoria, profesorId) => {
+    return await apiRequest(`/clases/descuentos/info?categoria=${encodeURIComponent(categoria)}&profesorId=${profesorId}`);
+  },
+
+  // Obtener historial de descuentos
+  obtenerHistorialDescuentos: async () => {
+    return await apiRequest('/clases/descuentos/historial');
+  }
+};
+
+// Servicios de reseñas
+export const reviewService = {
+  // Crear una nueva reseña
+  crearReview: async (reviewData) => {
+    return await apiRequest('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  },
+
+  // Obtener reseñas de un profesor
+  obtenerReviewsProfesor: async (profesorId, page = 1, limit = 10) => {
+    return await apiRequest(`/reviews/profesor/${profesorId}?page=${page}&limit=${limit}`);
+  },
+
+  // Responder a una reseña (profesor)
+  responderReview: async (reviewId, comentario) => {
+    return await apiRequest(`/reviews/${reviewId}/responder`, {
+      method: 'PUT',
+      body: JSON.stringify({ comentario }),
+    });
+  },
+
+  // Obtener mis reseñas (estudiante)
+  obtenerMisReviews: async (page = 1, limit = 10) => {
+    return await apiRequest(`/reviews/mis-reviews?page=${page}&limit=${limit}`);
+  }
 };
 
 // Servicio para verificar el estado de la API
@@ -302,5 +341,6 @@ export default {
   profesorService,
   claseService,
   servicioService,
+  reviewService,
   statusService,
 };

@@ -3,6 +3,7 @@ import Clase from '../models/Clase.js';
 import User from '../models/User.js';
 import Review from '../models/Review.js';
 import { crearPagoMercadoPago } from '../services/mercadoPagoService.js';
+import { calcularDescuento, aplicarDescuento } from '../services/descuentoService.js';
 
 // Solicitar una nueva clase
 export const solicitarClase = async (req, res) => {
@@ -23,7 +24,8 @@ export const solicitarClase = async (req, res) => {
       fecha, 
       horaInicio, 
       duracion, 
-      modalidad 
+      modalidad,
+      categoria 
     } = req.body;
 
     // Verificar que el profesor existe
@@ -43,9 +45,20 @@ export const solicitarClase = async (req, res) => {
       });
     }
 
-    // Calcular precio total
+    // Calcular precio total y verificar descuentos
     const precio = profesor.precioPorHora;
-    const total = precio * duracion;
+    const subtotal = precio * duracion;
+    
+    // Verificar si se puede aplicar descuento
+    let descuentoInfo = null;
+    if (categoria) {
+      try {
+        descuentoInfo = await calcularDescuento(precio, duracion, req.userId, profesorId, categoria);
+      } catch (error) {
+        console.error('Error calculando descuento:', error);
+        // Continuar sin descuento si hay error
+      }
+    }
 
     // Crear la solicitud de clase
     const nuevaClase = new Clase({
@@ -58,8 +71,18 @@ export const solicitarClase = async (req, res) => {
       duracion,
       modalidad,
       precio,
-      total
+      total: subtotal // Se calculará automáticamente con descuento si aplica
     });
+
+    // Aplicar descuento si está disponible
+    if (descuentoInfo && descuentoInfo.puedeAplicar) {
+      nuevaClase.descuento = {
+        aplicado: true,
+        porcentaje: descuentoInfo.porcentajeDescuento,
+        categoria,
+        asumidoPor: descuentoInfo.asumidoPor
+      };
+    }
 
     await nuevaClase.save();
 
@@ -384,6 +407,68 @@ export const crearPagoClase = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error creando el pago'
+    });
+  }
+};
+
+// Obtener información de descuentos para un estudiante
+export const obtenerInfoDescuentos = async (req, res) => {
+  try {
+    const { categoria, profesorId } = req.query;
+    
+    if (!categoria) {
+      return res.status(400).json({
+        success: false,
+        message: 'La categoría es requerida'
+      });
+    }
+
+    if (!profesorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'El ID del profesor es requerido'
+      });
+    }
+
+    const descuentoInfo = await calcularDescuento(
+      50000, // Precio de ejemplo, se puede ajustar
+      1, // Duración de ejemplo
+      req.userId,
+      profesorId,
+      categoria
+    );
+
+    res.json({
+      success: true,
+      data: descuentoInfo
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo información de descuentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+// Obtener historial de descuentos del estudiante
+export const obtenerHistorialDescuentos = async (req, res) => {
+  try {
+    const { obtenerHistorialDescuentos: obtenerHistorial } = await import('../services/descuentoService.js');
+    
+    const historial = await obtenerHistorial(req.userId);
+
+    res.json({
+      success: true,
+      data: historial
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo historial de descuentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
     });
   }
 };

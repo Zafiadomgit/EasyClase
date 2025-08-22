@@ -62,14 +62,21 @@ export const buscarProfesores = async (req, res) => {
     // Opciones de paginación y ordenamiento
     const options = {
       page: Number(page),
-      limit: Number(limit),
-      sort: { [ordenarPor]: orden === 'desc' ? -1 : 1 }
+      limit: Number(limit)
     };
 
-    // Ejecutar búsqueda
+    // Ejecutar búsqueda con ordenamiento inteligente
+    // 1. Primero los premium (activo: true)
+    // 2. Entre premium, ordenar por calificación y número de reseñas
+    // 3. Entre no premium, ordenar por calificación y número de reseñas
     const profesores = await User.find(filtros)
       .select('-password -__v')
-      .sort(options.sort)
+      .sort([
+        { 'premium.activo': -1 }, // Premium primero (true = 1, false = 0)
+        { calificacionPromedio: -1 }, // Mejor calificación primero
+        { totalReviews: -1 }, // Más reseñas primero
+        { createdAt: -1 } // Más recientes como desempate
+      ])
       .limit(options.limit * 1)
       .skip((options.page - 1) * options.limit);
 
@@ -193,7 +200,12 @@ export const obtenerProfesoresDestacados = async (req, res) => {
       totalReviews: { $gte: 10 }
     })
     .select('-password -__v')
-    .sort({ calificacionPromedio: -1, totalReviews: -1 })
+    .sort([
+      { 'premium.activo': -1 }, // Premium primero
+      { calificacionPromedio: -1 }, // Mejor calificación primero
+      { totalReviews: -1 }, // Más reseñas primero
+      { createdAt: -1 } // Más recientes como desempate
+    ])
     .limit(8);
 
     res.json({

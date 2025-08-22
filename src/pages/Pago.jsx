@@ -64,7 +64,7 @@ const Pago = () => {
         reservaId: reserva.id || Date.now(), // En producción vendría del backend
         estudianteId: user.id,
         profesorId: profesor.id,
-        monto: reserva.costo,
+        monto: reserva.total || reserva.costo,
         metodoPago: metodoPago,
         estado: 'completado',
         fecha: new Date().toISOString()
@@ -296,7 +296,7 @@ const Pago = () => {
                 ) : (
                   <>
                     <Lock className="w-5 h-5 mr-2" />
-                    Pagar {formatPrecio(reserva.costo)} de forma segura
+                    Pagar {formatPrecio(reserva.total || reserva.costo)} de forma segura
                   </>
                 )}
               </button>
@@ -382,6 +382,12 @@ const Pago = () => {
                   <span className="text-secondary-600">Subtotal:</span>
                   <span className="font-semibold">{formatPrecio(reserva.costo)}</span>
                 </div>
+                {reserva.descuento && reserva.descuento.aplicado && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Descuento del {reserva.descuento.porcentaje}%:</span>
+                    <span className="font-semibold">-{formatPrecio(reserva.descuento.montoDescuento)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-green-600">
                   <span>Comisión de plataforma:</span>
                   <span className="font-semibold">$0 (gratis por tiempo limitado)</span>
@@ -389,7 +395,7 @@ const Pago = () => {
                 <hr className="my-3" />
                 <div className="flex justify-between text-lg font-bold text-primary-600">
                   <span>Total a pagar:</span>
-                  <span>{formatPrecio(reserva.costo)}</span>
+                  <span>{formatPrecio(reserva.total || reserva.costo)}</span>
                 </div>
               </div>
             </div>

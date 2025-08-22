@@ -6,7 +6,9 @@ import {
   responderSolicitud,
   confirmarClaseCompletada,
   cancelarClase,
-  crearPagoClase
+  crearPagoClase,
+  obtenerInfoDescuentos,
+  obtenerHistorialDescuentos
 } from '../controllers/claseController.js';
 import { verifyToken } from '../controllers/authController.js';
 
@@ -46,5 +48,9 @@ router.put('/:id/responder', responderSolicitud);
 router.put('/:id/completar', confirmarClaseCompletada);
 router.put('/:id/cancelar', cancelarClase);
 router.post('/:id/pagar', crearPagoClase);
+
+// Rutas de descuentos
+router.get('/descuentos/info', obtenerInfoDescuentos);
+router.get('/descuentos/historial', obtenerHistorialDescuentos);
 
 export default router;

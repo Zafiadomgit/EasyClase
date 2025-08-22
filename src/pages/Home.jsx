@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown } from 'lucide-react'
+import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
@@ -447,6 +447,120 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Sistema de Descuentos */}
+      <section className="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-6">
+              <Percent className="w-4 h-4 mr-2" />
+              ¡Nuevo sistema de descuentos!
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display">
+              Descuentos Especiales para tu Primera Clase
+            </h2>
+            <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
+              Obtén un 10% de descuento en tu primera clase de cada categoría. ¡Y con Premium, todos los descuentos que quieras!
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Descuento por categoría */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-green-200">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Percent className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-secondary-900 mb-2">
+                  10% de Descuento
+                </h3>
+                <p className="text-green-600 font-semibold">
+                  En tu primera clase de cada categoría
+                </p>
+              </div>
+              <ul className="space-y-3 text-secondary-600">
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Una clase con descuento por categoría</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Descuento asumido por el profesor</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Sin costos ocultos</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Premium */}
+            <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-8 shadow-lg text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="text-center mb-6 relative z-10">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">
+                  Plan Premium
+                </h3>
+                <p className="text-primary-100 font-semibold">
+                  Descuentos ilimitados
+                </p>
+              </div>
+              <ul className="space-y-3 text-primary-100 relative z-10">
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
+                  <span>10% de descuento en todas las clases</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Descuento asumido por la plataforma</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Acceso prioritario a profesores</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Cómo funciona */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-200">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-secondary-900 mb-2">
+                  Cómo Funciona
+                </h3>
+                <p className="text-blue-600 font-semibold">
+                  Proceso simple y transparente
+                </p>
+              </div>
+              <div className="space-y-4 text-secondary-600">
+                <div className="flex items-start">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5 flex-shrink-0">
+                    1
+                  </div>
+                  <span>Elige tu categoría de aprendizaje</span>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5 flex-shrink-0">
+                    2
+                  </div>
+                  <span>Selecciona tu profesor preferido</span>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5 flex-shrink-0">
+                    3
+                  </div>
+                  <span>¡Disfruta tu descuento automáticamente!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Por qué EasyClase es diferente */}
       <section ref={whyEasyClaseRef} className="py-20 bg-white scroll-reveal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -775,7 +889,7 @@ const Home = () => {
               to="/registro"
               className="bg-white text-primary-600 hover:bg-primary-50 font-bold py-4 px-10 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto text-lg"
             >
-              Registrarse Gratis
+              Registrarse y Obtener Descuentos
             </Link>
             <Link
               to="/buscar"

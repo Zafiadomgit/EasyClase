@@ -156,6 +156,32 @@ const claseSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxLength: [1000, 'Las notas no pueden exceder 1000 caracteres']
+  },
+  // Sistema de descuentos
+  descuento: {
+    aplicado: {
+      type: Boolean,
+      default: false
+    },
+    porcentaje: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    montoDescuento: {
+      type: Number,
+      default: 0
+    },
+    categoria: {
+      type: String,
+      default: null
+    },
+    asumidoPor: {
+      type: String,
+      enum: ['profesor', 'plataforma'],
+      default: 'profesor'
+    }
   }
 }, {
   timestamps: true
@@ -173,8 +199,17 @@ claseSchema.index({ transactionId: 1 });
 
 // Middleware para calcular el total antes de guardar
 claseSchema.pre('save', function(next) {
-  if (this.isModified('precio') || this.isModified('duracion')) {
-    this.total = this.precio * this.duracion;
+  if (this.isModified('precio') || this.isModified('duracion') || this.isModified('descuento')) {
+    const subtotal = this.precio * this.duracion;
+    
+    // Aplicar descuento si está configurado
+    if (this.descuento.aplicado && this.descuento.porcentaje > 0) {
+      this.descuento.montoDescuento = (subtotal * this.descuento.porcentaje) / 100;
+      this.total = subtotal - this.descuento.montoDescuento;
+    } else {
+      this.total = subtotal;
+      this.descuento.montoDescuento = 0;
+    }
   }
   next();
 });
