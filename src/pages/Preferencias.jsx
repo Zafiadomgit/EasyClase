@@ -4,7 +4,7 @@ import { userService } from '../services/api'
 import { Settings, Bell, Globe, Palette, CheckCircle, AlertCircle } from 'lucide-react'
 
 const Preferencias = () => {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [success, setSuccess] = useState('')
@@ -37,17 +37,26 @@ const Preferencias = () => {
 
   // Cargar preferencias al montar el componente
   useEffect(() => {
-    if (user) {
+    // Esperar a que la autenticación termine de cargar
+    if (authLoading) return
+    
+    // Solo cargar si el usuario existe y está autenticado
+    if (user && user.id) {
       cargarPreferencias()
+    } else {
+      // Si no hay usuario, no mostrar loading
+      setInitialLoading(false)
     }
-  }, [user])
+  }, [user, authLoading])
 
   const cargarPreferencias = async () => {
     try {
       setInitialLoading(true)
+      setError('')
+      
       const response = await userService.obtenerPreferencias()
       
-      if (response.data) {
+      if (response && response.data) {
         const { notifications, language, theme } = response.data
         
         if (notifications) {
@@ -62,12 +71,28 @@ const Preferencias = () => {
       }
     } catch (error) {
       console.error('Error cargando preferencias:', error)
+      setError('Error al cargar las preferencias. Usando valores por defecto.')
       // Si no se pueden cargar, usamos los valores por defecto
     } finally {
       setInitialLoading(false)
     }
   }
 
+  // Mostrar loading de autenticación
+  if (authLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-secondary-600">Verificando autenticación...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Renderizar acceso denegado si no hay usuario
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -79,7 +104,8 @@ const Preferencias = () => {
     )
   }
 
-  if (initialLoading) {
+  // Renderizar loading de preferencias solo si hay usuario y está cargando
+  if (initialLoading && user) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-96">
