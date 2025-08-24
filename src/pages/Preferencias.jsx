@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Preferencias = () => {
   const { user } = useAuth()
   const [testState, setTestState] = useState('Estado inicial')
+  const [useEffectTest, setUseEffectTest] = useState('Esperando...')
+
+  // useEffect básico para probar
+  useEffect(() => {
+    console.log('useEffect ejecutado - usuario:', user)
+    setUseEffectTest('useEffect funcionando!')
+  }, [user])
 
   const cambiarEstado = () => {
     setTestState('Estado cambiado!')
@@ -36,6 +43,11 @@ const Preferencias = () => {
           >
             Cambiar Estado
           </button>
+        </div>
+        <div className="mt-4 p-4 bg-purple-100 rounded-lg">
+          <p className="text-purple-800">
+            🔄 useEffect: {useEffectTest}
+          </p>
         </div>
       </div>
     </div>
