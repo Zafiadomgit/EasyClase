@@ -5,8 +5,6 @@ import { Settings, Bell, Globe, Palette, CheckCircle, AlertCircle } from 'lucide
 
 const Preferencias = () => {
   const { user } = useAuth()
-  const [testState, setTestState] = useState('Estado inicial')
-  const [useEffectTest, setUseEffectTest] = useState('Esperando...')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -36,12 +34,6 @@ const Preferencias = () => {
     colorScheme: 'default'
   })
 
-  // useEffect básico para probar
-  useEffect(() => {
-    console.log('useEffect ejecutado - usuario:', user)
-    setUseEffectTest('useEffect funcionando!')
-  }, [user])
-
   // useEffect para cargar preferencias
   useEffect(() => {
     if (user && user.id) {
@@ -53,10 +45,8 @@ const Preferencias = () => {
     try {
       setLoading(true)
       setError('')
-      console.log('Intentando cargar preferencias...')
       
       const response = await userService.obtenerPreferencias()
-      console.log('Respuesta de preferencias:', response)
       
       if (response && response.data) {
         const { notifications, language, theme } = response.data
@@ -112,11 +102,9 @@ const Preferencias = () => {
         theme: themeSettings
       }
       
-      console.log('Guardando preferencias:', preferencias)
       await userService.actualizarPreferencias(preferencias)
       
       setSuccess('Preferencias guardadas exitosamente')
-      console.log('Preferencias guardadas correctamente')
       
       // Limpiar mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccess(''), 3000)
@@ -131,8 +119,16 @@ const Preferencias = () => {
     }
   }
 
-  const cambiarEstado = () => {
-    setTestState('Estado cambiado!')
+  // Renderizar acceso denegado si no hay usuario
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-secondary-900 mb-4">Acceso Denegado</h2>
+          <p className="text-secondary-600">Debes iniciar sesión para acceder a tus preferencias.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -162,31 +158,6 @@ const Preferencias = () => {
           <span className="text-red-800">{error}</span>
         </div>
       )}
-
-      {/* Cajas de prueba */}
-      <div className="mb-8 space-y-4">
-        <div className="p-4 bg-green-100 rounded-lg">
-          <p className="text-green-800">✅ Si ves esto, el componente funciona correctamente</p>
-        </div>
-        <div className="p-4 bg-blue-100 rounded-lg">
-          <p className="text-blue-800">🔍 Usuario: {user ? user.name || 'Conectado' : 'No conectado'}</p>
-        </div>
-        <div className="p-4 bg-yellow-100 rounded-lg">
-          <p className="text-yellow-800">🧪 Estado: {testState}</p>
-          <button onClick={cambiarEstado} className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Cambiar Estado
-          </button>
-        </div>
-        <div className="p-4 bg-purple-100 rounded-lg">
-          <p className="text-purple-800">🔄 useEffect: {useEffectTest}</p>
-        </div>
-        <div className="p-4 bg-orange-100 rounded-lg">
-          <p className="text-orange-800">🔔 Notificaciones: {notificationSettings.emailNotifications ? 'Activadas' : 'Desactivadas'}</p>
-        </div>
-        <div className="p-4 bg-red-100 rounded-lg">
-          <p className="text-red-800">📡 API: {loading ? 'Cargando...' : error ? error : 'Cargado correctamente'}</p>
-        </div>
-      </div>
 
       <div className="space-y-8">
         {/* Preferencias de Notificaciones */}
@@ -229,6 +200,174 @@ const Preferencias = () => {
                 />
                 <div className="w-11 h-6 bg-secondary-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-secondary-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
+            </div>
+
+            {/* Recordatorios de Clases */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-secondary-900">Recordatorios de Clases</h3>
+                <p className="text-xs text-secondary-600">Te avisamos antes de tus clases</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.classReminders}
+                  onChange={(e) => handleNotificationChange('classReminders', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-secondary-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-secondary-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {/* Notificaciones de Pagos */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-secondary-900">Notificaciones de Pagos</h3>
+                <p className="text-xs text-secondary-600">Información sobre transacciones</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.paymentNotifications}
+                  onChange={(e) => handleNotificationChange('paymentNotifications', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-secondary-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-secondary-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Preferencias de Idioma y Región */}
+        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6">
+          <div className="flex items-center mb-6">
+            <Globe className="w-6 h-6 text-green-600 mr-3" />
+            <h2 className="text-xl font-semibold text-secondary-900">Idioma y Región</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Idioma */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Idioma
+              </label>
+              <select
+                value={languageSettings.language}
+                onChange={(e) => handleLanguageChange('language', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+
+            {/* Zona Horaria */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Zona Horaria
+              </label>
+              <select
+                value={languageSettings.timezone}
+                onChange={(e) => handleLanguageChange('timezone', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="America/Bogota">Colombia (GMT-5)</option>
+                <option value="America/Mexico_City">México (GMT-6)</option>
+                <option value="America/New_York">Nueva York (GMT-5)</option>
+                <option value="Europe/Madrid">España (GMT+1)</option>
+              </select>
+            </div>
+
+            {/* Moneda */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Moneda
+              </label>
+              <select
+                value={languageSettings.currency}
+                onChange={(e) => handleLanguageChange('currency', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="COP">Peso Colombiano (COP)</option>
+                <option value="USD">Dólar Estadounidense (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+                <option value="MXN">Peso Mexicano (MXN)</option>
+              </select>
+            </div>
+
+            {/* Formato de Fecha */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Formato de Fecha
+              </label>
+              <select
+                value={languageSettings.dateFormat}
+                onChange={(e) => handleLanguageChange('dateFormat', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Preferencias de Tema */}
+        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6">
+          <div className="flex items-center mb-6">
+            <Palette className="w-6 h-6 text-purple-600 mr-3" />
+            <h2 className="text-xl font-semibold text-secondary-900">Apariencia</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tema */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Tema
+              </label>
+              <select
+                value={themeSettings.theme}
+                onChange={(e) => handleThemeChange('theme', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="light">Claro</option>
+                <option value="dark">Oscuro</option>
+                <option value="auto">Automático</option>
+              </select>
+            </div>
+
+            {/* Tamaño de Fuente */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Tamaño de Fuente
+              </label>
+              <select
+                value={themeSettings.fontSize}
+                onChange={(e) => handleThemeChange('fontSize', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="small">Pequeño</option>
+                <option value="medium">Mediano</option>
+                <option value="large">Grande</option>
+              </select>
+            </div>
+
+            {/* Esquema de Colores */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Esquema de Colores
+              </label>
+              <select
+                value={themeSettings.colorScheme}
+                onChange={(e) => handleThemeChange('colorScheme', e.target.value)}
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="default">Predeterminado</option>
+                <option value="highContrast">Alto Contraste</option>
+                <option value="colorBlind">Daltónico</option>
+              </select>
             </div>
           </div>
         </div>
