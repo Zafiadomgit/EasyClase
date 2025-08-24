@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { userService } from '../services/api'
 
 const Preferencias = () => {
   const { user } = useAuth()
   const [testState, setTestState] = useState('Estado inicial')
   const [useEffectTest, setUseEffectTest] = useState('Esperando...')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   
   // Estados para preferencias de notificaciones
   const [notificationSettings, setNotificationSettings] = useState({
@@ -36,6 +39,43 @@ const Preferencias = () => {
     console.log('useEffect ejecutado - usuario:', user)
     setUseEffectTest('useEffect funcionando!')
   }, [user])
+
+  // useEffect para cargar preferencias
+  useEffect(() => {
+    if (user && user.id) {
+      cargarPreferencias()
+    }
+  }, [user])
+
+  const cargarPreferencias = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      console.log('Intentando cargar preferencias...')
+      
+      const response = await userService.obtenerPreferencias()
+      console.log('Respuesta de preferencias:', response)
+      
+      if (response && response.data) {
+        const { notifications, language, theme } = response.data
+        
+        if (notifications) {
+          setNotificationSettings(prev => ({ ...prev, ...notifications }))
+        }
+        if (language) {
+          setLanguageSettings(prev => ({ ...prev, ...language }))
+        }
+        if (theme) {
+          setThemeSettings(prev => ({ ...prev, ...theme }))
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando preferencias:', error)
+      setError('Error al cargar las preferencias. Usando valores por defecto.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const cambiarEstado = () => {
     setTestState('Estado cambiado!')
@@ -77,6 +117,11 @@ const Preferencias = () => {
         <div className="mt-4 p-4 bg-orange-100 rounded-lg">
           <p className="text-orange-800">
             🔔 Notificaciones: {notificationSettings.emailNotifications ? 'Activadas' : 'Desactivadas'}
+          </p>
+        </div>
+        <div className="mt-4 p-4 bg-red-100 rounded-lg">
+          <p className="text-red-800">
+            📡 API: {loading ? 'Cargando...' : error ? error : 'Cargado correctamente'}
           </p>
         </div>
       </div>
