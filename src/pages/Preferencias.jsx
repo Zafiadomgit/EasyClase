@@ -5,6 +5,31 @@ const Preferencias = () => {
   const { user } = useAuth()
   const [testState, setTestState] = useState('Estado inicial')
   const [useEffectTest, setUseEffectTest] = useState('Esperando...')
+  
+  // Estados para preferencias de notificaciones
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
+    classReminders: true,
+    paymentNotifications: true,
+    marketingEmails: false
+  })
+
+  // Estados para preferencias de idioma y región
+  const [languageSettings, setLanguageSettings] = useState({
+    language: 'es',
+    timezone: 'America/Bogota',
+    currency: 'COP',
+    dateFormat: 'DD/MM/YYYY'
+  })
+
+  // Estados para preferencias de tema
+  const [themeSettings, setThemeSettings] = useState({
+    theme: 'light',
+    fontSize: 'medium',
+    colorScheme: 'default'
+  })
 
   // useEffect básico para probar
   useEffect(() => {
@@ -47,6 +72,11 @@ const Preferencias = () => {
         <div className="mt-4 p-4 bg-purple-100 rounded-lg">
           <p className="text-purple-800">
             🔄 useEffect: {useEffectTest}
+          </p>
+        </div>
+        <div className="mt-4 p-4 bg-orange-100 rounded-lg">
+          <p className="text-orange-800">
+            🔔 Notificaciones: {notificationSettings.emailNotifications ? 'Activadas' : 'Desactivadas'}
           </p>
         </div>
       </div>
