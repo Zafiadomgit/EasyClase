@@ -27,50 +27,46 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Verificar si hay un token válido
-      if (authService.isAuthenticated()) {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser && currentUser.id) {
-          // Establecer usuario inmediatamente para evitar flash de loading
-          setUser(currentUser);
-          setIsAuthenticated(true);
-          
-          // Verificar que el token sigue siendo válido en background
-          try {
-            const response = await authService.getProfile();
-            if (response && response.data && response.data.user) {
-              const updatedUser = response.data.user;
-              setUser(updatedUser);
-              // Persistir usuario en localStorage
-              localStorage.setItem('user', JSON.stringify(updatedUser));
-            }
-          } catch (error) {
-            console.error('Error verificando perfil, pero manteniendo sesión:', error);
-            // NO hacer logout automático, solo log del error
-            // El usuario puede seguir usando la app con datos locales
+      // PRIMERO: Verificar si hay datos en localStorage
+      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem('token');
+      
+      if (savedUser && savedToken) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          if (parsedUser && parsedUser.id) {
+            // Establecer usuario inmediatamente desde localStorage
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+            console.log('Usuario restaurado desde localStorage:', parsedUser.name);
           }
-        } else {
-          // Usuario inválido, limpiar sesión
-          logout();
-        }
-      } else {
-        // No hay token, verificar si hay usuario en localStorage
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          try {
-            const parsedUser = JSON.parse(savedUser);
-            if (parsedUser && parsedUser.id) {
-              // Usar usuario guardado temporalmente
-              setUser(parsedUser);
-              setIsAuthenticated(true);
-              console.log('Usuario restaurado desde localStorage');
-            }
-          } catch (error) {
-            console.error('Error parseando usuario guardado:', error);
-            localStorage.removeItem('user');
-          }
+        } catch (error) {
+          console.error('Error parseando usuario guardado:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
         }
       }
+      
+      // SEGUNDO: Verificar si el token es válido (en background)
+      if (savedToken) {
+        try {
+          const response = await authService.getProfile();
+          if (response && response.data && response.data.user) {
+            const updatedUser = response.data.user;
+            setUser(updatedUser);
+            setIsAuthenticated(true);
+            
+            // Actualizar localStorage con datos frescos
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            console.log('Token válido, perfil actualizado:', updatedUser.name);
+          }
+        } catch (error) {
+          console.error('Error verificando perfil, pero manteniendo sesión local:', error);
+          // NO hacer logout automático
+          // El usuario puede seguir usando la app con datos locales
+        }
+      }
+      
     } catch (error) {
       console.error('Error verificando estado de autenticación:', error);
       // NO hacer logout automático en caso de error
@@ -92,6 +88,7 @@ export const AuthProvider = ({ children }) => {
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(userData));
+        console.log('Usuario logueado exitosamente:', userData.name);
         
         return response;
       } else {
@@ -118,6 +115,7 @@ export const AuthProvider = ({ children }) => {
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(newUser));
+        console.log('Usuario registrado exitosamente:', newUser.name);
         
         return response;
       } else {
@@ -143,6 +141,8 @@ export const AuthProvider = ({ children }) => {
       setShowPremiumModal(false);
       // Limpiar localStorage
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      console.log('Usuario deslogueado exitosamente');
     }
   };
 
@@ -156,6 +156,7 @@ export const AuthProvider = ({ children }) => {
         
         // Actualizar localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('Perfil actualizado exitosamente');
         
         return response;
       }

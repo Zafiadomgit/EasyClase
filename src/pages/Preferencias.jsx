@@ -75,13 +75,17 @@ const Preferencias = () => {
   }
 
   const aplicarPreferencias = () => {
+    console.log('Aplicando preferencias:', { themeSettings, languageSettings })
+    
     // Aplicar tema
     if (themeSettings.theme === 'dark') {
       document.documentElement.classList.add('dark')
       document.body.classList.add('dark')
+      console.log('Tema oscuro aplicado')
     } else {
       document.documentElement.classList.remove('dark')
       document.body.classList.remove('dark')
+      console.log('Tema claro aplicado')
     }
 
     // Aplicar tamaño de fuente
@@ -90,32 +94,41 @@ const Preferencias = () => {
       medium: '16px',
       large: '18px'
     }
-    document.documentElement.style.fontSize = fontSizeMap[themeSettings.fontSize] || '16px'
+    const newFontSize = fontSizeMap[themeSettings.fontSize] || '16px'
+    document.documentElement.style.fontSize = newFontSize
+    console.log('Tamaño de fuente aplicado:', newFontSize)
+
+    // Aplicar idioma (guardar en localStorage para que persista)
+    localStorage.setItem('language', languageSettings.language)
+    console.log('Idioma guardado:', languageSettings.language)
+    
+    // Aplicar zona horaria
+    localStorage.setItem('timezone', languageSettings.timezone)
+    console.log('Zona horaria guardada:', languageSettings.timezone)
+    
+    // Aplicar moneda
+    localStorage.setItem('currency', languageSettings.currency)
+    console.log('Moneda guardada:', languageSettings.currency)
+    
+    // Aplicar formato de fecha
+    localStorage.setItem('dateFormat', languageSettings.dateFormat)
+    console.log('Formato de fecha guardado:', languageSettings.dateFormat)
 
     // Aplicar esquema de colores
     if (themeSettings.colorScheme === 'highContrast') {
       document.documentElement.style.setProperty('--color-primary', '#000000')
       document.documentElement.style.setProperty('--color-secondary', '#ffffff')
+      console.log('Esquema alto contraste aplicado')
     } else if (themeSettings.colorScheme === 'colorBlind') {
       document.documentElement.style.setProperty('--color-primary', '#0066cc')
       document.documentElement.style.setProperty('--color-secondary', '#cc6600')
+      console.log('Esquema daltónico aplicado')
     } else {
       // Resetear a valores por defecto
       document.documentElement.style.removeProperty('--color-primary')
       document.documentElement.style.removeProperty('--color-secondary')
+      console.log('Esquema por defecto aplicado')
     }
-
-    // Aplicar idioma (guardar en localStorage para que persista)
-    localStorage.setItem('language', themeSettings.language)
-    
-    // Aplicar zona horaria
-    localStorage.setItem('timezone', languageSettings.timezone)
-    
-    // Aplicar moneda
-    localStorage.setItem('currency', languageSettings.currency)
-    
-    // Aplicar formato de fecha
-    localStorage.setItem('dateFormat', languageSettings.dateFormat)
   }
 
   const handleNotificationChange = (setting, value) => {
