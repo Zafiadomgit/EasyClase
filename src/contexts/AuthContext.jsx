@@ -25,7 +25,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      setLoading(true);
+      // NO setear loading = true aquí para evitar flash
+      // setLoading(true);
       
       // PRIMERO: Verificar si hay datos en localStorage
       const savedUser = localStorage.getItem('user');
@@ -39,6 +40,10 @@ export const AuthProvider = ({ children }) => {
             setUser(parsedUser);
             setIsAuthenticated(true);
             console.log('Usuario restaurado desde localStorage:', parsedUser.name);
+            
+            // Ya tenemos usuario, no mostrar loading
+            setLoading(false);
+            return; // Salir temprano
           }
         } catch (error) {
           console.error('Error parseando usuario guardado:', error);

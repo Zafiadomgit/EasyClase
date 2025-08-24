@@ -15,13 +15,16 @@ const Header = () => {
   const categoriesRef = useRef(null)
   const notificationsRef = useRef(null)
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout } = useAuth()
+  const { isAuthenticated, user, logout, loading } = useAuth()
   // const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   // Datos temporales para las notificaciones
   const notifications = []
   const unreadCount = 0
   const markAsRead = () => {}
   const markAllAsRead = () => {}
+  
+  // Evitar renderizar elementos de usuario mientras se verifica autenticación
+  const shouldShowUserElements = !loading && isAuthenticated && user;
   
   const getNotificationIcon = (type) => {
     const icons = {
@@ -239,7 +242,7 @@ const Header = () => {
 
           {/* Botones de acción Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated ? (
+            {shouldShowUserElements ? (
               <>
                 {/* Botón de Notificaciones */}
                 <div className="relative" ref={notificationsRef}>
@@ -495,7 +498,7 @@ const Header = () => {
               </div>
               
               <div className="border-t border-secondary-200 pt-3 mt-3">
-                {isAuthenticated ? (
+                {shouldShowUserElements ? (
                   <>
                     <div className="flex items-center px-3 py-2 mb-2">
                       <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">

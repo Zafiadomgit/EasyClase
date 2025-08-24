@@ -6,8 +6,9 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
 
-  // Mostrar loading mientras se verifica la autenticación
-  if (loading) {
+  // Solo mostrar loading si realmente no hay usuario y está cargando
+  // Esto evita el flash visual cuando ya tenemos usuario en localStorage
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
