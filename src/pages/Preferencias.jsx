@@ -1,8 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Preferencias = () => {
   const { user } = useAuth()
+  const [testState, setTestState] = useState('Estado inicial')
+
+  const cambiarEstado = () => {
+    setTestState('Estado cambiado!')
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -20,6 +25,17 @@ const Preferencias = () => {
           <p className="text-blue-800">
             🔍 Usuario: {user ? user.name || 'Conectado' : 'No conectado'}
           </p>
+        </div>
+        <div className="mt-4 p-4 bg-yellow-100 rounded-lg">
+          <p className="text-yellow-800">
+            🧪 Estado: {testState}
+          </p>
+          <button 
+            onClick={cambiarEstado}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Cambiar Estado
+          </button>
         </div>
       </div>
     </div>
