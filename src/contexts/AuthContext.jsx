@@ -25,27 +25,35 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
+      setLoading(true);
+      
+      // Verificar si hay un token válido
       if (authService.isAuthenticated()) {
         const currentUser = authService.getCurrentUser();
-        if (currentUser) {
+        if (currentUser && currentUser.id) {
           setUser(currentUser);
           setIsAuthenticated(true);
           
           // Verificar que el token sigue siendo válido
           try {
             const response = await authService.getProfile();
-            if (response.data?.user) {
+            if (response && response.data && response.data.user) {
               setUser(response.data.user);
               localStorage.setItem('user', JSON.stringify(response.data.user));
             }
           } catch (error) {
+            console.error('Token inválido, limpiando sesión:', error);
             // Token inválido, limpiar sesión
             logout();
           }
+        } else {
+          // Usuario inválido, limpiar sesión
+          logout();
         }
       }
     } catch (error) {
       console.error('Error verificando estado de autenticación:', error);
+      // En caso de error, limpiar sesión y continuar
       logout();
     } finally {
       setLoading(false);
@@ -57,23 +65,9 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.login(credentials);
       
-      if (response.data?.user) {
+      if (response && response.data && response.data.user) {
         setUser(response.data.user);
         setIsAuthenticated(true);
-        
-        // Mostrar modal Premium para profesores (temporalmente desactivado)
-        /*
-        if (response.data.user?.tipoUsuario === 'profesor') {
-          const lastShown = localStorage.getItem('premiumModalShown');
-          const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000); // 24 horas
-          
-          if (!lastShown || parseInt(lastShown) < oneDayAgo) {
-            setTimeout(() => {
-              setShowPremiumModal(true);
-            }, 3000); // Mostrar después de 3 segundos para dar tiempo a cargar
-          }
-        }
-        */
         
         return response;
       } else {
@@ -93,7 +87,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.register(userData);
       
-      if (response.data?.user) {
+      if (response && response.data && response.data.user) {
         setUser(response.data.user);
         setIsAuthenticated(true);
         return response;
@@ -110,9 +104,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+    try {
+      authService.logout();
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setShowPremiumModal(false);
+    }
   };
 
   const updateProfile = async (profileData) => {
