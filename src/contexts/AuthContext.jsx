@@ -31,30 +31,50 @@ export const AuthProvider = ({ children }) => {
       if (authService.isAuthenticated()) {
         const currentUser = authService.getCurrentUser();
         if (currentUser && currentUser.id) {
+          // Establecer usuario inmediatamente para evitar flash de loading
           setUser(currentUser);
           setIsAuthenticated(true);
           
-          // Verificar que el token sigue siendo válido
+          // Verificar que el token sigue siendo válido en background
           try {
             const response = await authService.getProfile();
             if (response && response.data && response.data.user) {
-              setUser(response.data.user);
-              localStorage.setItem('user', JSON.stringify(response.data.user));
+              const updatedUser = response.data.user;
+              setUser(updatedUser);
+              // Persistir usuario en localStorage
+              localStorage.setItem('user', JSON.stringify(updatedUser));
             }
           } catch (error) {
-            console.error('Token inválido, limpiando sesión:', error);
-            // Token inválido, limpiar sesión
-            logout();
+            console.error('Error verificando perfil, pero manteniendo sesión:', error);
+            // NO hacer logout automático, solo log del error
+            // El usuario puede seguir usando la app con datos locales
           }
         } else {
           // Usuario inválido, limpiar sesión
           logout();
         }
+      } else {
+        // No hay token, verificar si hay usuario en localStorage
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            if (parsedUser && parsedUser.id) {
+              // Usar usuario guardado temporalmente
+              setUser(parsedUser);
+              setIsAuthenticated(true);
+              console.log('Usuario restaurado desde localStorage');
+            }
+          } catch (error) {
+            console.error('Error parseando usuario guardado:', error);
+            localStorage.removeItem('user');
+          }
+        }
       }
     } catch (error) {
       console.error('Error verificando estado de autenticación:', error);
-      // En caso de error, limpiar sesión y continuar
-      logout();
+      // NO hacer logout automático en caso de error
+      // Solo log del error y continuar
     } finally {
       setLoading(false);
     }
@@ -66,8 +86,12 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(credentials);
       
       if (response && response.data && response.data.user) {
-        setUser(response.data.user);
+        const userData = response.data.user;
+        setUser(userData);
         setIsAuthenticated(true);
+        
+        // Persistir usuario en localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
         
         return response;
       } else {
@@ -88,8 +112,13 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(userData);
       
       if (response && response.data && response.data.user) {
-        setUser(response.data.user);
+        const newUser = response.data.user;
+        setUser(newUser);
         setIsAuthenticated(true);
+        
+        // Persistir usuario en localStorage
+        localStorage.setItem('user', JSON.stringify(newUser));
+        
         return response;
       } else {
         throw new Error('Respuesta de registro inválida');
@@ -112,6 +141,8 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       setShowPremiumModal(false);
+      // Limpiar localStorage
+      localStorage.removeItem('user');
     }
   };
 
@@ -120,7 +151,12 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.updateProfile(profileData);
       
       if (response.data?.user) {
-        setUser(response.data.user);
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        
+        // Actualizar localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
         return response;
       }
       

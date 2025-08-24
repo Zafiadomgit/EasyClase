@@ -41,6 +41,11 @@ const Preferencias = () => {
     }
   }, [user])
 
+  // useEffect para aplicar preferencias en tiempo real
+  useEffect(() => {
+    aplicarPreferencias()
+  }, [themeSettings, languageSettings])
+
   const cargarPreferencias = async () => {
     try {
       setLoading(true)
@@ -67,6 +72,50 @@ const Preferencias = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const aplicarPreferencias = () => {
+    // Aplicar tema
+    if (themeSettings.theme === 'dark') {
+      document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
+    }
+
+    // Aplicar tamaño de fuente
+    const fontSizeMap = {
+      small: '14px',
+      medium: '16px',
+      large: '18px'
+    }
+    document.documentElement.style.fontSize = fontSizeMap[themeSettings.fontSize] || '16px'
+
+    // Aplicar esquema de colores
+    if (themeSettings.colorScheme === 'highContrast') {
+      document.documentElement.style.setProperty('--color-primary', '#000000')
+      document.documentElement.style.setProperty('--color-secondary', '#ffffff')
+    } else if (themeSettings.colorScheme === 'colorBlind') {
+      document.documentElement.style.setProperty('--color-primary', '#0066cc')
+      document.documentElement.style.setProperty('--color-secondary', '#cc6600')
+    } else {
+      // Resetear a valores por defecto
+      document.documentElement.style.removeProperty('--color-primary')
+      document.documentElement.style.removeProperty('--color-secondary')
+    }
+
+    // Aplicar idioma (guardar en localStorage para que persista)
+    localStorage.setItem('language', themeSettings.language)
+    
+    // Aplicar zona horaria
+    localStorage.setItem('timezone', languageSettings.timezone)
+    
+    // Aplicar moneda
+    localStorage.setItem('currency', languageSettings.currency)
+    
+    // Aplicar formato de fecha
+    localStorage.setItem('dateFormat', languageSettings.dateFormat)
   }
 
   const handleNotificationChange = (setting, value) => {
