@@ -504,11 +504,11 @@ const Dashboard = () => {
                         <p className="text-secondary-600 text-sm">
                           {isEstudiante() ? `Profesor: ${clase.profesorNombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
                         </p>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
-                          <span className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {new Date(clase.fecha).toLocaleDateString('es-ES')}
-                          </span>
+                                                 <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
+                           <span className="flex items-center">
+                             <Calendar className="w-4 h-4 mr-1" />
+                             {new Date(clase.fecha + 'T00:00:00').toLocaleDateString('es-ES')}
+                           </span>
                           <span className="flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
                             {clase.hora} ({clase.duracion}h)
