@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle, Calendar, Clock, User, ArrowLeft } from 'lucide-react'
 import { formatPrecio } from '../utils/currencyUtils'
 import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../contexts/NotificationContext'
 import claseServiceLocal from '../services/claseService'
 
 const PagoSuccess = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { showPaymentSuccess } = useNotifications()
   const [pagoData, setPagoData] = useState(null)
   const [claseGuardada, setClaseGuardada] = useState(false)
 
@@ -100,6 +102,15 @@ const PagoSuccess = () => {
       // Limpiar datos de reserva pendiente
       localStorage.removeItem('reserva_pendiente')
       console.log('🧹 Datos de reserva pendiente limpiados')
+      
+      // Mostrar notificación de pago exitoso
+      const fechaFormateada = new Date(claseData.fecha).toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      showPaymentSuccess(fechaFormateada, claseData.hora)
       
       setClaseGuardada(true)
     } catch (error) {

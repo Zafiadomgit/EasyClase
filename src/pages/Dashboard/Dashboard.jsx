@@ -21,6 +21,7 @@ import {
   Bug
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNotifications } from '../../contexts/NotificationContext'
 import { servicioService, profesorService } from '../../services/api'
 import claseServiceLocal from '../../services/claseService'
 import { formatPrecio } from '../../utils/currencyUtils'
@@ -43,6 +44,7 @@ const ErrorButton = () => {
 
 const Dashboard = () => {
   const { user, isProfesor, isEstudiante } = useAuth()
+  const { showClassAdded } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
   const [clases, setClases] = useState([])
@@ -298,6 +300,15 @@ const Dashboard = () => {
       
       // Recargar datos
       await cargarDatos()
+      
+      // Mostrar notificación
+      const fechaFormateada = new Date(clasePrueba.fecha).toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      showClassAdded(clasePrueba.tema, fechaFormateada, clasePrueba.hora)
       
       alert('Clase de prueba agregada exitosamente. Revisa la consola para más detalles.')
     } catch (error) {

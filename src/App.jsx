@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { NotificationProvider } from './contexts/NotificationContext'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
@@ -45,8 +46,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-        <div className="min-h-screen transition-colors duration-300" style={{backgroundColor: 'rgb(var(--color-background))'}}>
+        <NotificationProvider>
+          <Router>
+          <div className="min-h-screen transition-colors duration-300" style={{backgroundColor: 'rgb(var(--color-background))'}}>
           <Routes>
             {/* Rutas independientes (sin Layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />
@@ -152,8 +154,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Register />} />
           </Routes>
-        </div>
+                  </div>
         </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   )

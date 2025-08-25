@@ -66,13 +66,8 @@ const MercadoPagoSimulado = () => {
         const paymentId = urlParams.get('payment_id') || Date.now()
         const externalReference = urlParams.get('external_reference') || 'reserva_123'
         
-        navigate('/pago/success', {
-          state: {
-            payment_id: paymentId,
-            status: 'approved',
-            external_reference: externalReference
-          }
-        })
+        // Redirigir con parámetros en la URL para que PagoSuccess los pueda leer
+        window.location.href = `/pago/success?payment_id=${paymentId}&status=approved&external_reference=${externalReference}`
       }, 3000)
     }, 3000)
   }
