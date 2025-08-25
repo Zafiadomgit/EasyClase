@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { Shield, CreditCard, Lock, CheckCircle, AlertCircle, Calendar, Clock, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { formatPrecio } from '../utils/currencyUtils'
 
 const Pago = () => {
   const { profesorId } = useParams()
@@ -23,14 +24,7 @@ const Pago = () => {
     cvv: ''
   })
 
-  // Función para formatear precios
-  const formatPrecio = (precio) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio)
-  }
+
 
   useEffect(() => {
     // Obtener datos de la reserva desde el state de navegación
@@ -388,15 +382,15 @@ const Pago = () => {
                     <span className="font-semibold">-{formatPrecio(reserva.descuento.montoDescuento)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-green-600">
-                  <span>Comisión de plataforma:</span>
-                  <span className="font-semibold">$3.500 (comisión reducida)</span>
-                </div>
-                <hr className="my-3" />
-                <div className="flex justify-between text-lg font-bold text-primary-600">
-                  <span>Total a pagar:</span>
-                  <span>{formatPrecio((reserva.total || reserva.costo) + 3500)}</span>
-                </div>
+                                 <div className="flex justify-between text-green-600">
+                   <span>Comisión de plataforma:</span>
+                   <span className="font-semibold">Incluida en el precio</span>
+                 </div>
+                 <hr className="my-3" />
+                 <div className="flex justify-between text-lg font-bold text-primary-600">
+                   <span>Total a pagar:</span>
+                   <span>{formatPrecio(reserva.total || reserva.costo)}</span>
+                 </div>
               </div>
             </div>
 

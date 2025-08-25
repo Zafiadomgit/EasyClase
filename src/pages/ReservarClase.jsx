@@ -364,10 +364,10 @@ const ReservarClase = () => {
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                   <span>Soporte 24/7 para resolver cualquier problema</span>
                 </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Comisión reducida para usuarios premium</span>
-                </div>
+                                 <div className="flex items-start">
+                   <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                   <span>Comisión incluida en el precio - no pagas extra</span>
+                 </div>
               </div>
             </div>
 

@@ -122,3 +122,49 @@ export const formatPrecioConDescuento = (precioOriginal, descuento) => {
     ahorro: formatPrecio(precioOriginal - precioFinal)
   }
 }
+
+/**
+ * Calcula la comisión que se descuenta al profesor
+ * @param {number} precio - El precio que paga el alumno
+ * @param {boolean} esPremium - Si el profesor es premium
+ * @returns {number} - Comisión que se descuenta al profesor
+ */
+export const calcularComisionProfesor = (precio, esPremium = false) => {
+  if (!precio) return 0
+  
+  const porcentajeComision = esPremium ? 10 : 20
+  return precio * (porcentajeComision / 100)
+}
+
+/**
+ * Calcula cuánto recibe el profesor después de la comisión
+ * @param {number} precio - El precio que paga el alumno
+ * @param {boolean} esPremium - Si el profesor es premium
+ * @returns {number} - Cantidad que recibe el profesor
+ */
+export const calcularGananciaProfesor = (precio, esPremium = false) => {
+  if (!precio) return 0
+  
+  const comision = calcularComisionProfesor(precio, esPremium)
+  return precio - comision
+}
+
+/**
+ * Formatea la información de comisión para mostrar al profesor
+ * @param {number} precio - El precio que paga el alumno
+ * @param {boolean} esPremium - Si el profesor es premium
+ * @returns {object} - Objeto con información de comisión
+ */
+export const obtenerInfoComision = (precio, esPremium = false) => {
+  const comision = calcularComisionProfesor(precio, esPremium)
+  const ganancia = calcularGananciaProfesor(precio, esPremium)
+  const porcentaje = esPremium ? 10 : 20
+  
+  return {
+    precioAlumno: precio,
+    comision: comision,
+    gananciaProfesor: ganancia,
+    porcentajeComision: porcentaje,
+    esPremium: esPremium
+  }
+}
