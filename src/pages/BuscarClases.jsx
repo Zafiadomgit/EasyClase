@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { profesorService } from '../services/api'
+import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
 const BuscarClases = () => {
   const [profesores, setProfesores] = useState([])
@@ -377,14 +378,7 @@ const BuscarClases = () => {
     setLoading(false)
   }, [])
 
-  // Función para formatear precio
-  const formatPrecio = (precio) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio)
-  }
+
 
   if (loading) {
     return (

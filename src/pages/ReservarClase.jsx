@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Star, Clock, DollarSign, Shield, Calendar, User, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import ChatModal from '../components/Chat/ChatModal'
+import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
 const ReservarClase = () => {
   const { profesorId } = useParams()
@@ -27,14 +28,7 @@ const ReservarClase = () => {
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ]
 
-  // Función para formatear precios
-  const formatPrecio = (precio) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio)
-  }
+
 
   useEffect(() => {
     // Verificar autenticación
@@ -60,7 +54,7 @@ const ReservarClase = () => {
         especialidad: 'Excel Avanzado',
         rating: 4.9,
         reviews: 127,
-        tarifa: 35,
+        tarifa: 35000,
         experiencia: '5 años',
         descripcion: 'Especialista en Excel con certificación Microsoft. He ayudado a más de 500 profesionales a dominar las herramientas avanzadas de Excel.',
         foto: '/api/placeholder/150/150',
@@ -108,7 +102,7 @@ const ReservarClase = () => {
       console.log('Creando reserva:', reserva)
 
       // Redirigir al pago
-      navigate(`/pago/${profesorId}`, { 
+      navigate('/pago', { 
         state: { 
           reserva,
           profesor: profesor
@@ -199,7 +193,7 @@ const ReservarClase = () => {
                 </div>
                 <div className="flex items-center">
                   <DollarSign className="w-4 h-4 mr-1" />
-                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}/hora</span>
+                  <span className="font-semibold">{formatPrecioPorHora(profesor.tarifa)}</span>
                 </div>
               </div>
             </div>

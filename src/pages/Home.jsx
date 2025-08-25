@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
-import TestimonialsCarousel from '../components/Testimonials/TestimonialsCarousel'
+import SimpleTestimonials from '../components/Testimonials/SimpleTestimonials'
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
   PayPerHourIcon, 
@@ -785,12 +785,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonios con Carrusel */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <TestimonialsCarousel />
-        </div>
-      </section>
+      {/* Testimonios */}
+      <SimpleTestimonials />
 
       {/* FAQ Section */}
       <section className="py-20 bg-white">

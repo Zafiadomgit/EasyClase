@@ -16,6 +16,9 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { claseService } from '../services/api.js'
+import EnhancedChatModal from '../components/Chat/EnhancedChatModal'
+import { communicationService } from '../services/communicationService'
+import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
 const PerfilProfesor = () => {
   const { id } = useParams()
@@ -27,6 +30,8 @@ const PerfilProfesor = () => {
   const [duration, setDuration] = useState(1)
   const [descuentoInfo, setDescuentoInfo] = useState(null)
   const [loadingDescuento, setLoadingDescuento] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [chatError, setChatError] = useState('')
 
   // Datos del profesor (normalmente vendrían de una API)
   const profesor = {
@@ -99,13 +104,7 @@ const PerfilProfesor = () => {
     cargarDescuentoInfo();
   }, [user, profesor.especialidad, profesor.id]);
 
-  const formatPrecio = (precio) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio)
-  }
+
 
   const handleReservarClase = () => {
     if (!selectedDate || !selectedTime) {
@@ -141,10 +140,55 @@ const PerfilProfesor = () => {
     navigate('/pago', { state: { reserva: data, profesor } })
   }
 
+  const handleOpenChat = () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    setIsChatOpen(true)
+  }
+
+  const handleCloseChat = () => {
+    setIsChatOpen(false)
+    setChatError('')
+  }
+
+  const handleSendMessage = async (messageData) => {
+    try {
+      if (messageData.type === 'violation') {
+        // Reportar violación al sistema
+        await communicationService.reportViolation({
+          userId: user.id,
+          type: messageData.violations[0].type,
+          content: messageData.violations[0].matches.join(', '),
+          warningCount: messageData.warningCount,
+          context: 'profesor_chat'
+        })
+        
+        // Enviar notificación de advertencia
+        await communicationService.sendWarningNotification(user.id, {
+          type: 'contact_sharing',
+          message: `Has recibido una advertencia por intentar compartir información de contacto. Advertencia ${messageData.warningCount}/3.`,
+          count: messageData.warningCount
+        })
+      } else {
+        // Enviar mensaje normal
+        await communicationService.sendChatMessage({
+          senderId: user.id,
+          receiverId: profesor.id,
+          content: messageData.content
+        })
+      }
+    } catch (error) {
+      console.error('Error enviando mensaje:', error)
+      setChatError('Error al enviar el mensaje. Por favor intenta de nuevo.')
+    }
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header del perfil */}
-      <div className="card mb-8">
+      <div className="card mb-8 bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Foto y info básica */}
           <div className="flex-shrink-0">
@@ -158,13 +202,13 @@ const PerfilProfesor = () => {
           {/* Información principal */}
           <div className="flex-1">
             <div className="text-center lg:text-left">
-              <h1 className="text-3xl font-bold text-secondary-900 mb-2 font-display">
+              <h1 className="text-3xl font-bold text-secondary-900 dark:text-gray-100 mb-2 font-display">
                 {profesor.nombre}
               </h1>
-              <p className="text-xl text-primary-600 font-medium mb-2">
+              <p className="text-xl text-primary-600 dark:text-primary-400 font-medium mb-2">
                 {profesor.especialidad}
               </p>
-              <p className="text-secondary-600 mb-4">
+              <p className="text-secondary-600 dark:text-gray-400 mb-4">
                 {profesor.titulo} • {profesor.experiencia} de experiencia
               </p>
 
@@ -172,14 +216,14 @@ const PerfilProfesor = () => {
               <div className="flex flex-wrap justify-center lg:justify-start items-center gap-6 mb-6">
                 <div className="flex items-center">
                   <Star className="w-5 h-5 text-yellow-400 fill-current mr-1" />
-                  <span className="font-semibold text-secondary-900">{profesor.rating}</span>
-                  <span className="text-secondary-600 ml-1">({profesor.reviewsCount} reseñas)</span>
+                  <span className="font-semibold text-secondary-900 dark:text-gray-100">{profesor.rating}</span>
+                  <span className="text-secondary-600 dark:text-gray-400 ml-1">({profesor.reviewsCount} reseñas)</span>
                 </div>
-                <div className="flex items-center text-secondary-600">
+                <div className="flex items-center text-secondary-600 dark:text-gray-400">
                   <MapPin className="w-4 h-4 mr-1" />
                   {profesor.ubicacion}
                 </div>
-                <div className="flex items-center text-secondary-600">
+                <div className="flex items-center text-secondary-600 dark:text-gray-400">
                   <Clock className="w-4 h-4 mr-1" />
                   {profesor.modalidad}
                 </div>
@@ -188,16 +232,16 @@ const PerfilProfesor = () => {
               {/* Estadísticas */}
               <div className="grid grid-cols-3 gap-4 text-center lg:text-left">
                 <div>
-                  <p className="text-2xl font-bold text-secondary-900">{profesor.clasesCompletadas}</p>
-                  <p className="text-sm text-secondary-600">Clases completadas</p>
+                  <p className="text-2xl font-bold text-secondary-900 dark:text-gray-100">{profesor.clasesCompletadas}</p>
+                  <p className="text-sm text-secondary-600 dark:text-gray-400">Clases completadas</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-secondary-900">{profesor.estudiantesActivos}</p>
-                  <p className="text-sm text-secondary-600">Estudiantes activos</p>
+                  <p className="text-2xl font-bold text-secondary-900 dark:text-gray-100">{profesor.estudiantesActivos}</p>
+                  <p className="text-sm text-secondary-600 dark:text-gray-400">Estudiantes activos</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-secondary-900">{profesor.responseTime}</p>
-                  <p className="text-sm text-secondary-600">Tiempo de respuesta</p>
+                  <p className="text-2xl font-bold text-secondary-900 dark:text-gray-100">{profesor.responseTime}</p>
+                  <p className="text-sm text-secondary-600 dark:text-gray-400">Tiempo de respuesta</p>
                 </div>
               </div>
             </div>
@@ -205,12 +249,12 @@ const PerfilProfesor = () => {
 
           {/* Tarjeta de reserva */}
           <div className="lg:w-80 flex-shrink-0">
-            <div className="border border-secondary-200 rounded-xl p-6 bg-secondary-50">
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-secondary-900">
-                  {formatPrecio(profesor.precio)}
-                  <span className="text-lg font-normal text-secondary-600">/hora</span>
-                </div>
+            <div className="border border-secondary-200 dark:border-gray-600 rounded-xl p-6 bg-secondary-50 dark:bg-gray-800">
+                              <div className="text-center mb-6">
+                  <div className="text-3xl font-bold text-secondary-900 dark:text-gray-100">
+                    {formatPrecio(profesor.precio)}
+                    <span className="text-lg font-normal text-secondary-600 dark:text-gray-400">/hora</span>
+                  </div>
                 
                 {/* Información de descuento */}
                 {descuentoInfo && descuentoInfo.puedeAplicar && (
@@ -240,12 +284,12 @@ const PerfilProfesor = () => {
 
               {/* Selector de fecha */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                   Fecha
                 </label>
                 <input
                   type="date"
-                  className="input-field"
+                  className="input-field dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
@@ -254,7 +298,7 @@ const PerfilProfesor = () => {
 
               {/* Selector de hora */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                   Hora
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -265,7 +309,7 @@ const PerfilProfesor = () => {
                       className={`p-2 rounded-lg border text-sm font-medium transition-colors ${
                         selectedTime === hora
                           ? 'bg-primary-600 text-white border-primary-600'
-                          : 'border-secondary-300 text-secondary-700 hover:border-primary-300'
+                          : 'border-secondary-300 dark:border-gray-600 text-secondary-700 dark:text-gray-300 hover:border-primary-300 dark:hover:border-primary-400'
                       }`}
                     >
                       {hora}
@@ -276,13 +320,13 @@ const PerfilProfesor = () => {
 
               {/* Duración */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                   Duración (horas)
                 </label>
                 <select
                   value={duration}
                   onChange={(e) => setDuration(parseInt(e.target.value))}
-                  className="input-field"
+                  className="input-field dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                 >
                   <option value={1}>1 hora</option>
                   <option value={2}>2 horas</option>
@@ -292,10 +336,10 @@ const PerfilProfesor = () => {
               </div>
 
               {/* Total */}
-              <div className="mb-6 p-3 bg-white rounded-lg border border-secondary-200">
+              <div className="mb-6 p-3 bg-white dark:bg-gray-700 rounded-lg border border-secondary-200 dark:border-gray-600">
                 <div className="flex justify-between items-center">
-                  <span className="text-secondary-700">Total:</span>
-                  <span className="text-xl font-bold text-secondary-900">
+                  <span className="text-secondary-700 dark:text-gray-300">Total:</span>
+                  <span className="text-xl font-bold text-secondary-900 dark:text-gray-100">
                     {formatPrecio(profesor.precio * duration)}
                   </span>
                 </div>
@@ -308,7 +352,10 @@ const PerfilProfesor = () => {
                 Reservar Clase
               </button>
 
-              <button className="w-full btn-outline mt-3">
+              <button 
+                onClick={handleOpenChat}
+                className="w-full btn-outline mt-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+              >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Enviar Mensaje
               </button>
@@ -319,7 +366,7 @@ const PerfilProfesor = () => {
 
       {/* Tabs */}
       <div className="mb-8">
-        <div className="border-b border-secondary-200">
+        <div className="border-b border-secondary-200 dark:border-gray-600">
           <nav className="flex space-x-8">
             {[
               { id: 'resumen', label: 'Resumen' },
@@ -331,8 +378,8 @@ const PerfilProfesor = () => {
                 onClick={() => setSelectedTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   selectedTab === tab.id
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-secondary-500 dark:text-gray-400 hover:text-secondary-700 dark:hover:text-gray-300 hover:border-secondary-300 dark:hover:border-gray-500'
                 }`}
               >
                 {tab.label}
@@ -347,20 +394,20 @@ const PerfilProfesor = () => {
         <div className="lg:col-span-2">
           {selectedTab === 'resumen' && (
             <div className="space-y-6">
-              <div className="card">
-                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Acerca de mí</h3>
-                <p className="text-secondary-700 leading-relaxed">
+              <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-secondary-900 dark:text-gray-100 mb-4">Acerca de mí</h3>
+                <p className="text-secondary-700 dark:text-gray-300 leading-relaxed">
                   {profesor.descripcion}
                 </p>
               </div>
 
-              <div className="card">
-                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Habilidades</h3>
+              <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-secondary-900 dark:text-gray-100 mb-4">Habilidades</h3>
                 <div className="flex flex-wrap gap-2">
                   {profesor.habilidades.map((habilidad, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium"
+                      className="px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium"
                     >
                       {habilidad}
                     </span>
@@ -368,9 +415,9 @@ const PerfilProfesor = () => {
                 </div>
               </div>
 
-              <div className="card">
-                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Disponibilidad</h3>
-                <p className="text-secondary-700">{profesor.disponibilidad}</p>
+              <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-secondary-900 dark:text-gray-100 mb-4">Disponibilidad</h3>
+                <p className="text-secondary-700 dark:text-gray-300">{profesor.disponibilidad}</p>
               </div>
             </div>
           )}
@@ -378,24 +425,24 @@ const PerfilProfesor = () => {
           {selectedTab === 'resenas' && (
             <div className="space-y-4">
               {resenas.map((resena, index) => (
-                <div key={index} className="card">
+                <div key={index} className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-semibold text-secondary-900">{resena.estudiante}</p>
+                      <p className="font-semibold text-secondary-900 dark:text-gray-100">{resena.estudiante}</p>
                       <div className="flex items-center mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
                             className={`w-4 h-4 ${
-                              i < resena.rating ? 'text-yellow-400 fill-current' : 'text-secondary-300'
+                              i < resena.rating ? 'text-yellow-400 fill-current' : 'text-secondary-300 dark:text-gray-600'
                             }`}
                           />
                         ))}
                       </div>
                     </div>
-                    <span className="text-sm text-secondary-500">{resena.fecha}</span>
+                    <span className="text-sm text-secondary-500 dark:text-gray-400">{resena.fecha}</span>
                   </div>
-                  <p className="text-secondary-700">{resena.comentario}</p>
+                  <p className="text-secondary-700 dark:text-gray-300">{resena.comentario}</p>
                 </div>
               ))}
             </div>
@@ -403,13 +450,13 @@ const PerfilProfesor = () => {
 
           {selectedTab === 'experiencia' && (
             <div className="space-y-6">
-              <div className="card">
-                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Certificaciones</h3>
+              <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-secondary-900 dark:text-gray-100 mb-4">Certificaciones</h3>
                 <ul className="space-y-2">
                   {profesor.certificaciones.map((cert, index) => (
                     <li key={index} className="flex items-center">
-                      <Award className="w-5 h-5 text-primary-600 mr-3" />
-                      <span className="text-secondary-700">{cert}</span>
+                      <Award className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-3" />
+                      <span className="text-secondary-700 dark:text-gray-300">{cert}</span>
                     </li>
                   ))}
                 </ul>
@@ -420,27 +467,27 @@ const PerfilProfesor = () => {
 
         {/* Sidebar con info adicional */}
         <div className="space-y-6">
-          <div className="card">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">Datos Verificados</h3>
+          <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100 mb-4">Datos Verificados</h3>
             <div className="space-y-3">
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                <span className="text-secondary-700">Identidad verificada</span>
+                <span className="text-secondary-700 dark:text-gray-300">Identidad verificada</span>
               </div>
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                <span className="text-secondary-700">Email verificado</span>
+                <span className="text-secondary-700 dark:text-gray-300">Email verificado</span>
               </div>
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                <span className="text-secondary-700">Teléfono verificado</span>
+                <span className="text-secondary-700 dark:text-gray-300">Teléfono verificado</span>
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">Políticas</h3>
-            <div className="space-y-3 text-sm text-secondary-700">
+          <div className="card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100 mb-4">Políticas</h3>
+            <div className="space-y-3 text-sm text-secondary-700 dark:text-gray-300">
               <p><strong>Cancelación:</strong> Hasta 2 horas antes sin penalización</p>
               <p><strong>Reprogramación:</strong> Permitida con 4 horas de anticipación</p>
               <p><strong>Reembolso:</strong> 100% si no estás satisfecho</p>
@@ -448,6 +495,29 @@ const PerfilProfesor = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Chat */}
+      <EnhancedChatModal
+        isOpen={isChatOpen}
+        onClose={handleCloseChat}
+        profesor={profesor}
+        onSendMessage={handleSendMessage}
+      />
+
+      {/* Mostrar error si existe */}
+      {chatError && (
+        <div className="fixed bottom-4 right-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg shadow-lg z-50">
+          <div className="flex items-center">
+            <span className="text-sm">{chatError}</span>
+            <button
+              onClick={() => setChatError('')}
+              className="ml-3 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
