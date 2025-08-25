@@ -1,28 +1,27 @@
-// Servicio para integración con MercadoPago
-// Versión funcional sin backend - Simula el proceso completo
+// Servicio real para integración con MercadoPago
+import mercadopago from 'mercadopago'
 
 class MercadoPagoService {
   constructor() {
-    // Credenciales simuladas para desarrollo
+    // Configurar MercadoPago con credenciales reales
     this.publicKey = process.env.REACT_APP_MERCADOPAGO_PUBLIC_KEY || 'TEST-12345678-1234-1234-1234-123456789012'
+    this.accessToken = process.env.REACT_APP_MERCADOPAGO_ACCESS_TOKEN || 'TEST-12345678-1234-1234-1234-123456789012'
     this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api'
+    
+    // Configurar MercadoPago SDK
+    mercadopago.configure({
+      access_token: this.accessToken
+    })
   }
 
   /**
-   * Crea una preferencia de pago en MercadoPago (SIMULADO)
+   * Crea una preferencia de pago real en MercadoPago
    * @param {Object} paymentData - Datos del pago
    * @returns {Promise<Object>} - Respuesta de MercadoPago
    */
   async createPaymentPreference(paymentData) {
     try {
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Simular respuesta exitosa de MercadoPago
       const preference = {
-        id: `pref_${Date.now()}`,
-        init_point: `${window.location.origin}/pago/success?payment_id=${Date.now()}&status=approved&external_reference=${paymentData.reservaId}`,
-        sandbox_init_point: `${window.location.origin}/pago/success?payment_id=${Date.now()}&status=approved&external_reference=${paymentData.reservaId}`,
         items: [{
           id: paymentData.reservaId,
           title: `Clase con ${paymentData.profesor.nombre}`,
@@ -35,11 +34,20 @@ class MercadoPagoService {
           email: paymentData.payerEmail
         },
         external_reference: paymentData.reservaId,
-        auto_return: 'approved'
+        notification_url: `${this.baseURL}/mercadopago/webhook`,
+        back_urls: {
+          success: `${window.location.origin}/pago/success`,
+          failure: `${window.location.origin}/pago/failure`,
+          pending: `${window.location.origin}/pago/pending`
+        },
+        auto_return: 'approved',
+        expires: true,
+        expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
       }
 
-      console.log('Preferencia creada (simulada):', preference)
-      return preference
+      const response = await mercadopago.preferences.create(preference)
+      console.log('Preferencia creada (real):', response)
+      return response
     } catch (error) {
       console.error('Error en MercadoPago:', error)
       throw new Error('No se pudo procesar el pago. Intenta nuevamente.')
@@ -47,72 +55,48 @@ class MercadoPagoService {
   }
 
   /**
-   * Procesa un pago con tarjeta de crédito/débito (SIMULADO)
+   * Procesa un pago con tarjeta de crédito/débito real
    * @param {Object} cardData - Datos de la tarjeta
    * @param {Object} paymentData - Datos del pago
    * @returns {Promise<Object>} - Respuesta del pago
    */
   async processCardPayment(cardData, paymentData) {
     try {
-      // Simular delay de procesamiento
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Simular validación de tarjeta
-      const cardNumber = cardData.number.replace(/\s/g, '')
+      // Crear token de tarjeta
+      const cardToken = await this.createCardToken(cardData)
       
-      // Tarjetas de prueba para simular diferentes resultados
-      if (cardNumber.startsWith('4000')) {
-        // Tarjeta que simula rechazo
-        throw new Error('Tarjeta rechazada. Verifica los datos.')
-      } else if (cardNumber.startsWith('5000')) {
-        // Tarjeta que simula pago pendiente
-        return {
-          id: `pay_${Date.now()}`,
-          status: 'pending',
-          status_detail: 'pending_review',
-          external_reference: paymentData.reservaId
-        }
-      } else {
-        // Tarjeta que simula pago exitoso
-        return {
-          id: `pay_${Date.now()}`,
-          status: 'approved',
-          status_detail: 'accredited',
-          external_reference: paymentData.reservaId,
-          transaction_amount: paymentData.amount,
-          payment_method: {
-            type: 'credit_card',
-            id: 'visa'
-          }
-        }
+      // Procesar pago
+      const payment = {
+        transaction_amount: paymentData.amount,
+        token: cardToken,
+        description: `Clase con ${paymentData.profesor.nombre}`,
+        installments: cardData.installments || 1,
+        payment_method_id: cardData.paymentMethodId || 'visa',
+        payer: {
+          email: paymentData.payerEmail
+        },
+        external_reference: paymentData.reservaId
       }
+
+      const response = await mercadopago.payment.save(payment)
+      console.log('Pago procesado (real):', response)
+      return response
     } catch (error) {
       console.error('Error procesando pago con tarjeta:', error)
-      throw error
+      throw new Error(error.message || 'Error al procesar el pago con tarjeta')
     }
   }
 
   /**
-   * Obtiene el estado de un pago (SIMULADO)
+   * Obtiene el estado real de un pago
    * @param {string} paymentId - ID del pago
    * @returns {Promise<Object>} - Estado del pago
    */
   async getPaymentStatus(paymentId) {
     try {
-      // Simular delay de consulta
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Simular respuesta de estado
-      return {
-        id: paymentId,
-        status: 'approved',
-        status_detail: 'accredited',
-        transaction_amount: 35000,
-        payment_method: {
-          type: 'credit_card',
-          id: 'visa'
-        }
-      }
+      const response = await mercadopago.payment.get(paymentId)
+      console.log('Estado del pago (real):', response)
+      return response
     } catch (error) {
       console.error('Error obteniendo estado del pago:', error)
       throw new Error('No se pudo verificar el estado del pago')
@@ -120,19 +104,16 @@ class MercadoPagoService {
   }
 
   /**
-   * Inicializa MercadoPago SDK (SIMULADO)
+   * Inicializa MercadoPago SDK
    * @returns {Promise<Object>} - Instancia de MercadoPago
    */
   async initializeMercadoPago() {
     try {
-      // Simular inicialización
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      console.log('MercadoPago inicializado (simulado)')
+      console.log('MercadoPago inicializado (real)')
       return {
         publicKey: this.publicKey,
         initialized: true,
-        environment: 'sandbox'
+        environment: this.accessToken.startsWith('TEST') ? 'sandbox' : 'production'
       }
     } catch (error) {
       console.error('Error inicializando MercadoPago:', error)
@@ -141,40 +122,28 @@ class MercadoPagoService {
   }
 
   /**
-   * Crea un token de tarjeta para MercadoPago (SIMULADO)
+   * Crea un token real de tarjeta para MercadoPago
    * @param {Object} cardData - Datos de la tarjeta
    * @returns {Promise<string>} - Token de la tarjeta
    */
   async createCardToken(cardData) {
     try {
-      // Simular delay de tokenización
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Validar datos básicos
-      const cardNumber = cardData.number.replace(/\s/g, '')
-      const cvv = cardData.cvv
-      const expiration = cardData.expiration
-
-      if (!cardNumber || cardNumber.length < 13) {
-        throw new Error('Número de tarjeta inválido')
+      const cardToken = {
+        card_number: cardData.number.replace(/\s/g, ''),
+        security_code: cardData.cvv,
+        expiration_month: cardData.expiration.split('/')[0],
+        expiration_year: '20' + cardData.expiration.split('/')[1],
+        cardholder: {
+          name: cardData.name
+        }
       }
 
-      if (!cvv || cvv.length < 3) {
-        throw new Error('CVV inválido')
-      }
-
-      if (!expiration || !expiration.includes('/')) {
-        throw new Error('Fecha de expiración inválida')
-      }
-
-      // Simular token exitoso
-      const token = `tok_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      
-      console.log('Token creado (simulado):', token)
-      return token
+      const response = await mercadopago.card_token.create(cardToken)
+      console.log('Token creado (real):', response)
+      return response.id
     } catch (error) {
       console.error('Error creando token de tarjeta:', error)
-      throw error
+      throw new Error(error.message || 'Error al procesar la tarjeta')
     }
   }
 
@@ -226,6 +195,36 @@ class MercadoPagoService {
       isValid: errors.length === 0,
       errors
     }
+  }
+
+  /**
+   * Obtiene métodos de pago disponibles
+   * @returns {Promise<Array>} - Lista de métodos de pago
+   */
+  async getPaymentMethods() {
+    try {
+      const response = await mercadopago.payment_methods.list()
+      return response
+    } catch (error) {
+      console.error('Error obteniendo métodos de pago:', error)
+      return []
+    }
+  }
+
+  /**
+   * Identifica el tipo de tarjeta basado en el número
+   * @param {string} cardNumber - Número de tarjeta
+   * @returns {string} - Tipo de tarjeta
+   */
+  identifyCardType(cardNumber) {
+    const cleanNumber = cardNumber.replace(/\s/g, '')
+    
+    if (cleanNumber.startsWith('4')) return 'visa'
+    if (cleanNumber.startsWith('5')) return 'mastercard'
+    if (cleanNumber.startsWith('3')) return 'amex'
+    if (cleanNumber.startsWith('6')) return 'discover'
+    
+    return 'visa' // Por defecto
   }
 }
 

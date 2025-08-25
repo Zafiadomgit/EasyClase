@@ -99,11 +99,11 @@ const Pago = () => {
           payerEmail: user?.email || 'usuario@example.com'
         }
 
-        const cardData = {
-          token: cardToken,
-          paymentMethodId: 'visa', // Esto se determinaría basado en el número de tarjeta
-          installments: 1
-        }
+                 const cardData = {
+           token: cardToken,
+           paymentMethodId: mercadopagoService.identifyCardType(datosTargeta.numero),
+           installments: 1
+         }
 
         const paymentResult = await mercadopagoService.processCardPayment(cardData, paymentData)
         
