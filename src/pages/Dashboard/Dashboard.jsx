@@ -21,7 +21,9 @@ import {
   Bug
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { claseService, servicioService, profesorService } from '../../services/api'
+import { servicioService, profesorService } from '../../services/api'
+import claseServiceLocal from '../../services/claseService'
+import { formatPrecio } from '../../utils/currencyUtils'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 
 // Componente de prueba para Sentry
@@ -69,9 +71,16 @@ const Dashboard = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true)
-      // Obtener clases del usuario desde la API
-      const response = await claseService.obtenerMisClases()
-      setClases(response.data?.clases || [])
+      // Obtener clases del usuario usando el servicio local
+      try {
+        const userId = user?.id || 'user_' + Date.now()
+        const proximasClases = await claseServiceLocal.obtenerProximasClases(userId)
+        setClases(proximasClases)
+        console.log('Clases cargadas:', proximasClases)
+      } catch (clasesError) {
+        console.log('Error cargando clases locales:', clasesError)
+        setClases([])
+      }
 
       // Obtener servicios si el usuario puede ofrecer servicios
       try {
@@ -403,15 +412,15 @@ const Dashboard = () => {
               Próximas Clases
             </h2>
             
-            {proximasClases.length > 0 ? (
+            {clases.length > 0 ? (
               <div className="space-y-4">
-                {proximasClases.map((clase) => (
-                  <div key={clase._id} className="border border-secondary-200 rounded-lg p-4 hover:bg-secondary-50 transition-colors">
+                {clases.map((clase) => (
+                  <div key={clase.id} className="border border-secondary-200 rounded-lg p-4 hover:bg-secondary-50 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-secondary-900">{clase.materia}</h3>
+                        <h3 className="font-semibold text-secondary-900">{clase.tema}</h3>
                         <p className="text-secondary-600 text-sm">
-                          {isEstudiante() ? `Profesor: ${clase.profesor?.nombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
+                          {isEstudiante() ? `Profesor: ${clase.profesorNombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
                         </p>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
                           <span className="flex items-center">
@@ -420,11 +429,11 @@ const Dashboard = () => {
                           </span>
                           <span className="flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            {clase.horaInicio} ({clase.duracion}h)
+                            {clase.hora} ({clase.duracion}h)
                           </span>
                         </div>
                         <p className="text-secondary-500 text-sm mt-1">
-                          {formatPrecio(clase.total)} • {clase.modalidad}
+                          {formatPrecio(clase.total)} • {clase.metodoPago}
                         </p>
                       </div>
                       <div className="text-right">
@@ -439,14 +448,17 @@ const Dashboard = () => {
                            clase.estado === 'solicitada' ? 'Solicitada' : clase.estado}
                         </span>
                         <div className="mt-2 space-y-2">
-                          {clase.estado === 'confirmada' && (
+                          {clase.estado === 'confirmada' && claseServiceLocal.verificarClaseProxima(clase) && (
                             <button 
-                              onClick={() => unirseAClase(clase._id)}
-                              className="bg-green-600 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-700 flex items-center space-x-1"
+                              onClick={() => unirseAClase(clase.id)}
+                              className="bg-green-600 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-700 flex items-center space-x-1 animate-pulse"
                             >
                               <Video className="w-4 h-4" />
-                              <span>Unirse a Clase</span>
+                              <span>¡Unirse Ahora!</span>
                             </button>
+                          )}
+                          {clase.estado === 'confirmada' && !claseServiceLocal.verificarClaseProxima(clase) && (
+                            <p className="text-xs text-green-600">Videollamada disponible 10 min antes</p>
                           )}
                           <button className="btn-primary text-sm px-3 py-1">
                             Ver Detalles
