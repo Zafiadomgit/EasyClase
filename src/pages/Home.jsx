@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
+import TestimonialsCarousel from '../components/Testimonials/TestimonialsCarousel'
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
   PayPerHourIcon, 
@@ -784,33 +785,10 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonios */}
-      <section className="py-16 bg-white">
+      {/* Testimonios con Carrusel */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4 font-display">
-              Lo que dicen nuestros estudiantes
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonios.map((testimonio, index) => (
-              <div key={index} className="card text-center">
-                <div className="flex justify-center mb-4">
-                  {[...Array(testimonio.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-secondary-600 mb-4 italic">
-                  "{testimonio.testimonio}"
-                </p>
-                <div>
-                  <p className="font-semibold text-secondary-900">{testimonio.nombre}</p>
-                  <p className="text-secondary-500 text-sm">{testimonio.profesion}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <TestimonialsCarousel />
         </div>
       </section>
 

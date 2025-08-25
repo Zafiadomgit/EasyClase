@@ -101,11 +101,52 @@ const Terminos = () => {
               <li>Mantener un comportamiento respetuoso</li>
               <li>Proporcionar feedback honesto sobre los servicios recibidos</li>
               <li>No solicitar servicios fuera de la plataforma para evitar comisiones</li>
+              <li><strong>NO compartir información de contacto personal (teléfonos, emails, redes sociales) con los profesores</strong></li>
+              <li>Usar únicamente los canales oficiales de comunicación de la plataforma</li>
             </ul>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">8. Política de Cancelación</h2>
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">8. Política de Comunicación y Seguridad</h2>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">🚫 Prohibición de Intercambio de Información de Contacto</h3>
+              <p className="text-red-700 mb-3">
+                Para garantizar la seguridad de todos los usuarios y el correcto funcionamiento de la plataforma, 
+                <strong>está estrictamente prohibido</strong> compartir información de contacto personal entre estudiantes y profesores.
+              </p>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                <li>Números de teléfono (móvil, fijo, WhatsApp)</li>
+                <li>Direcciones de email personales</li>
+                <li>Usuarios de redes sociales (Instagram, Facebook, Twitter, etc.)</li>
+                <li>Enlaces a plataformas de comunicación externas</li>
+                <li>Cualquier otra información que permita contacto directo fuera de la plataforma</li>
+              </ul>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">✅ Canales Oficiales Permitidos</h3>
+              <ul className="list-disc list-inside text-blue-700 space-y-1">
+                <li>Chat interno de la plataforma</li>
+                <li>Videollamadas integradas durante las clases programadas</li>
+                <li>Mensajes a través del sistema de notificaciones</li>
+                <li>Comunicación a través del soporte oficial</li>
+              </ul>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Sanciones por Violación</h3>
+              <ul className="list-disc list-inside text-yellow-700 space-y-1">
+                <li><strong>Primera advertencia:</strong> Notificación automática del sistema</li>
+                <li><strong>Segunda advertencia:</strong> Bloqueo temporal del chat (24 horas)</li>
+                <li><strong>Tercera advertencia:</strong> Suspensión de la cuenta por 7 días</li>
+                <li><strong>Violaciones repetidas:</strong> Baneo permanente de la plataforma</li>
+              </ul>
+              <p className="text-yellow-700 mt-3 font-medium">
+                <strong>Importante:</strong> Esta política es fundamental para garantizar la seguridad de tu dinero y la integridad de la plataforma.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">9. Política de Cancelación</h2>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
               <h3 className="text-lg font-semibold text-yellow-800 mb-2">Cancelaciones</h3>
               <ul className="list-disc list-inside text-yellow-700 space-y-1">
@@ -118,28 +159,28 @@ const Terminos = () => {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">9. Propiedad Intelectual</h2>
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">10. Propiedad Intelectual</h2>
             <p className="text-secondary-700 leading-relaxed mb-4">
               Todo el contenido de la plataforma, incluyendo textos, gráficos, logos, iconos, imágenes, clips de audio, descargas digitales y software, es propiedad de EasyClase y está protegido por las leyes de derechos de autor.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">10. Limitación de Responsabilidad</h2>
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">11. Limitación de Responsabilidad</h2>
             <p className="text-secondary-700 leading-relaxed mb-4">
               EasyClase actúa únicamente como intermediario. No somos responsables por la calidad, seguridad o legalidad de los servicios ofrecidos por los profesores, ni por la capacidad de pago de los estudiantes.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">11. Modificaciones</h2>
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">12. Modificaciones</h2>
             <p className="text-secondary-700 leading-relaxed mb-4">
               Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios importantes serán notificados con 30 días de anticipación.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">12. Contacto</h2>
+            <h2 className="text-2xl font-semibold text-secondary-900 mb-4">13. Contacto</h2>
             <p className="text-secondary-700 leading-relaxed">
               Si tiene preguntas sobre estos Términos de Servicio, contáctenos en:
             </p>

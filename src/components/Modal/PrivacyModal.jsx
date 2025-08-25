@@ -46,10 +46,10 @@ const PrivacyModal = ({ isOpen, onClose, onAccept }) => {
         />
 
         {/* Modal content */}
-        <div className="inline-block w-full max-w-4xl px-6 py-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+        <div className="inline-block w-full max-w-4xl px-6 py-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-600">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Política de Privacidad
             </h3>
             <button

@@ -69,7 +69,7 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-amber-600 to-orange-600 text-white p-6 rounded-t-2xl">
           <button
@@ -96,7 +96,7 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
         <div className="p-6">
           {/* Beneficios */}
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
               ¿Por qué Premium? 🚀
             </h3>
             <div className="space-y-3">
@@ -105,7 +105,7 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
                   <div className="bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
                     {beneficio.icon}
                   </div>
-                  <span className="text-gray-700 text-sm">{beneficio.texto}</span>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">{beneficio.texto}</span>
                 </div>
               ))}
             </div>
@@ -113,7 +113,7 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
 
           {/* Selector de Plan */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Elige tu plan:</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Elige tu plan:</h4>
             <div className="space-y-2">
               {Object.keys(planes).map((plan) => (
                 <button
@@ -121,18 +121,18 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
                   onClick={() => setSelectedPlan(plan)}
                   className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
                     selectedPlan === plan
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-gray-200 hover:border-amber-300'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-amber-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className={`font-medium ${selectedPlan === plan ? 'text-amber-700' : 'text-gray-900'}`}>
+                      <div className={`font-medium ${selectedPlan === plan ? 'text-amber-700 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'}`}>
                         {plan === 'mensual' && 'Plan Mensual'}
                         {plan === 'trimestral' && 'Plan Trimestral ⭐'}
                         {plan === 'anual' && 'Plan Anual 🎯'}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
                         {formatPrecio(planes[plan].precio)}{planes[plan].periodo}
                       </div>
                     </div>
@@ -159,15 +159,15 @@ const PremiumModal = ({ isOpen, onClose, user }) => {
             
             <button
               onClick={handleMasTarde}
-              className="w-full text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full text-gray-600 dark:text-gray-400 py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Tal vez más tarde
             </button>
           </div>
 
           {/* Trust indicators */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center">
                 <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                 Sin compromisos
