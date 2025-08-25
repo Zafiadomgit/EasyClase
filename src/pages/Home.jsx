@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
-import SimpleTestimonials from '../components/Testimonials/SimpleTestimonials'
+import TestimonialsCarousel from '../components/Testimonials/TestimonialsCarousel'
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
   PayPerHourIcon, 
@@ -459,9 +459,9 @@ const Home = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-secondary-900 mb-6 font-display">
               Descuentos Especiales para tu Primera Clase
             </h2>
-            <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-              Obtén un 10% de descuento en tu primera clase de cada categoría. ¡Y con Premium, todos los descuentos que quieras!
-            </p>
+                         <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
+               Obtén un 10% de descuento en tu primera clase de cada categoría. ¡Y con Premium, comisión reducida en todas las clases!
+             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -487,10 +487,10 @@ const Home = () => {
                   <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                   <span>Descuento asumido por el profesor</span>
                 </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Sin costos ocultos</span>
-                </li>
+                                 <li className="flex items-start">
+                   <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                   <span>Comisión transparente</span>
+                 </li>
               </ul>
             </div>
 
@@ -501,22 +501,22 @@ const Home = () => {
                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Star className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">
-                  Plan Premium
-                </h3>
-                <p className="text-primary-100 font-semibold">
-                  Descuentos ilimitados
-                </p>
+                                 <h3 className="text-xl font-bold mb-2">
+                   Plan Premium
+                 </h3>
+                 <p className="text-primary-100 font-semibold">
+                   Comisión reducida
+                 </p>
               </div>
               <ul className="space-y-3 text-primary-100 relative z-10">
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
-                  <span>10% de descuento en todas las clases</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Descuento asumido por la plataforma</span>
-                </li>
+                                 <li className="flex items-start">
+                   <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
+                   <span>Comisión reducida del 10% al 5%</span>
+                 </li>
+                 <li className="flex items-start">
+                   <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
+                   <span>Descuento asumido por la plataforma</span>
+                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-white mr-2 mt-0.5 flex-shrink-0" />
                   <span>Acceso prioritario a profesores</span>
@@ -681,10 +681,10 @@ const Home = () => {
                 Sitios web profesionales, aplicaciones móviles y sistemas personalizados
               </p>
               <div className="text-center">
-                <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Premium: 10% comisión
-                </span>
+                                 <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                   <Crown className="w-4 h-4 mr-1" />
+                   Premium: 5% comisión
+                 </span>
               </div>
             </div>
 
@@ -742,8 +742,8 @@ const Home = () => {
                 <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Target className="w-6 h-6 text-amber-600" />
                 </div>
-                <h4 className="font-semibold text-secondary-900 mb-2">Solo 10% Comisión</h4>
-                <p className="text-sm text-secondary-600">vs 20% estándar</p>
+                                 <h4 className="font-semibold text-secondary-900 mb-2">Solo 5% Comisión</h4>
+                 <p className="text-sm text-secondary-600">vs 10% estándar</p>
               </div>
               
               <div className="text-center">
@@ -785,8 +785,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonios */}
-      <SimpleTestimonials />
+             {/* Testimonios con Carrusel */}
+       <section className="py-20 bg-gray-50 dark:bg-gray-900">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <TestimonialsCarousel />
+         </div>
+       </section>
 
       {/* FAQ Section */}
       <section className="py-20 bg-white">
@@ -863,7 +867,7 @@ const Home = () => {
               to="/registro"
               className="bg-white text-primary-600 hover:bg-primary-50 font-bold py-4 px-10 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto text-lg"
             >
-              Registrarse y Obtener Descuentos
+                             Registrarse y Obtener Beneficios
             </Link>
             <Link
               to="/buscar"

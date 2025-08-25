@@ -390,12 +390,12 @@ const Pago = () => {
                 )}
                 <div className="flex justify-between text-green-600">
                   <span>Comisión de plataforma:</span>
-                  <span className="font-semibold">$0 (gratis por tiempo limitado)</span>
+                  <span className="font-semibold">$3.500 (comisión reducida)</span>
                 </div>
                 <hr className="my-3" />
                 <div className="flex justify-between text-lg font-bold text-primary-600">
                   <span>Total a pagar:</span>
-                  <span>{formatPrecio(reserva.total || reserva.costo)}</span>
+                  <span>{formatPrecio((reserva.total || reserva.costo) + 3500)}</span>
                 </div>
               </div>
             </div>
