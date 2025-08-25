@@ -138,13 +138,21 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  if (!user?.id) return null
+  if (!user?.id) {
+    console.log('🔔 NotificationBell: No user ID, returning null')
+    return null
+  }
+
+  console.log('🔔 NotificationBell: Rendering with user ID:', user.id, 'isOpen:', isOpen, 'unreadCount:', unreadCount)
 
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Botón de la campanita */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          console.log('🔔 Bell button clicked! Current isOpen:', isOpen)
+          setIsOpen(!isOpen)
+        }}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
       >
         <Bell className="w-5 h-5" />

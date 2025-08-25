@@ -27,6 +27,8 @@ const Header = () => {
   // Evitar renderizar elementos de usuario mientras se verifica autenticación
   const shouldShowUserElements = !loading && isAuthenticated && user;
   
+  console.log('🔔 Header: shouldShowUserElements:', shouldShowUserElements, 'loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', user?.id)
+  
   const getNotificationIcon = (type) => {
     const icons = {
       payment: '💳',
