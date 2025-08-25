@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import { Shield, CreditCard, Lock, CheckCircle, AlertCircle, Calendar, Clock, User } from 'lucide-react'
+import { Shield, CreditCard, Lock, CheckCircle, AlertCircle, Calendar, Clock, User, ExternalLink } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatPrecio } from '../utils/currencyUtils'
+import mercadopagoService from '../services/mercadopagoService'
 
 const Pago = () => {
   const { profesorId } = useParams()
@@ -16,13 +17,15 @@ const Pago = () => {
   const [error, setError] = useState('')
   const [pagoExitoso, setPagoExitoso] = useState(false)
 
-  const [metodoPago, setMetodoPago] = useState('tarjeta')
+  const [metodoPago, setMetodoPago] = useState('mercadopago')
   const [datosTargeta, setDatosTargeta] = useState({
     numero: '',
     nombre: '',
     expiracion: '',
     cvv: ''
   })
+  const [mercadopagoUrl, setMercadopagoUrl] = useState('')
+  const [mercadopagoInitialized, setMercadopagoInitialized] = useState(false)
 
 
 
@@ -37,46 +40,85 @@ const Pago = () => {
     }
   }, [location.state, navigate])
 
+  // Inicializar MercadoPago cuando se carga la página
+  useEffect(() => {
+    const initializeMercadoPago = async () => {
+      try {
+        await mercadopagoService.initializeMercadoPago()
+        setMercadopagoInitialized(true)
+      } catch (error) {
+        console.error('Error inicializando MercadoPago:', error)
+        setError('No se pudo inicializar el sistema de pagos')
+      }
+    }
+
+    if (reserva && profesor) {
+      initializeMercadoPago()
+    }
+  }, [reserva, profesor])
+
   const handlePago = async (e) => {
     e.preventDefault()
     setProcesando(true)
     setError('')
 
     try {
-      // Validar datos de tarjeta
-      if (metodoPago === 'tarjeta') {
+      if (metodoPago === 'mercadopago') {
+        // Crear preferencia de pago en MercadoPago
+        const paymentData = {
+          amount: reserva.total || reserva.costo,
+          profesor: profesor,
+          reservaId: reserva.id || Date.now(),
+          payerName: user?.nombre || 'Usuario',
+          payerEmail: user?.email || 'usuario@example.com'
+        }
+
+        const preference = await mercadopagoService.createPaymentPreference(paymentData)
+        
+        if (preference.init_point) {
+          // Redirigir a MercadoPago
+          window.location.href = preference.init_point
+        } else {
+          throw new Error('No se pudo crear la sesión de pago')
+        }
+      } else if (metodoPago === 'tarjeta') {
+        // Validar datos de tarjeta
         if (!datosTargeta.numero || !datosTargeta.nombre || !datosTargeta.expiracion || !datosTargeta.cvv) {
           throw new Error('Por favor completa todos los datos de la tarjeta')
         }
+
+        // Crear token de tarjeta
+        const cardToken = await mercadopagoService.createCardToken(datosTargeta)
+        
+        // Procesar pago con tarjeta
+        const paymentData = {
+          amount: reserva.total || reserva.costo,
+          profesor: profesor,
+          reservaId: reserva.id || Date.now(),
+          payerEmail: user?.email || 'usuario@example.com'
+        }
+
+        const cardData = {
+          token: cardToken,
+          paymentMethodId: 'visa', // Esto se determinaría basado en el número de tarjeta
+          installments: 1
+        }
+
+        const paymentResult = await mercadopagoService.processCardPayment(cardData, paymentData)
+        
+        if (paymentResult.status === 'approved') {
+          setPagoExitoso(true)
+          setTimeout(() => {
+            navigate('/dashboard', { 
+              state: { 
+                mensaje: 'Pago realizado exitosamente. Tu clase ha sido reservada.' 
+              }
+            })
+          }, 3000)
+        } else {
+          throw new Error('El pago no fue aprobado. Intenta nuevamente.')
+        }
       }
-
-      // Simular procesamiento de pago
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Crear el pago en el backend
-      const pagoData = {
-        reservaId: reserva.id || Date.now(), // En producción vendría del backend
-        estudianteId: user.id,
-        profesorId: profesor.id,
-        monto: reserva.total || reserva.costo,
-        metodoPago: metodoPago,
-        estado: 'completado',
-        fecha: new Date().toISOString()
-      }
-
-      console.log('Pago procesado:', pagoData)
-
-      // Marcar como exitoso
-      setPagoExitoso(true)
-
-      // Redirigir después de 3 segundos
-      setTimeout(() => {
-        navigate('/dashboard', { 
-          state: { 
-            mensaje: 'Pago realizado exitosamente. Tu clase ha sido reservada.' 
-          }
-        })
-      }, 3000)
 
     } catch (err) {
       setError(err.message)
@@ -195,18 +237,24 @@ const Pago = () => {
                     <span className="font-medium">Tarjeta de Crédito/Débito</span>
                   </label>
                   
-                  <label className="flex items-center p-4 border border-secondary-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="mercadopago"
-                      checked={metodoPago === 'mercadopago'}
-                      onChange={(e) => setMetodoPago(e.target.value)}
-                      className="mr-3"
-                    />
-                    <div className="w-5 h-5 mr-2 bg-blue-500 rounded"></div>
-                    <span className="font-medium">MercadoPago</span>
-                  </label>
+                                     <label className="flex items-center p-4 border border-secondary-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+                     <input
+                       type="radio"
+                       name="metodoPago"
+                       value="mercadopago"
+                       checked={metodoPago === 'mercadopago'}
+                       onChange={(e) => setMetodoPago(e.target.value)}
+                       className="mr-3"
+                     />
+                     <div className="w-5 h-5 mr-2 bg-blue-500 rounded flex items-center justify-center">
+                       <span className="text-white text-xs font-bold">MP</span>
+                     </div>
+                     <div className="flex-1">
+                       <span className="font-medium">MercadoPago</span>
+                       <p className="text-sm text-secondary-600">Pago seguro con tarjetas, efectivo y más</p>
+                     </div>
+                     <ExternalLink className="w-4 h-4 text-secondary-400" />
+                   </label>
                 </div>
               </div>
 
@@ -276,24 +324,33 @@ const Pago = () => {
                 </div>
               )}
 
-              {/* Botón de pago */}
-              <button
-                type="submit"
-                disabled={procesando}
-                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {procesando ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Procesando pago...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-5 h-5 mr-2" />
-                    Pagar {formatPrecio(reserva.total || reserva.costo)} de forma segura
-                  </>
-                )}
-              </button>
+                             {/* Botón de pago */}
+               <button
+                 type="submit"
+                 disabled={procesando || !mercadopagoInitialized}
+                 className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+               >
+                 {procesando ? (
+                   <>
+                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                     {metodoPago === 'mercadopago' ? 'Redirigiendo a MercadoPago...' : 'Procesando pago...'}
+                   </>
+                 ) : (
+                   <>
+                     {metodoPago === 'mercadopago' ? (
+                       <>
+                         <ExternalLink className="w-5 h-5 mr-2" />
+                         Pagar con MercadoPago - {formatPrecio(reserva.total || reserva.costo)}
+                       </>
+                     ) : (
+                       <>
+                         <Lock className="w-5 h-5 mr-2" />
+                         Pagar {formatPrecio(reserva.total || reserva.costo)} con tarjeta
+                       </>
+                     )}
+                   </>
+                 )}
+               </button>
             </form>
 
             {/* Seguridad */}

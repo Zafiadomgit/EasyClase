@@ -9,13 +9,22 @@ const EnhancedChatModal = ({ isOpen, onClose, profesor, onSendMessage }) => {
   const [isBlocked, setIsBlocked] = useState(false)
   const messagesEndRef = useRef(null)
 
-  // Patrones para detectar información de contacto
+  // Patrones para detectar información de contacto - MEJORADOS
   const contactPatterns = {
-    phone: /(\+?[0-9]{1,4}[-.\s]?)?[0-9]{7,15}/g,
+    // Números de teléfono más específicos (evita falsos positivos)
+    phone: /(\+?57\s?)?[0-9]{3}[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}|(\+?[0-9]{1,4}[-.\s]?)?[0-9]{7,15}/g,
+    // Emails
     email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-    whatsapp: /(whatsapp|wa|w\.a\.|w\.a)\s*:?\s*(\+?[0-9]{1,4}[-.\s]?)?[0-9]{7,15}/gi,
+    // WhatsApp con variaciones
+    whatsapp: /(whatsapp|wa|w\.a\.|w\.a|w\.a\.p\.p)\s*:?\s*(\+?[0-9]{1,4}[-.\s]?)?[0-9]{7,15}/gi,
+    // Telegram
     telegram: /(telegram|tg)\s*:?\s*@?[a-zA-Z0-9_]{5,}/gi,
-    instagram: /(instagram|ig)\s*:?\s*@?[a-zA-Z0-9_\.]{3,}/gi
+    // Instagram
+    instagram: /(instagram|ig)\s*:?\s*@?[a-zA-Z0-9_\.]{3,}/gi,
+    // Números escritos como texto
+    phoneText: /(numero|tel|telefono|celular|cel|móvil|movil)\s*:?\s*(\+?[0-9]{1,4}[-.\s]?)?[0-9]{7,15}/gi,
+    // Patrones comunes de números colombianos
+    colombianPhone: /(3[0-9]{2}|6[0-9]{2}|8[0-9]{2})\s?[0-9]{3}\s?[0-9]{4}/g
   }
 
   const scrollToBottom = () => {
@@ -54,6 +63,8 @@ const EnhancedChatModal = ({ isOpen, onClose, profesor, onSendMessage }) => {
   const getWarningMessage = (type) => {
     const warnings = {
       phone: 'No está permitido compartir números de teléfono',
+      phoneText: 'No está permitido compartir números de teléfono',
+      colombianPhone: 'No está permitido compartir números de teléfono',
       email: 'No está permitido compartir direcciones de email',
       whatsapp: 'No está permitido compartir información de WhatsApp',
       telegram: 'No está permitido compartir información de Telegram',

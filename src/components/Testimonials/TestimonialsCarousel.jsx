@@ -127,7 +127,7 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
         </button>
       </div>
 
-      {/* Carrusel principal */}
+      {/* Carrusel principal - VERSIÓN MEJORADA */}
       <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl">
         {/* Botones de navegación */}
         <button
@@ -146,21 +146,18 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
           <ChevronRight className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         </button>
 
-        {/* Contenido del carrusel */}
-        <div className="relative">
-          {displayTestimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className={`absolute inset-0 transition-all duration-500 ease-in-out ${
-                index === currentIndex
-                  ? 'opacity-100 translate-x-0'
-                  : index < currentIndex
-                  ? 'opacity-0 -translate-x-full'
-                  : 'opacity-0 translate-x-full'
-              }`}
-            >
-              <div className="p-8 md:p-12">
-                <div className="max-w-4xl mx-auto text-center">
+        {/* Contenido del carrusel - VERSIÓN MEJORADA */}
+        <div className="relative h-96 md:h-80">
+          <div 
+            className="flex transition-transform duration-500 ease-in-out h-full"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {displayTestimonials.map((testimonial) => (
+              <div
+                key={testimonial.id}
+                className="w-full flex-shrink-0 p-8 md:p-12"
+              >
+                <div className="max-w-4xl mx-auto text-center h-full flex flex-col justify-center">
                   {/* Icono de comillas */}
                   <div className="mb-6">
                     <Quote className="w-12 h-12 text-blue-500 dark:text-blue-400 mx-auto" />
@@ -210,8 +207,8 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Indicadores de puntos */}
