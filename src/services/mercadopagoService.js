@@ -23,10 +23,12 @@ class MercadoPagoService {
       // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 1000))
       
+      // Para simular mejor MercadoPago, vamos a crear una página intermedia
+      // que simule el proceso de pago real
       return {
         id: `pref_${Date.now()}`,
-        init_point: `${window.location.origin}/pago/success?payment_id=${Date.now()}&status=approved&external_reference=${paymentData.reservaId}`,
-        sandbox_init_point: `${window.location.origin}/pago/success?payment_id=${Date.now()}&status=approved&external_reference=${paymentData.reservaId}`,
+        init_point: `${window.location.origin}/pago/mercadopago-simulado?payment_id=${Date.now()}&status=pending&external_reference=${paymentData.reservaId}`,
+        sandbox_init_point: `${window.location.origin}/pago/mercadopago-simulado?payment_id=${Date.now()}&status=pending&external_reference=${paymentData.reservaId}`,
         items: [{
           id: paymentData.reservaId,
           title: `Clase con ${paymentData.profesor.nombre}`,
@@ -61,7 +63,7 @@ class MercadoPagoService {
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       // Simular diferentes resultados basados en el número de tarjeta
-      const cardNumber = cardData.number.replace(/\s/g, '')
+      const cardNumber = cardData.number ? cardData.number.replace(/\s/g, '') : ''
       
       if (cardNumber.startsWith('4000')) {
         throw new Error('Tarjeta rechazada. Verifica los datos.')
@@ -147,9 +149,9 @@ class MercadoPagoService {
       console.log('Creando token de tarjeta simulado:', cardData)
       
       // Validar datos básicos
-      const cardNumber = cardData.number.replace(/\s/g, '')
-      const cvv = cardData.cvv
-      const expiration = cardData.expiration
+      const cardNumber = cardData.number ? cardData.number.replace(/\s/g, '') : ''
+      const cvv = cardData.cvv || ''
+      const expiration = cardData.expiration || ''
 
       if (!cardNumber || cardNumber.length < 13) {
         throw new Error('Número de tarjeta inválido')
@@ -184,20 +186,26 @@ class MercadoPagoService {
   validateCardData(cardData) {
     const errors = []
     
+    // Validar que cardData existe y tiene las propiedades necesarias
+    if (!cardData) {
+      errors.push('Datos de tarjeta requeridos')
+      return { isValid: false, errors }
+    }
+    
     // Validar número de tarjeta
-    const cardNumber = cardData.number.replace(/\s/g, '')
+    const cardNumber = cardData.number ? cardData.number.replace(/\s/g, '') : ''
     if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
       errors.push('Número de tarjeta inválido')
     }
 
     // Validar CVV
-    const cvv = cardData.cvv
+    const cvv = cardData.cvv || ''
     if (!cvv || cvv.length < 3 || cvv.length > 4) {
       errors.push('CVV inválido')
     }
 
     // Validar fecha de expiración
-    const expiration = cardData.expiration
+    const expiration = cardData.expiration || ''
     if (!expiration || !expiration.includes('/')) {
       errors.push('Fecha de expiración inválida')
     } else {
@@ -240,6 +248,8 @@ class MercadoPagoService {
    * @returns {string} - Tipo de tarjeta
    */
   identifyCardType(cardNumber) {
+    if (!cardNumber) return 'visa'
+    
     const cleanNumber = cardNumber.replace(/\s/g, '')
     
     if (cleanNumber.startsWith('4')) return 'visa'

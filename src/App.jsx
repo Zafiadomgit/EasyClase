@@ -22,6 +22,7 @@ import Pago from './pages/Pago'
 import PagoSuccess from './pages/PagoSuccess'
 import PagoFailure from './pages/PagoFailure'
 import PagoPending from './pages/PagoPending'
+import MercadoPagoSimulado from './pages/MercadoPagoSimulado'
 import ComoFunciona from './pages/ComoFunciona'
 import Terminos from './pages/Legal/Terminos'
 import Privacidad from './pages/Legal/Privacidad'
@@ -62,6 +63,7 @@ function App() {
               <Route path="/ser-profesor" element={<SerProfesor />} />
               <Route path="/reservar/:id" element={<ReservarClase />} />
               <Route path="/pago" element={<Pago />} />
+              <Route path="/pago/mercadopago-simulado" element={<MercadoPagoSimulado />} />
               <Route path="/pago/success" element={<PagoSuccess />} />
               <Route path="/pago/failure" element={<PagoFailure />} />
               <Route path="/pago/pending" element={<PagoPending />} />

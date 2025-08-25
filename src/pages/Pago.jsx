@@ -82,6 +82,11 @@ const Pago = () => {
           throw new Error('No se pudo crear la sesión de pago')
         }
       } else if (metodoPago === 'tarjeta') {
+        // Validar que datosTargeta existe
+        if (!datosTargeta) {
+          throw new Error('Por favor, completa los datos de la tarjeta')
+        }
+
         // Validar datos de tarjeta con validación mejorada
         const validation = mercadopagoService.validateCardData(datosTargeta)
         if (!validation.isValid) {
@@ -99,11 +104,11 @@ const Pago = () => {
           payerEmail: user?.email || 'usuario@example.com'
         }
 
-                 const cardData = {
-           token: cardToken,
-           paymentMethodId: mercadopagoService.identifyCardType(datosTargeta.numero),
-           installments: 1
-         }
+        const cardData = {
+          token: cardToken,
+          paymentMethodId: mercadopagoService.identifyCardType(datosTargeta.numero || ''),
+          installments: 1
+        }
 
         const paymentResult = await mercadopagoService.processCardPayment(cardData, paymentData)
         
