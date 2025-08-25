@@ -5,6 +5,7 @@ import { formatPrecio } from '../utils/currencyUtils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import claseServiceLocal from '../services/claseService'
+import notificationService from '../services/notificationService'
 
 const PagoSuccess = () => {
   const location = useLocation()
@@ -103,7 +104,7 @@ const PagoSuccess = () => {
       localStorage.removeItem('reserva_pendiente')
       console.log('🧹 Datos de reserva pendiente limpiados')
       
-      // Mostrar notificación de pago exitoso
+      // Mostrar notificación temporal
       const fechaFormateada = new Date(claseData.fecha).toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
@@ -111,6 +112,22 @@ const PagoSuccess = () => {
         day: 'numeric'
       })
       showPaymentSuccess(fechaFormateada, claseData.hora)
+      
+      // Crear notificación persistente en la campanita para el estudiante
+      notificationService.createPaymentSuccessNotification(userId, claseData)
+      
+      // Crear notificación para el profesor (si tenemos su ID)
+      if (reservaData.profesor && reservaData.profesor.id) {
+        const reservaDataForProfesor = {
+          id: claseData.id,
+          estudianteId: userId,
+          estudianteNombre: user?.nombre || 'Estudiante',
+          tema: claseData.tema,
+          fecha: claseData.fecha,
+          hora: claseData.hora
+        }
+        notificationService.createNewReservationNotification(reservaData.profesor.id, reservaDataForProfesor)
+      }
       
       setClaseGuardada(true)
     } catch (error) {

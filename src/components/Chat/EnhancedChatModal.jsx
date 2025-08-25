@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { X, Send, User, MessageCircle, AlertTriangle, Shield, Phone, Mail } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
+import notificationService from '../../services/notificationService'
 
 const EnhancedChatModal = ({ isOpen, onClose, profesor, onSendMessage }) => {
+  const { user } = useAuth()
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isTyping, setIsTyping] = useState(false)
@@ -154,6 +157,18 @@ const EnhancedChatModal = ({ isOpen, onClose, profesor, onSendMessage }) => {
         content: message,
         timestamp: new Date()
       })
+    }
+    
+    // Crear notificación para el profesor sobre el nuevo mensaje
+    if (profesor?.id && user?.id) {
+      const messageData = {
+        id: Date.now(),
+        senderId: user.id,
+        senderName: user.nombre || 'Estudiante',
+        preview: message.length > 50 ? message.substring(0, 50) + '...' : message,
+        chatId: `chat_${user.id}_${profesor.id}`
+      }
+      notificationService.createNewMessageNotification(profesor.id, messageData)
     }
   }
 

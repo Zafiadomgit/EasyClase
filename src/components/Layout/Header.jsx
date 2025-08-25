@@ -4,6 +4,7 @@ import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown
 import { useAuth } from '../../contexts/AuthContext'
 import ThemeToggle from '../UI/ThemeToggle'
 import CategoriesModal from '../Modal/CategoriesModal'
+import NotificationBell from '../NotificationBell'
 // import { useNotifications, getNotificationIcon, getNotificationColor } from '../../hooks/useNotifications'
 
 const Header = () => {
@@ -245,89 +246,7 @@ const Header = () => {
             {shouldShowUserElements ? (
               <>
                 {/* Botón de Notificaciones */}
-                <div className="relative" ref={notificationsRef}>
-                  <button
-                    onClick={toggleNotifications}
-                    className="relative p-2 text-secondary-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                  >
-                    <Bell className="w-6 h-6" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </button>
-                  
-                  {isNotificationsOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 py-4 z-50">
-                      <div className="px-4 py-2 border-b border-secondary-100">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-secondary-900">Notificaciones</h3>
-                          <span className="text-xs text-secondary-600">{unreadCount} sin leer</span>
-                        </div>
-                      </div>
-                      
-                      <div className="max-h-64 overflow-y-auto">
-                        {notifications.length > 0 ? (
-                          notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              onClick={() => markAsRead(notification.id)}
-                              className={`px-4 py-3 hover:bg-secondary-50 cursor-pointer border-l-4 ${
-                                notification.read 
-                                  ? 'border-transparent bg-white' 
-                                  : getNotificationColor(notification.priority)
-                              }`}
-                            >
-                              <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 mt-1 text-lg">
-                                  {getNotificationIcon(notification.type)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium text-secondary-900">
-                                      {notification.title}
-                                    </p>
-                                    <span className="text-xs text-secondary-500">
-                                      {notification.time}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-secondary-600 mt-1">
-                                    {notification.message}
-                                  </p>
-                                  {notification.priority === 'urgent' && (
-                                    <span className="inline-block mt-1 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                      Urgente
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-4 py-8 text-center">
-                            <Bell className="w-8 h-8 text-secondary-300 mx-auto mb-2" />
-                            <p className="text-sm text-secondary-600">No tienes notificaciones</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {notifications.length > 0 && (
-                        <div className="px-4 py-2 border-t border-secondary-100 flex justify-between items-center">
-                          <button 
-                            onClick={markAllAsRead}
-                            className="text-sm text-secondary-600 hover:text-secondary-700 font-medium"
-                          >
-                            Marcar todas como leídas
-                          </button>
-                          <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                            Ver todas →
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <NotificationBell />
                 
                 {/* Menú de Usuario */}
                 <div className="relative">

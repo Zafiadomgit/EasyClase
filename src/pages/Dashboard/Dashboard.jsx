@@ -24,6 +24,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { servicioService, profesorService } from '../../services/api'
 import claseServiceLocal from '../../services/claseService'
+import notificationService from '../../services/notificationService'
 import { formatPrecio } from '../../utils/currencyUtils'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 
@@ -47,6 +48,50 @@ const Dashboard = () => {
   const { showClassAdded } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Función para crear notificaciones de prueba
+  const crearNotificacionesPrueba = () => {
+    if (!user?.id) return
+
+    // Notificación de pago exitoso
+    notificationService.createPaymentSuccessNotification(user.id, {
+      id: 'test_1',
+      tema: 'Programación React',
+      fecha: '2024-01-15',
+      hora: '14:00'
+    })
+
+    // Notificación de nueva reserva (para profesores)
+    if (isProfesor) {
+      notificationService.createNewReservationNotification(user.id, {
+        id: 'test_2',
+        estudianteId: 'estudiante_123',
+        estudianteNombre: 'María García',
+        tema: 'Matemáticas Avanzadas',
+        fecha: '2024-01-16',
+        hora: '10:00'
+      })
+    }
+
+    // Notificación de nuevo mensaje
+    notificationService.createNewMessageNotification(user.id, {
+      id: 'test_3',
+      senderId: 'profesor_456',
+      senderName: 'Dr. Carlos López',
+      preview: 'Hola, ¿cómo va tu progreso con el proyecto?',
+      chatId: 'chat_123_456'
+    })
+
+    // Notificación de clase próxima
+    notificationService.createUpcomingClassNotification(user.id, {
+      id: 'test_4',
+      tema: 'Inglés Conversacional',
+      fecha: '2024-01-15',
+      hora: '16:00'
+    })
+
+    alert('Notificaciones de prueba creadas. Revisa la campanita! 🎉')
+  }
   const [clases, setClases] = useState([])
   const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -393,6 +438,12 @@ const Dashboard = () => {
                className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors ml-2"
              >
                Agregar Clase Prueba
+             </button>
+             <button
+               onClick={crearNotificacionesPrueba}
+               className="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors ml-2"
+             >
+               🔔 Crear Notificaciones Prueba
              </button>
            </div>
         </div>
