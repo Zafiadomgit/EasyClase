@@ -1,0 +1,5 @@
+[33mc5157d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Simplificar configuración de Vercel y crear página de webhook temporal
+[33me77b480[m Corregir configuración de Vercel para deploy exitoso
+[33m9b9110a[m Configurar webhooks para Vercel y agregar sistema de notificaciones
+[33m2a143ca[m Configurar webhooks para Vercel y crear endpoint específico
+[33m20f3ebf[m Se siguen corrigiendo errores en el sistema de pagos
