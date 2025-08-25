@@ -368,25 +368,22 @@ const Dashboard = () => {
               }
             </p>
           </div>
-                     {/* Botón de prueba Sentry (solo en desarrollo) */}
-           {import.meta.env.DEV && (
-             <div className="text-right">
-               <p className="text-xs text-gray-500 mb-2">Herramientas de desarrollo</p>
-               <ErrorButton />
-                               <button
-                  onClick={debugLocalStorage}
-                  className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
-                >
-                  Debug localStorage
-                </button>
-                <button
-                  onClick={agregarClasePrueba}
-                  className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors ml-2"
-                >
-                  Agregar Clase Prueba
-                </button>
-             </div>
-           )}
+                     {/* Botones de debug - siempre visibles para testing */}
+           <div className="text-right">
+             <p className="text-xs text-gray-500 mb-2">Herramientas de debug</p>
+             <button
+               onClick={debugLocalStorage}
+               className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
+             >
+               Debug localStorage
+             </button>
+             <button
+               onClick={agregarClasePrueba}
+               className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors ml-2"
+             >
+               Agregar Clase Prueba
+             </button>
+           </div>
         </div>
       </div>
 
@@ -554,18 +551,28 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-secondary-500">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
-                <p>No tienes clases programadas próximamente</p>
-                <button 
-                  className="btn-primary mt-4"
-                  onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
-                >
-                  {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
-                </button>
-              </div>
-            )}
+                         ) : (
+               <div className="text-center py-8 text-secondary-500">
+                 <Calendar className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                 <p>No tienes clases programadas próximamente</p>
+                 <div className="space-y-3 mt-4">
+                   <button 
+                     className="btn-primary"
+                     onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
+                   >
+                     {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
+                   </button>
+                   <div className="pt-2">
+                     <button 
+                       onClick={agregarClasePrueba}
+                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                     >
+                       🧪 Agregar Clase de Prueba
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             )}
           </div>
 
           {/* Mis Servicios */}
