@@ -250,6 +250,17 @@ const Header = () => {
                 {/* Botón de Notificaciones */}
                 <NotificationBell />
                 
+                {/* Botón de prueba temporal */}
+                <button
+                  onClick={() => {
+                    console.log('🔔 Test button clicked!')
+                    alert('Botón de prueba funciona!')
+                  }}
+                  className="relative p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full transition-colors"
+                >
+                  🔔 TEST
+                </button>
+                
                 {/* Menú de Usuario */}
                 <div className="relative">
                   <button
