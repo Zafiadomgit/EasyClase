@@ -729,7 +729,7 @@ const Dashboard = () => {
       {/* Modal de Confirmación de Retiro */}
       {showRetiroModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
             <div className="text-center">
               <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-secondary-900 mb-4">

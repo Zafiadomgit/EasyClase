@@ -400,9 +400,9 @@ const BuscarClases = () => {
   const profesoresPaginaActual = getProfesoresPaginaActual()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header de búsqueda */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -472,7 +472,7 @@ const BuscarClases = () => {
         {/* Lista de profesores */}
         <div className="space-y-6">
           {profesoresPaginaActual.map((profesor) => (
-            <div key={profesor._id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div key={profesor._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-300">
               <div className="p-6">
                 <div className="flex flex-col md:flex-row md:items-start gap-4">
                   {/* Información del profesor */}

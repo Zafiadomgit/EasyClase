@@ -128,7 +128,7 @@ const Header = () => {
 
 
   return (
-    <header className="bg-white/95 backdrop-blur-md shadow-lg border-b border-secondary-100 sticky top-0 z-50">
+    <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg border-b border-secondary-100 dark:border-gray-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
@@ -176,10 +176,10 @@ const Header = () => {
               </button>
               
               {isCategoriesOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-secondary-200 py-4 z-50">
-                  <div className="px-4 py-2 border-b border-secondary-100">
-                    <h3 className="text-sm font-semibold text-secondary-900">Todas las Categorías</h3>
-                    <p className="text-xs text-secondary-600">Encuentra tu profesor ideal</p>
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 py-4 z-50">
+                  <div className="px-4 py-2 border-b border-secondary-100 dark:border-gray-600">
+                    <h3 className="text-sm font-semibold text-secondary-900 dark:text-gray-100">Todas las Categorías</h3>
+                    <p className="text-xs text-secondary-600 dark:text-gray-400">Encuentra tu profesor ideal</p>
                   </div>
                   
                   <div className="py-2">
@@ -187,7 +187,7 @@ const Header = () => {
                       <button
                         key={categoria.name}
                         onClick={() => handleCategoryClick(categoria.name)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary-50 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -195,7 +195,7 @@ const Header = () => {
                           </div>
                           <div className="text-left">
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium text-secondary-900">{categoria.name}</span>
+                              <span className="text-sm font-medium text-secondary-900 dark:text-gray-100">{categoria.name}</span>
                               {categoria.popular && (
                                 <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full flex items-center">
                                   <Star className="w-3 h-3 mr-1" />
@@ -203,7 +203,7 @@ const Header = () => {
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-secondary-600">{categoria.profesores} profesores</span>
+                            <span className="text-xs text-secondary-600 dark:text-gray-400">{categoria.profesores} profesores</span>
                           </div>
                         </div>
                         <ChevronDown className="w-4 h-4 text-secondary-400 rotate-[-90deg]" />
@@ -211,7 +211,7 @@ const Header = () => {
                     ))}
                   </div>
                   
-                  <div className="px-4 py-2 border-t border-secondary-100">
+                  <div className="px-4 py-2 border-t border-secondary-100 dark:border-gray-600">
                     <button
                       onClick={() => {
                         setIsCategoriesOpen(false)
@@ -259,7 +259,7 @@ const Header = () => {
                   </button>
                   
                   {isNotificationsOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-secondary-200 py-4 z-50">
+                    <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 py-4 z-50">
                       <div className="px-4 py-2 border-b border-secondary-100">
                         <div className="flex items-center justify-between">
                           <h3 className="text-sm font-semibold text-secondary-900">Notificaciones</h3>

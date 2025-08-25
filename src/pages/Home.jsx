@@ -53,7 +53,7 @@ const SearchBar = () => {
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl p-6 border border-primary-100">
+    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-6 border border-primary-100 dark:border-gray-600">
       <form onSubmit={handleSearch} className="space-y-4">
         {/* Campo de búsqueda principal */}
         <div className="relative">
@@ -63,7 +63,7 @@ const SearchBar = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="¿Qué quieres aprender? (Excel, Python, Inglés...)"
-            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-secondary-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-300 placeholder-secondary-400"
+            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-secondary-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-300 placeholder-secondary-400 dark:placeholder-gray-400"
           />
         </div>
 
@@ -122,12 +122,12 @@ const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className="border border-secondary-200 rounded-2xl overflow-hidden">
+    <div className="border border-secondary-200 dark:border-gray-600 rounded-2xl overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 text-left bg-white hover:bg-secondary-50 transition-colors duration-200 flex items-center justify-between"
+                    className="w-full px-6 py-4 text-left bg-white dark:bg-gray-700 hover:bg-secondary-50 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-between"
       >
-        <h3 className="text-lg font-semibold text-secondary-900">{question}</h3>
+                  <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100">{question}</h3>
         {isOpen ? (
           <ChevronUp className="w-5 h-5 text-primary-600 flex-shrink-0" />
         ) : (
@@ -135,8 +135,8 @@ const FAQItem = ({ question, answer }) => {
         )}
       </button>
       {isOpen && (
-        <div className="px-6 pb-4 bg-secondary-50">
-          <p className="text-secondary-700 leading-relaxed">{answer}</p>
+        <div className="px-6 pb-4 bg-secondary-50 dark:bg-gray-700">
+          <p className="text-secondary-700 dark:text-gray-300 leading-relaxed">{answer}</p>
         </div>
       )}
     </div>

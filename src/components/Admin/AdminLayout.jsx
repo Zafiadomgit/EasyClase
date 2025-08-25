@@ -43,7 +43,7 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-secondary-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-secondary-200">
+              <div className="w-64 bg-white dark:bg-gray-800 shadow-lg border-r border-secondary-200 dark:border-gray-600">
         {/* Logo */}
         <div className="p-6 border-b border-secondary-200">
           <Link to="/" className="flex items-center space-x-3">

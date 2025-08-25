@@ -185,10 +185,10 @@ const Preferencias = () => {
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-secondary-900 mb-4">Acceso Denegado</h2>
-          <p className="text-secondary-600">Debes iniciar sesión para acceder a tus preferencias.</p>
-        </div>
+              <div className="text-center">
+        <h2 className="text-2xl font-bold text-secondary-900 dark:text-gray-100 mb-4">Acceso Denegado</h2>
+        <p className="text-secondary-600 dark:text-gray-400">Debes iniciar sesión para acceder a tus preferencias.</p>
+      </div>
       </div>
     )
   }
@@ -198,10 +198,10 @@ const Preferencias = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
-          <Settings className="w-8 h-8 text-secondary-600 mr-3" />
-          <h1 className="text-3xl font-bold text-secondary-900">Preferencias</h1>
+          <Settings className="w-8 h-8 text-secondary-600 dark:text-gray-400 mr-3" />
+          <h1 className="text-3xl font-bold text-secondary-900 dark:text-gray-100">Preferencias</h1>
         </div>
-        <p className="text-lg text-secondary-600">
+        <p className="text-lg text-secondary-600 dark:text-gray-400">
           Personaliza tu experiencia y notificaciones
         </p>
       </div>
@@ -223,18 +223,18 @@ const Preferencias = () => {
 
       <div className="space-y-8">
         {/* Preferencias de Notificaciones */}
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-gray-600 p-6">
           <div className="flex items-center mb-6">
             <Bell className="w-6 h-6 text-blue-600 mr-3" />
-            <h2 className="text-xl font-semibold text-secondary-900">Notificaciones</h2>
+            <h2 className="text-xl font-semibold text-secondary-900 dark:text-gray-100">Notificaciones</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Notificaciones por Email */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-secondary-900">Notificaciones por Email</h3>
-                <p className="text-xs text-secondary-600">Recibe actualizaciones importantes por email</p>
+                <h3 className="text-sm font-medium text-secondary-900 dark:text-gray-100">Notificaciones por Email</h3>
+                <p className="text-xs text-secondary-600 dark:text-gray-400">Recibe actualizaciones importantes por email</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -250,8 +250,8 @@ const Preferencias = () => {
             {/* Notificaciones Push */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-secondary-900">Notificaciones Push</h3>
-                <p className="text-xs text-secondary-600">Recibe alertas en tiempo real</p>
+                <h3 className="text-sm font-medium text-secondary-900 dark:text-gray-100">Notificaciones Push</h3>
+                <p className="text-xs text-secondary-600 dark:text-gray-400">Recibe alertas en tiempo real</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -267,8 +267,8 @@ const Preferencias = () => {
             {/* Recordatorios de Clases */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-secondary-900">Recordatorios de Clases</h3>
-                <p className="text-xs text-secondary-600">Te avisamos antes de tus clases</p>
+                <h3 className="text-sm font-medium text-secondary-900 dark:text-gray-100">Recordatorios de Clases</h3>
+                <p className="text-xs text-secondary-600 dark:text-gray-400">Te avisamos antes de tus clases</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -284,8 +284,8 @@ const Preferencias = () => {
             {/* Notificaciones de Pagos */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-secondary-900">Notificaciones de Pagos</h3>
-                <p className="text-xs text-secondary-600">Información sobre transacciones</p>
+                <h3 className="text-sm font-medium text-secondary-900 dark:text-gray-100">Notificaciones de Pagos</h3>
+                <p className="text-xs text-secondary-600 dark:text-gray-400">Información sobre transacciones</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -301,22 +301,22 @@ const Preferencias = () => {
         </div>
 
         {/* Preferencias de Idioma y Región */}
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-gray-600 p-6">
           <div className="flex items-center mb-6">
             <Globe className="w-6 h-6 text-green-600 mr-3" />
-            <h2 className="text-xl font-semibold text-secondary-900">Idioma y Región</h2>
+            <h2 className="text-xl font-semibold text-secondary-900 dark:text-gray-100">Idioma y Región</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Idioma */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Idioma
               </label>
               <select
                 value={languageSettings.language}
                 onChange={(e) => handleLanguageChange('language', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="es">Español</option>
                 <option value="en">English</option>
@@ -326,13 +326,13 @@ const Preferencias = () => {
 
             {/* Zona Horaria */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Zona Horaria
               </label>
               <select
                 value={languageSettings.timezone}
                 onChange={(e) => handleLanguageChange('timezone', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="America/Bogota">Colombia (GMT-5)</option>
                 <option value="America/Mexico_City">México (GMT-6)</option>
@@ -343,13 +343,13 @@ const Preferencias = () => {
 
             {/* Moneda */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Moneda
               </label>
               <select
                 value={languageSettings.currency}
                 onChange={(e) => handleLanguageChange('currency', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="COP">Peso Colombiano (COP)</option>
                 <option value="USD">Dólar Estadounidense (USD)</option>
@@ -360,13 +360,13 @@ const Preferencias = () => {
 
             {/* Formato de Fecha */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Formato de Fecha
               </label>
               <select
                 value={languageSettings.dateFormat}
                 onChange={(e) => handleLanguageChange('dateFormat', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -377,22 +377,22 @@ const Preferencias = () => {
         </div>
 
         {/* Preferencias de Tema */}
-        <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-gray-600 p-6">
           <div className="flex items-center mb-6">
             <Palette className="w-6 h-6 text-purple-600 mr-3" />
-            <h2 className="text-xl font-semibold text-secondary-900">Apariencia</h2>
+            <h2 className="text-xl font-semibold text-secondary-900 dark:text-gray-100">Apariencia</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Tema */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Tema
               </label>
               <select
                 value={themeSettings.theme}
                 onChange={(e) => handleThemeChange('theme', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="light">Claro</option>
                 <option value="dark">Oscuro</option>
@@ -402,13 +402,13 @@ const Preferencias = () => {
 
             {/* Tamaño de Fuente */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Tamaño de Fuente
               </label>
               <select
                 value={themeSettings.fontSize}
                 onChange={(e) => handleThemeChange('fontSize', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="small">Pequeño</option>
                 <option value="medium">Mediano</option>
@@ -418,13 +418,13 @@ const Preferencias = () => {
 
             {/* Esquema de Colores */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-700 dark:text-gray-300 mb-2">
                 Esquema de Colores
               </label>
               <select
                 value={themeSettings.colorScheme}
                 onChange={(e) => handleThemeChange('colorScheme', e.target.value)}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="default">Predeterminado</option>
                 <option value="highContrast">Alto Contraste</option>

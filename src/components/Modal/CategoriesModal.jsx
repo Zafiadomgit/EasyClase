@@ -230,7 +230,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
       }}
     >
       <div 
-        className="bg-white rounded-2xl w-full overflow-y-auto shadow-2xl"
+        className="bg-white dark:bg-gray-800 rounded-2xl w-full overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{ 
           maxWidth: '1000px',
@@ -239,7 +239,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-secondary-200 px-4 py-3 rounded-t-2xl">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-secondary-200 dark:border-gray-600 px-4 py-3 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-secondary-900 font-display">
@@ -259,7 +259,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4 bg-white min-h-[400px]" style={{ backgroundColor: '#ffffff' }}>
+        <div className="p-4 bg-white dark:bg-gray-800 min-h-[400px]" style={{ backgroundColor: '#ffffff' }}>
           {/* Categorías más buscadas */}
           <div className="mb-4">
             <h3 className="text-base font-semibold text-secondary-900 mb-2 flex items-center">
