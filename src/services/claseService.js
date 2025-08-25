@@ -65,16 +65,33 @@ class ClaseService {
    */
   async obtenerProximasClases(userId) {
     try {
+      console.log('🔍 Obteniendo próximas clases para userId:', userId)
+      
       const todasLasClases = await this.obtenerClasesUsuario(userId)
+      console.log('📋 Todas las clases obtenidas:', todasLasClases)
+      
       const ahora = new Date()
+      console.log('⏰ Fecha actual:', ahora.toISOString())
       
       // Filtrar clases futuras
-      return todasLasClases.filter(clase => {
+      const clasesFuturas = todasLasClases.filter(clase => {
         const fechaClase = new Date(`${clase.fecha}T${clase.hora}`)
-        return fechaClase > ahora && clase.estado === 'confirmada'
-      }).sort((a, b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`))
+        const esFutura = fechaClase > ahora
+        const esConfirmada = clase.estado === 'confirmada'
+        
+        console.log(`📅 Clase ${clase.id}: fecha=${clase.fecha}, hora=${clase.hora}, estado=${clase.estado}, esFutura=${esFutura}, esConfirmada=${esConfirmada}`)
+        
+        return esFutura && esConfirmada
+      })
+      
+      console.log('✅ Clases futuras y confirmadas:', clasesFuturas)
+      
+      const clasesOrdenadas = clasesFuturas.sort((a, b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`))
+      console.log('📊 Clases ordenadas por fecha:', clasesOrdenadas)
+      
+      return clasesOrdenadas
     } catch (error) {
-      console.error('Error obteniendo próximas clases:', error)
+      console.error('❌ Error obteniendo próximas clases:', error)
       return []
     }
   }
@@ -117,11 +134,19 @@ class ClaseService {
    */
   guardarClaseEnLocalStorage(clase) {
     try {
+      console.log('🔍 Guardando clase en localStorage para userId:', clase.userId)
       const clasesExistentes = this.obtenerClasesDeLocalStorage(clase.userId)
+      console.log('📋 Clases existentes antes de agregar:', clasesExistentes)
+      
       clasesExistentes.push(clase)
-      localStorage.setItem(`clases_${clase.userId}`, JSON.stringify(clasesExistentes))
+      console.log('➕ Clase agregada. Total de clases:', clasesExistentes.length)
+      
+      const key = `clases_${clase.userId}`
+      localStorage.setItem(key, JSON.stringify(clasesExistentes))
+      console.log('💾 Clase guardada en localStorage con key:', key)
+      console.log('📦 Datos guardados:', JSON.stringify(clasesExistentes))
     } catch (error) {
-      console.error('Error guardando clase en localStorage:', error)
+      console.error('❌ Error guardando clase en localStorage:', error)
     }
   }
 
@@ -132,10 +157,22 @@ class ClaseService {
    */
   obtenerClasesDeLocalStorage(userId) {
     try {
-      const clases = localStorage.getItem(`clases_${userId}`)
-      return clases ? JSON.parse(clases) : []
+      const key = `clases_${userId}`
+      console.log('🔍 Buscando clases en localStorage con key:', key)
+      
+      const clases = localStorage.getItem(key)
+      console.log('📦 Datos raw de localStorage:', clases)
+      
+      if (clases) {
+        const clasesParsed = JSON.parse(clases)
+        console.log('✅ Clases parseadas exitosamente:', clasesParsed)
+        return clasesParsed
+      } else {
+        console.log('📭 No hay clases guardadas para este userId')
+        return []
+      }
     } catch (error) {
-      console.error('Error obteniendo clases de localStorage:', error)
+      console.error('❌ Error obteniendo clases de localStorage:', error)
       return []
     }
   }

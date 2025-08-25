@@ -267,6 +267,45 @@ const Dashboard = () => {
     }
   }
 
+  // Función para agregar una clase de prueba
+  const agregarClasePrueba = async () => {
+    try {
+      const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
+      
+      // Crear una clase de prueba para mañana
+      const mañana = new Date()
+      mañana.setDate(mañana.getDate() + 1)
+      const fechaMañana = mañana.toISOString().split('T')[0]
+      
+      const clasePrueba = {
+        userId: userId,
+        tema: 'Clase de Prueba - React',
+        profesorNombre: 'Prof. Juan Pérez',
+        profesorEspecialidad: 'Desarrollo Frontend',
+        fecha: fechaMañana,
+        hora: '15:00',
+        duracion: 2,
+        total: 70000,
+        metodoPago: 'Tarjeta de Crédito',
+        notas: 'Clase de prueba agregada manualmente',
+        estado: 'confirmada'
+      }
+      
+      console.log('🧪 Agregando clase de prueba:', clasePrueba)
+      
+      const claseGuardada = await claseServiceLocal.guardarClase(clasePrueba)
+      console.log('✅ Clase de prueba guardada:', claseGuardada)
+      
+      // Recargar datos
+      await cargarDatos()
+      
+      alert('Clase de prueba agregada exitosamente. Revisa la consola para más detalles.')
+    } catch (error) {
+      console.error('❌ Error agregando clase de prueba:', error)
+      alert('Error agregando clase de prueba: ' + error.message)
+    }
+  }
+
   // Filtrar clases por estado
   const proximasClases = clases.filter(clase => 
     ['solicitada', 'confirmada'].includes(clase.estado) &&
@@ -334,12 +373,18 @@ const Dashboard = () => {
              <div className="text-right">
                <p className="text-xs text-gray-500 mb-2">Herramientas de desarrollo</p>
                <ErrorButton />
-               <button
-                 onClick={debugLocalStorage}
-                 className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
-               >
-                 Debug localStorage
-               </button>
+                               <button
+                  onClick={debugLocalStorage}
+                  className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
+                >
+                  Debug localStorage
+                </button>
+                <button
+                  onClick={agregarClasePrueba}
+                  className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors ml-2"
+                >
+                  Agregar Clase Prueba
+                </button>
              </div>
            )}
         </div>
