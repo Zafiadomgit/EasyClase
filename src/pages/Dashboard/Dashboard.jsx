@@ -73,7 +73,15 @@ const Dashboard = () => {
       setLoading(true)
       // Obtener clases del usuario usando el servicio local
       try {
-        const userId = user?.id || 'user_' + Date.now()
+        // Usar un userId consistente
+        const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
+        
+        // Guardar el userId en localStorage para consistencia
+        if (!localStorage.getItem('easyclase_user_id')) {
+          localStorage.setItem('easyclase_user_id', userId)
+        }
+        
+        console.log('Cargando clases para userId:', userId)
         const proximasClases = await claseServiceLocal.obtenerProximasClases(userId)
         setClases(proximasClases)
         console.log('Clases cargadas:', proximasClases)
@@ -233,6 +241,32 @@ const Dashboard = () => {
     }
   }
 
+  // Función de debug para verificar localStorage
+  const debugLocalStorage = () => {
+    const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
+    console.log('UserId actual:', userId)
+    
+    // Verificar todas las claves en localStorage
+    console.log('Todas las claves en localStorage:')
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      console.log(`${key}:`, localStorage.getItem(key))
+    }
+    
+    // Verificar específicamente las clases
+    const clasesEnStorage = localStorage.getItem(`clases_${userId}`)
+    console.log(`Clases para userId ${userId}:`, clasesEnStorage)
+    
+    if (clasesEnStorage) {
+      try {
+        const clasesParsed = JSON.parse(clasesEnStorage)
+        console.log('Clases parseadas:', clasesParsed)
+      } catch (e) {
+        console.error('Error parseando clases:', e)
+      }
+    }
+  }
+
   // Filtrar clases por estado
   const proximasClases = clases.filter(clase => 
     ['solicitada', 'confirmada'].includes(clase.estado) &&
@@ -295,13 +329,19 @@ const Dashboard = () => {
               }
             </p>
           </div>
-          {/* Botón de prueba Sentry (solo en desarrollo) */}
-          {import.meta.env.DEV && (
-            <div className="text-right">
-              <p className="text-xs text-gray-500 mb-2">Herramientas de desarrollo</p>
-              <ErrorButton />
-            </div>
-          )}
+                     {/* Botón de prueba Sentry (solo en desarrollo) */}
+           {import.meta.env.DEV && (
+             <div className="text-right">
+               <p className="text-xs text-gray-500 mb-2">Herramientas de desarrollo</p>
+               <ErrorButton />
+               <button
+                 onClick={debugLocalStorage}
+                 className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
+               >
+                 Debug localStorage
+               </button>
+             </div>
+           )}
         </div>
       </div>
 

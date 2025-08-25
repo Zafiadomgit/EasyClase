@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle, Calendar, Clock, User, ArrowLeft } from 'lucide-react'
 import { formatPrecio } from '../utils/currencyUtils'
+import { useAuth } from '../contexts/AuthContext'
+import claseServiceLocal from '../services/claseService'
 
 const PagoSuccess = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [pagoData, setPagoData] = useState(null)
+  const [claseGuardada, setClaseGuardada] = useState(false)
 
   useEffect(() => {
     // Obtener datos de la URL de MercadoPago
@@ -17,24 +21,64 @@ const PagoSuccess = () => {
 
     if (status === 'approved' && paymentId) {
       // En producción, aquí se verificaría el pago con el backend
+      const reservaData = {
+        profesor: { nombre: 'María González' },
+        fecha: new Date().toISOString(),
+        hora: '15:00',
+        duracion: 1,
+        costo: 35000
+      }
+      
       setPagoData({
         paymentId,
         status,
         externalReference,
-        // Datos simulados - en producción vendrían del backend
-        reserva: {
-          profesor: { nombre: 'María González' },
-          fecha: new Date().toISOString(),
-          hora: '15:00',
-          duracion: 1,
-          costo: 35000
-        }
+        reserva: reservaData
       })
+      
+      // Guardar la clase en el servicio local
+      guardarClase(reservaData)
     } else {
       // Si no hay datos válidos, redirigir
       navigate('/dashboard')
     }
   }, [location, navigate])
+
+  const guardarClase = async (reservaData) => {
+    try {
+      // Usar un userId consistente
+      const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
+      
+      // Guardar el userId en localStorage para consistencia
+      if (!localStorage.getItem('easyclase_user_id')) {
+        localStorage.setItem('easyclase_user_id', userId)
+      }
+      
+      // Crear datos de la clase
+      const claseData = {
+        userId: userId,
+        tema: 'Clase de Programación', // Tema por defecto
+        profesorNombre: reservaData.profesor.nombre,
+        profesorEspecialidad: 'Desarrollo Web',
+        fecha: reservaData.fecha.split('T')[0], // Solo la fecha
+        hora: reservaData.hora,
+        duracion: reservaData.duracion,
+        total: reservaData.costo,
+        metodoPago: 'MercadoPago',
+        notas: 'Clase reservada exitosamente'
+      }
+      
+      console.log('Guardando clase con datos:', claseData)
+      
+      // Guardar usando el servicio local
+      const claseGuardada = await claseServiceLocal.guardarClase(claseData)
+      console.log('Clase guardada exitosamente:', claseGuardada)
+      
+      setClaseGuardada(true)
+    } catch (error) {
+      console.error('Error guardando clase:', error)
+    }
+  }
 
   if (!pagoData) {
     return (
@@ -133,6 +177,9 @@ const PagoSuccess = () => {
             <p>✅ El profesor te contactará para confirmar la clase</p>
             <p>✅ Tu dinero se mantendrá seguro hasta que confirmes que recibiste la clase</p>
             <p>✅ Puedes cancelar hasta 24 horas antes sin penalización</p>
+            {claseGuardada && (
+              <p className="font-semibold text-green-800">✅ Clase guardada en tu dashboard</p>
+            )}
           </div>
         </div>
 
