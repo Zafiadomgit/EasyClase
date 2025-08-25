@@ -82,9 +82,10 @@ const Pago = () => {
           throw new Error('No se pudo crear la sesión de pago')
         }
       } else if (metodoPago === 'tarjeta') {
-        // Validar datos de tarjeta
-        if (!datosTargeta.numero || !datosTargeta.nombre || !datosTargeta.expiracion || !datosTargeta.cvv) {
-          throw new Error('Por favor completa todos los datos de la tarjeta')
+        // Validar datos de tarjeta con validación mejorada
+        const validation = mercadopagoService.validateCardData(datosTargeta)
+        if (!validation.isValid) {
+          throw new Error(validation.errors.join(', '))
         }
 
         // Crear token de tarjeta

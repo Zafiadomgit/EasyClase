@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, Quote, Bug, Play, Pause } from 'lucide-react'
 
-const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5000 }) => {
+const CarouselDebug = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(autoPlay)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [debugInfo, setDebugInfo] = useState({
+    totalSlides: 5,
+    currentSlide: 0,
+    isAutoPlaying: true,
+    transformValue: '0%',
+    containerHeight: 'h-80',
+    slideWidth: '100%'
+  })
 
-  // Testimonios por defecto si no se proporcionan
-  const defaultTestimonials = [
+  const testimonials = [
     {
       id: 1,
       name: 'María García',
@@ -54,38 +61,51 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
     }
   ]
 
-  const displayTestimonials = testimonials.length > 0 ? testimonials : defaultTestimonials
-
   useEffect(() => {
     if (!isAutoPlaying) return
 
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
-        prevIndex === displayTestimonials.length - 1 ? 0 : prevIndex + 1
-      )
-    }, interval)
+      setCurrentIndex((prevIndex) => {
+        const newIndex = prevIndex === testimonials.length - 1 ? 0 : prevIndex + 1
+        updateDebugInfo(newIndex)
+        return newIndex
+      })
+    }, 3000)
 
     return () => clearInterval(timer)
-  }, [isAutoPlaying, interval, displayTestimonials.length])
+  }, [isAutoPlaying, testimonials.length])
+
+  const updateDebugInfo = (index) => {
+    setDebugInfo({
+      totalSlides: testimonials.length,
+      currentSlide: index + 1,
+      isAutoPlaying,
+      transformValue: `${-index * 100}%`,
+      containerHeight: 'h-80',
+      slideWidth: '100%'
+    })
+  }
 
   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex === displayTestimonials.length - 1 ? 0 : prevIndex + 1
-    )
+    const newIndex = currentIndex === testimonials.length - 1 ? 0 : currentIndex + 1
+    setCurrentIndex(newIndex)
+    updateDebugInfo(newIndex)
   }
 
   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex === 0 ? displayTestimonials.length - 1 : prevIndex - 1
-    )
+    const newIndex = currentIndex === 0 ? testimonials.length - 1 : currentIndex - 1
+    setCurrentIndex(newIndex)
+    updateDebugInfo(newIndex)
   }
 
   const goToSlide = (index) => {
     setCurrentIndex(index)
+    updateDebugInfo(index)
   }
 
   const toggleAutoPlay = () => {
     setIsAutoPlaying(!isAutoPlaying)
+    setDebugInfo(prev => ({ ...prev, isAutoPlaying: !isAutoPlaying }))
   }
 
   const renderStars = (rating) => {
@@ -103,32 +123,55 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
 
   return (
     <div className="relative max-w-6xl mx-auto px-4">
+      {/* Panel de depuración */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+        <div className="flex items-center mb-2">
+          <Bug className="w-5 h-5 text-yellow-600 mr-2" />
+          <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">Panel de Depuración</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="font-medium">Slides totales:</span> {debugInfo.totalSlides}
+          </div>
+          <div>
+            <span className="font-medium">Slide actual:</span> {debugInfo.currentSlide}
+          </div>
+          <div>
+            <span className="font-medium">Auto-play:</span> {debugInfo.isAutoPlaying ? 'ON' : 'OFF'}
+          </div>
+          <div>
+            <span className="font-medium">Transform:</span> {debugInfo.transformValue}
+          </div>
+        </div>
+      </div>
+
       {/* Título de la sección */}
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          Lo que dicen nuestros estudiantes
+      <div className="text-center mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Testimonios - Modo Depuración
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Descubre por qué miles de estudiantes confían en EasyClase para aprender nuevas habilidades
+        <p className="text-base text-gray-600 dark:text-gray-400">
+          Verificando funcionamiento del carrusel
         </p>
       </div>
 
       {/* Controles de reproducción automática */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-4">
         <button
           onClick={toggleAutoPlay}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
             isAutoPlaying
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          {isAutoPlaying ? '⏸️ Pausar' : '▶️ Reproducir'}
+          {isAutoPlaying ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+          {isAutoPlaying ? 'Pausar' : 'Reproducir'}
         </button>
       </div>
 
-      {/* Carrusel principal - VERSIÓN MEJORADA */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl">
+      {/* Carrusel principal */}
+      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl border-2 border-blue-200 dark:border-blue-800">
         {/* Botones de navegación */}
         <button
           onClick={prevSlide}
@@ -146,32 +189,37 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
           <ChevronRight className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         </button>
 
-        {/* Contenido del carrusel - VERSIÓN MEJORADA */}
+        {/* Contenido del carrusel */}
         <div className="relative h-80 md:h-72">
           <div 
             className="flex transition-transform duration-500 ease-in-out h-full"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
-            {displayTestimonials.map((testimonial) => (
+            {testimonials.map((testimonial, index) => (
               <div
                 key={testimonial.id}
-                className="w-full flex-shrink-0 p-8 md:p-12"
+                className="w-full flex-shrink-0 p-6 md:p-8 border-r border-gray-200 dark:border-gray-700"
               >
                 <div className="max-w-4xl mx-auto text-center h-full flex flex-col justify-center">
+                  {/* Indicador de slide */}
+                  <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                    Slide {index + 1}
+                  </div>
+
                   {/* Icono de comillas */}
-                  <div className="mb-4">
-                    <Quote className="w-10 h-10 text-blue-500 dark:text-blue-400 mx-auto" />
+                  <div className="mb-3">
+                    <Quote className="w-8 h-8 text-blue-500 dark:text-blue-400 mx-auto" />
                   </div>
 
                   {/* Comentario */}
-                  <blockquote className="text-lg md:text-xl font-medium text-gray-900 dark:text-gray-100 mb-6 leading-relaxed">
+                  <blockquote className="text-base md:text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 leading-relaxed">
                     "{testimonial.comment}"
                   </blockquote>
 
                   {/* Información del usuario */}
                   <div className="flex flex-col items-center">
                     {/* Avatar */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-3">
                       {testimonial.avatar ? (
                         <img
                           src={testimonial.avatar}
@@ -185,22 +233,22 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
 
                     {/* Nombre y rol */}
                     <div className="mb-2">
-                      <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {testimonial.name}
                       </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         {testimonial.role}
                       </p>
                     </div>
 
                     {/* Calificación */}
-                    <div className="flex items-center space-x-1 mb-2">
+                    <div className="flex items-center space-x-1 mb-1">
                       {renderStars(testimonial.rating)}
                     </div>
 
                     {/* Categoría */}
                     {testimonial.category && (
-                      <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium px-3 py-1 rounded-full">
+                      <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium px-2 py-1 rounded-full">
                         {testimonial.category}
                       </span>
                     )}
@@ -212,12 +260,12 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
         </div>
 
         {/* Indicadores de puntos */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {displayTestimonials.map((_, index) => (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {testimonials.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentIndex
                   ? 'bg-blue-600 dark:bg-blue-400'
                   : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
@@ -229,13 +277,13 @@ const TestimonialsCarousel = ({ testimonials = [], autoPlay = true, interval = 5
       </div>
 
       {/* Información adicional */}
-      <div className="mt-8 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Más de 1,000 estudiantes satisfechos • 4.9/5 calificación promedio
+      <div className="mt-6 text-center">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Modo depuración activo • Carrusel funcional
         </p>
       </div>
     </div>
   )
 }
 
-export default TestimonialsCarousel
+export default CarouselDebug
