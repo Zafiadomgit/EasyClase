@@ -20,24 +20,34 @@ const PagoSuccess = () => {
     const externalReference = urlParams.get('external_reference')
 
     if (status === 'approved' && paymentId) {
-      // En producción, aquí se verificaría el pago con el backend
-      const reservaData = {
-        profesor: { nombre: 'María González' },
-        fecha: new Date().toISOString(),
-        hora: '15:00',
-        duracion: 1,
-        costo: 35000
+      // Obtener datos de la reserva desde localStorage o sessionStorage
+      const reservaData = JSON.parse(localStorage.getItem('reserva_pendiente') || sessionStorage.getItem('reserva_pendiente') || '{}')
+      
+      // Si no hay datos de reserva, usar datos por defecto
+      if (!reservaData.profesor) {
+        const reservaDataDefault = {
+          profesor: { nombre: 'María González' },
+          fecha: new Date().toISOString(),
+          hora: '15:00',
+          duracion: 1,
+          costo: 35000
+        }
+        setPagoData({
+          paymentId,
+          status,
+          externalReference,
+          reserva: reservaDataDefault
+        })
+        guardarClase(reservaDataDefault)
+      } else {
+        setPagoData({
+          paymentId,
+          status,
+          externalReference,
+          reserva: reservaData
+        })
+        guardarClase(reservaData)
       }
-      
-      setPagoData({
-        paymentId,
-        status,
-        externalReference,
-        reserva: reservaData
-      })
-      
-      // Guardar la clase en el servicio local
-      guardarClase(reservaData)
     } else {
       // Si no hay datos válidos, redirigir
       navigate('/dashboard')
@@ -57,9 +67,9 @@ const PagoSuccess = () => {
       // Crear datos de la clase
       const claseData = {
         userId: userId,
-        tema: 'Clase de Programación', // Tema por defecto
+        tema: reservaData.tema || 'Clase de Programación',
         profesorNombre: reservaData.profesor.nombre,
-        profesorEspecialidad: 'Desarrollo Web',
+        profesorEspecialidad: reservaData.profesor.especialidad || 'Desarrollo Web',
         fecha: reservaData.fecha.split('T')[0], // Solo la fecha
         hora: reservaData.hora,
         duracion: reservaData.duracion,
@@ -68,11 +78,15 @@ const PagoSuccess = () => {
         notas: 'Clase reservada exitosamente'
       }
       
-      console.log('Guardando clase con datos:', claseData)
+      console.log('🔍 Guardando clase con datos:', claseData)
       
       // Guardar usando el servicio local
       const claseGuardada = await claseServiceLocal.guardarClase(claseData)
-      console.log('Clase guardada exitosamente:', claseGuardada)
+      console.log('✅ Clase guardada exitosamente:', claseGuardada)
+      
+      // Limpiar datos de reserva pendiente
+      localStorage.removeItem('reserva_pendiente')
+      console.log('🧹 Datos de reserva pendiente limpiados')
       
       setClaseGuardada(true)
     } catch (error) {

@@ -112,6 +112,19 @@ const Pago = () => {
         const preference = await mercadopagoService.createPaymentPreference(paymentData)
         
         if (preference.init_point) {
+          // Guardar datos de la reserva antes de redirigir
+          const reservaData = {
+            profesor: profesor,
+            tema: reserva.tema || 'Clase de Programación',
+            fecha: reserva.fecha,
+            hora: reserva.hora,
+            duracion: reserva.duracion,
+            costo: reserva.total || reserva.costo
+          }
+          
+          localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
+          console.log('Reserva guardada antes de redirigir a MercadoPago:', reservaData)
+          
           // Redirigir a MercadoPago
           window.location.href = preference.init_point
         } else {
