@@ -4,6 +4,7 @@ import { Shield, CreditCard, Lock, CheckCircle, AlertCircle, Calendar, Clock, Us
 import { useAuth } from '../contexts/AuthContext'
 import { formatPrecio } from '../utils/currencyUtils'
 import mercadopagoService from '../services/mercadopagoService'
+import claseServiceLocal from '../services/claseService'
 
 const Pago = () => {
   const { profesorId } = useParams()
@@ -56,6 +57,41 @@ const Pago = () => {
       initializeMercadoPago()
     }
   }, [reserva, profesor])
+
+  const guardarClaseDespuesDePago = async () => {
+    try {
+      // Usar un userId consistente
+      const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
+      
+      // Guardar el userId en localStorage para consistencia
+      if (!localStorage.getItem('easyclase_user_id')) {
+        localStorage.setItem('easyclase_user_id', userId)
+      }
+      
+      // Crear datos de la clase
+      const claseData = {
+        userId: userId,
+        tema: reserva.tema || 'Clase de Programación',
+        profesorNombre: profesor.nombre,
+        profesorEspecialidad: profesor.especialidad || 'Desarrollo Web',
+        fecha: reserva.fecha,
+        hora: reserva.hora,
+        duracion: reserva.duracion,
+        total: reserva.total || reserva.costo,
+        metodoPago: 'Tarjeta de Crédito/Débito',
+        notas: 'Clase reservada exitosamente'
+      }
+      
+      console.log('Guardando clase después del pago:', claseData)
+      
+      // Guardar usando el servicio local
+      const claseGuardada = await claseServiceLocal.guardarClase(claseData)
+      console.log('Clase guardada exitosamente:', claseGuardada)
+      
+    } catch (error) {
+      console.error('Error guardando clase después del pago:', error)
+    }
+  }
 
   const handlePago = async (e) => {
     e.preventDefault()
@@ -113,6 +149,9 @@ const Pago = () => {
         const paymentResult = await mercadopagoService.processCardPayment(cardData, paymentData)
         
         if (paymentResult.status === 'approved') {
+          // Guardar la clase antes de redirigir
+          await guardarClaseDespuesDePago()
+          
           setPagoExitoso(true)
           setTimeout(() => {
             navigate('/dashboard', { 

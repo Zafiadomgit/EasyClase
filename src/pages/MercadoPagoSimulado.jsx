@@ -61,11 +61,16 @@ const MercadoPagoSimulado = () => {
       
       // Redirigir después de 3 segundos
       setTimeout(() => {
+        // Obtener datos de la URL para pasar información real
+        const urlParams = new URLSearchParams(location.search)
+        const paymentId = urlParams.get('payment_id') || Date.now()
+        const externalReference = urlParams.get('external_reference') || 'reserva_123'
+        
         navigate('/pago/success', {
           state: {
-            payment_id: Date.now(),
+            payment_id: paymentId,
             status: 'approved',
-            external_reference: 'reserva_123'
+            external_reference: externalReference
           }
         })
       }, 3000)
