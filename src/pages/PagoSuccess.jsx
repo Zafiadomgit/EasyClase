@@ -13,15 +13,28 @@ const PagoSuccess = () => {
   const [claseGuardada, setClaseGuardada] = useState(false)
 
   useEffect(() => {
+    console.log('🎯 PagoSuccess.jsx cargado')
+    console.log('📍 URL actual:', location.search)
+    
     // Obtener datos de la URL de MercadoPago
     const urlParams = new URLSearchParams(location.search)
     const paymentId = urlParams.get('payment_id')
     const status = urlParams.get('status')
     const externalReference = urlParams.get('external_reference')
 
+    console.log('📊 Parámetros de URL:')
+    console.log('  - payment_id:', paymentId)
+    console.log('  - status:', status)
+    console.log('  - external_reference:', externalReference)
+
     if (status === 'approved' && paymentId) {
       // Obtener datos de la reserva desde localStorage o sessionStorage
-      const reservaData = JSON.parse(localStorage.getItem('reserva_pendiente') || sessionStorage.getItem('reserva_pendiente') || '{}')
+      console.log('🔍 Buscando datos de reserva en localStorage...')
+      const reservaDataRaw = localStorage.getItem('reserva_pendiente')
+      console.log('📦 Datos raw de reserva:', reservaDataRaw)
+      
+      const reservaData = JSON.parse(reservaDataRaw || sessionStorage.getItem('reserva_pendiente') || '{}')
+      console.log('✅ Datos de reserva parseados:', reservaData)
       
       // Si no hay datos de reserva, usar datos por defecto
       if (!reservaData.profesor) {

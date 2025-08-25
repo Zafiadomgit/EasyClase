@@ -98,6 +98,11 @@ const Pago = () => {
     setProcesando(true)
     setError('')
 
+    console.log('🚀 Iniciando proceso de pago...')
+    console.log('📋 Método de pago:', metodoPago)
+    console.log('📦 Datos de reserva:', reserva)
+    console.log('👨‍🏫 Datos de profesor:', profesor)
+
     try {
       if (metodoPago === 'mercadopago') {
         // Crear preferencia de pago en MercadoPago
@@ -122,9 +127,14 @@ const Pago = () => {
             costo: reserva.total || reserva.costo
           }
           
+          console.log('💾 Guardando reserva en localStorage:', reservaData)
           localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
-          console.log('Reserva guardada antes de redirigir a MercadoPago:', reservaData)
           
+          // Verificar que se guardó correctamente
+          const reservaGuardada = localStorage.getItem('reserva_pendiente')
+          console.log('✅ Reserva guardada en localStorage:', reservaGuardada)
+          
+          console.log('🔗 Redirigiendo a MercadoPago:', preference.init_point)
           // Redirigir a MercadoPago
           window.location.href = preference.init_point
         } else {
@@ -408,10 +418,38 @@ const Pago = () => {
                      )}
                    </>
                  )}
-               </button>
-            </form>
+                               </button>
+             </form>
 
-            {/* Seguridad */}
+             {/* Botón de prueba para simular pago exitoso */}
+             <div className="mt-4 pt-4 border-t border-secondary-200">
+               <button
+                 onClick={async () => {
+                   console.log('🧪 Simulando pago exitoso...')
+                   
+                   // Guardar datos de la reserva
+                   const reservaData = {
+                     profesor: profesor,
+                     tema: reserva.tema || 'Clase de Programación',
+                     fecha: reserva.fecha,
+                     hora: reserva.hora,
+                     duracion: reserva.duracion,
+                     costo: reserva.total || reserva.costo
+                   }
+                   
+                   console.log('💾 Guardando reserva de prueba:', reservaData)
+                   localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
+                   
+                   // Simular redirección a PagoSuccess
+                   window.location.href = '/pago/success?payment_id=TEST_123&status=approved&external_reference=test_ref'
+                 }}
+                 className="w-full bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-yellow-700 transition-colors"
+               >
+                 🧪 Simular Pago Exitoso (TEST)
+               </button>
+             </div>
+
+             {/* Seguridad */}
             <div className="mt-6 pt-6 border-t border-secondary-200">
               <div className="flex items-center text-sm text-secondary-600">
                 <Shield className="w-4 h-4 mr-2 text-green-500" />
