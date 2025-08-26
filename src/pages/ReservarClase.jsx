@@ -55,6 +55,7 @@ const ReservarClase = () => {
         rating: 4.9,
         reviews: 127,
         tarifa: 35000,
+        precioPorHora: 35000, // Agregar para consistencia
         experiencia: '5 años',
         descripcion: 'Especialista en Excel con certificación Microsoft. He ayudado a más de 500 profesionales a dominar las herramientas avanzadas de Excel.',
         foto: '/api/placeholder/150/150',
@@ -62,6 +63,8 @@ const ReservarClase = () => {
         certificaciones: ['Microsoft Excel Expert', 'Google Workspace'],
         idiomas: ['Español', 'Inglés']
       }
+      
+      console.log('🔍 ReservarClase: Profesor cargado:', profesorData)
       
       setProfesor(profesorData)
     } catch (err) {
@@ -84,6 +87,12 @@ const ReservarClase = () => {
 
       // Calcular costo total
       const costoTotal = profesor.tarifa * reservaData.duracion
+      
+      console.log('🔍 ReservarClase: Cálculo del costo:')
+      console.log('  - Tarifa por hora:', profesor.tarifa)
+      console.log('  - Duración seleccionada:', reservaData.duracion)
+      console.log('  - Cálculo:', `${profesor.tarifa} × ${reservaData.duracion} = ${costoTotal}`)
+      console.log('  - Tipo de datos - Tarifa:', typeof profesor.tarifa, 'Duración:', typeof reservaData.duracion)
 
       // Crear reserva
       const reserva = {
@@ -169,6 +178,12 @@ const ReservarClase = () => {
   }
 
   const costoTotal = profesor.tarifa * reservaData.duracion
+  
+  console.log('🔍 ReservarClase: Resumen renderizado:')
+  console.log('  - Profesor:', profesor.nombre)
+  console.log('  - Tarifa:', profesor.tarifa)
+  console.log('  - Duración:', reservaData.duracion)
+  console.log('  - Costo total:', costoTotal)
 
   return (
     <div className="reservar-clase-page bg-secondary-50 min-h-screen py-8">

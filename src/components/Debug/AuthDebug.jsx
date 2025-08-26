@@ -4,9 +4,10 @@ import { useAuth } from '../../contexts/AuthContext'
 const AuthDebug = () => {
   const { isAuthenticated, user, loading } = useAuth()
 
-  if (process.env.NODE_ENV === 'production') {
-    return null // No mostrar en producción
-  }
+  // Mostrar siempre para debug
+  // if (process.env.NODE_ENV === 'production') {
+  //   return null // No mostrar en producción
+  // }
 
   return (
     <div className="fixed bottom-4 left-4 bg-red-100 border border-red-300 rounded-lg p-3 text-xs max-w-xs z-50">
