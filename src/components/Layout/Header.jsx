@@ -24,6 +24,8 @@ const Header = () => {
   const shouldShowUserElements = !loading && isAuthenticated && user;
   
   console.log('🔔 Header: shouldShowUserElements:', shouldShowUserElements, 'loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', user?.id)
+  console.log('🔔 Header: User object:', user)
+  console.log('🔔 Header: Auth context details:', { loading, isAuthenticated, user: user ? { id: user.id, nombre: user.nombre, tipoUsuario: user.tipoUsuario } : null })
   
   // Función para mostrar notificaciones del sistema
   const showSystemNotification = (type, title, message) => {
@@ -458,6 +460,11 @@ const Header = () => {
                         </span>
                       </div>
                       <span className="text-secondary-900 font-medium">{user?.nombre}</span>
+                    </div>
+                    
+                    {/* Notificaciones en móvil */}
+                    <div className="px-3 py-2 mb-2">
+                      <NotificationBell />
                     </div>
                     <Link
                       to="/dashboard"

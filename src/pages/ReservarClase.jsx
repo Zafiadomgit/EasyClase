@@ -99,9 +99,13 @@ const ReservarClase = () => {
       }
 
       // Aquí se enviaría a la API
-      console.log('Creando reserva:', reserva)
+      console.log('🔍 ReservarClase: Creando reserva:', reserva)
+      console.log('🔍 ReservarClase: Duración:', reserva.duracion)
+      console.log('🔍 ReservarClase: Costo total:', reserva.costo)
+      console.log('🔍 ReservarClase: Tarifa por hora:', profesor.tarifa)
 
       // Redirigir al pago
+      console.log('🔍 ReservarClase: Navegando a pago con state:', { reserva, profesor })
       navigate('/pago', { 
         state: { 
           reserva,

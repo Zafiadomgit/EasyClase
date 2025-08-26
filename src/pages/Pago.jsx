@@ -33,10 +33,15 @@ const Pago = () => {
   useEffect(() => {
     // Obtener datos de la reserva desde el state de navegación
     if (location.state && location.state.reserva && location.state.profesor) {
+      console.log('🔍 Pago: Recibiendo datos de reserva:', location.state.reserva)
+      console.log('🔍 Pago: Duración recibida:', location.state.reserva.duracion)
+      console.log('🔍 Pago: Costo recibido:', location.state.reserva.costo)
+      console.log('🔍 Pago: Total recibido:', location.state.reserva.total)
       setReserva(location.state.reserva)
       setProfesor(location.state.profesor)
     } else {
       // Si no hay datos, redirigir de vuelta
+      console.log('❌ Pago: No se recibieron datos de reserva')
       navigate('/buscar')
     }
   }, [location.state, navigate])

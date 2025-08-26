@@ -4,6 +4,7 @@ import Header from './Header'
 import Footer from './Footer'
 import { useUpcomingClassNotifications } from '../../hooks/useUpcomingClassNotifications'
 import { useSystemNotifications } from '../../hooks/useSystemNotifications'
+import AuthDebug from '../Debug/AuthDebug'
 
 const Layout = () => {
   // Hook para notificaciones de clases próximas
@@ -19,6 +20,7 @@ const Layout = () => {
         <Outlet />
       </main>
       <Footer />
+      <AuthDebug />
     </div>
   )
 }

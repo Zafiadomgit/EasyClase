@@ -156,6 +156,8 @@ const NotificationBell = () => {
 
   if (!user?.id) {
     console.log('🔔 NotificationBell: No user ID, returning null')
+    console.log('🔔 NotificationBell: User object:', user)
+    console.log('🔔 NotificationBell: Auth context state:', { user, isAuthenticated: user ? true : false })
     return null
   }
 
