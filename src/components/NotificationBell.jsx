@@ -1,26 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Bell, X, Check, Trash2, MessageCircle, Calendar, CreditCard, Clock } from 'lucide-react'
+import { Bell, X, Check, Trash2, MessageCircle, Calendar, CreditCard, Clock, Star, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import notificationService from '../services/notificationService'
+import { useNotifications } from '../contexts/NotificationContext'
 
 const NotificationBell = () => {
   const { user } = useAuth()
+  const { 
+    persistentNotifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification,
+    loadPersistentNotifications 
+  } = useNotifications()
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
   const dropdownRef = useRef(null)
 
   useEffect(() => {
     if (!user?.id) return
 
     // Cargar notificaciones iniciales
-    loadNotifications()
+    loadPersistentNotifications(user.id)
 
     // Escuchar eventos de actualización de notificaciones
     const handleNotificationsUpdate = (event) => {
       if (event.detail.userId === user.id) {
-        setNotifications(event.detail.notifications)
-        setUnreadCount(notificationService.getUnreadCount(user.id))
+        loadPersistentNotifications(user.id)
       }
     }
 
@@ -29,54 +34,59 @@ const NotificationBell = () => {
     return () => {
       window.removeEventListener('notificationsUpdated', handleNotificationsUpdate)
     }
-  }, [user?.id])
-
-  const loadNotifications = () => {
-    if (!user?.id) return
-    
-    const userNotifications = notificationService.getNotifications(user.id)
-    setNotifications(userNotifications)
-    setUnreadCount(notificationService.getUnreadCount(user.id))
-  }
+  }, [user?.id, loadPersistentNotifications])
 
   const handleMarkAsRead = (notificationId) => {
     if (!user?.id) return
     
-    notificationService.markAsRead(user.id, notificationId)
+    markAsRead(user.id, notificationId)
   }
 
   const handleMarkAllAsRead = () => {
     if (!user?.id) return
     
-    notificationService.markAllAsRead(user.id)
+    markAllAsRead(user.id)
   }
 
   const handleDeleteNotification = (notificationId) => {
     if (!user?.id) return
     
-    notificationService.deleteNotification(user.id, notificationId)
+    deleteNotification(user.id, notificationId)
   }
 
   const handleNotificationClick = (notification) => {
-    // Marcar como leída
+    // Marcar como leída automáticamente al hacer click
     handleMarkAsRead(notification.id)
     
-    // Aquí puedes agregar navegación específica según el tipo de notificación
-    switch (notification.type) {
+    // Navegación específica según el tipo de notificación
+    switch (notification.data?.action) {
       case 'payment_success':
-      case 'upcoming_class':
+      case 'payment_rejected':
+      case 'class_confirmed':
+      case 'class_scheduled':
         // Navegar al dashboard
         window.location.href = '/dashboard'
-        break
-      case 'new_reservation':
-        // Navegar a mis clases (para profesores)
-        window.location.href = '/mis-clases'
         break
       case 'new_message':
         // Aquí podrías abrir el chat
         console.log('Abrir chat con:', notification.data.senderName)
+        // Navegar al chat o abrir modal de chat
+        break
+      case 'class_starting_soon':
+        // Navegar a la clase específica
+        if (notification.data.claseId) {
+          window.location.href = `/clase/${notification.data.claseId}`
+        } else {
+          window.location.href = '/mis-clases'
+        }
+        break
+      case 'payment_reminder':
+        // Navegar a la página de pagos
+        window.location.href = '/pago'
         break
       default:
+        // Navegar al dashboard por defecto
+        window.location.href = '/dashboard'
         break
     }
     
@@ -93,6 +103,10 @@ const NotificationBell = () => {
         return <CreditCard className="w-4 h-4" />
       case 'clock':
         return <Clock className="w-4 h-4" />
+      case 'star':
+        return <Star className="w-4 h-4" />
+      case 'check-circle':
+        return <CheckCircle className="w-4 h-4" />
       default:
         return <Bell className="w-4 h-4" />
     }
@@ -101,17 +115,19 @@ const NotificationBell = () => {
   const getColorClasses = (color) => {
     switch (color) {
       case 'green':
-        return 'text-green-600 bg-green-50 border-green-200'
+        return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-700'
       case 'blue':
-        return 'text-blue-600 bg-blue-50 border-blue-200'
+        return 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-700'
       case 'purple':
-        return 'text-purple-600 bg-purple-50 border-purple-200'
+        return 'text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-900/20 dark:border-purple-700'
       case 'orange':
-        return 'text-orange-600 bg-orange-50 border-orange-200'
+        return 'text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-900/20 dark:border-orange-700'
       case 'red':
-        return 'text-red-600 bg-red-50 border-red-200'
+        return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-700'
+      case 'yellow':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-700'
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200'
+        return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-900/20 dark:border-gray-700'
     }
   }
 
@@ -153,13 +169,13 @@ const NotificationBell = () => {
           console.log('🔔 Bell button clicked! Current isOpen:', isOpen)
           setIsOpen(!isOpen)
         }}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full transition-colors"
       >
         <Bell className="w-5 h-5" />
         
         {/* Badge de notificaciones no leídas */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -167,22 +183,22 @@ const NotificationBell = () => {
 
       {/* Dropdown de notificaciones */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 z-50 max-h-96 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Notificaciones</h3>
+          <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-gray-600">
+            <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100">Notificaciones</h3>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline"
                 >
                   Marcar todas como leídas
                 </button>
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -191,18 +207,21 @@ const NotificationBell = () => {
 
           {/* Lista de notificaciones */}
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                <p>No tienes notificaciones</p>
+            {persistentNotifications.length === 0 ? (
+              <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                <p className="text-sm font-medium">No tienes notificaciones</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Te notificaremos cuando tengas novedades</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {notifications.map((notification) => (
+              <div className="divide-y divide-secondary-100 dark:divide-gray-700">
+                {persistentNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.read ? 'bg-blue-50' : ''
+                    className={`p-4 hover:bg-secondary-50 dark:hover:bg-gray-700 cursor-pointer transition-colors border-l-2 ${
+                      !notification.read 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-l-blue-500' 
+                        : 'border-l-transparent'
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -215,19 +234,19 @@ const NotificationBell = () => {
                       {/* Contenido */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-secondary-900 dark:text-gray-100">
                             {notification.title}
                           </p>
                           <div className="flex items-center space-x-1">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-secondary-500 dark:text-gray-400">
                               {formatTime(notification.timestamp)}
                             </span>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="text-sm text-secondary-600 dark:text-gray-400 mt-1 line-clamp-2">
                           {notification.message}
                         </p>
                       </div>
@@ -240,7 +259,7 @@ const NotificationBell = () => {
                               e.stopPropagation()
                               handleMarkAsRead(notification.id)
                             }}
-                            className="p-1 text-gray-400 hover:text-green-600"
+                            className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                             title="Marcar como leída"
                           >
                             <Check className="w-3 h-3" />
@@ -251,7 +270,7 @@ const NotificationBell = () => {
                             e.stopPropagation()
                             handleDeleteNotification(notification.id)
                           }}
-                          className="p-1 text-gray-400 hover:text-red-600"
+                          className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                           title="Eliminar"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -265,11 +284,13 @@ const NotificationBell = () => {
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
-              <p className="text-xs text-gray-500 text-center">
-                {unreadCount} no leída{unreadCount !== 1 ? 's' : ''} de {notifications.length} total
-              </p>
+          {persistentNotifications.length > 0 && (
+            <div className="p-3 border-t border-secondary-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+              <div className="flex items-center justify-center space-x-2 text-xs text-secondary-500 dark:text-gray-400">
+                <span>{unreadCount} sin leer</span>
+                <span>•</span>
+                <span>{persistentNotifications.length} total</span>
+              </div>
             </div>
           )}
         </div>

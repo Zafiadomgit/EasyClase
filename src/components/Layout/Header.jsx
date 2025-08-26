@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown, Code, Calculator, Globe, FileText, Palette, TrendingUp, Clock, DollarSign } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNotifications } from '../../contexts/NotificationContext'
 import ThemeToggle from '../UI/ThemeToggle'
 import CategoriesModal from '../Modal/CategoriesModal'
 import NotificationBell from '../NotificationBell'
@@ -17,18 +18,47 @@ const Header = () => {
   const notificationsRef = useRef(null)
   const navigate = useNavigate()
   const { isAuthenticated, user, logout, loading } = useAuth()
-  // const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
-  // Datos temporales para las notificaciones
-  const notifications = []
-  const unreadCount = 0
-  const markAsRead = () => {}
-  const markAllAsRead = () => {}
+  const { addPersistentNotification } = useNotifications()
   
   // Evitar renderizar elementos de usuario mientras se verifica autenticación
   const shouldShowUserElements = !loading && isAuthenticated && user;
   
   console.log('🔔 Header: shouldShowUserElements:', shouldShowUserElements, 'loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', user?.id)
   
+  // Función para mostrar notificaciones del sistema
+  const showSystemNotification = (type, title, message) => {
+    if (!user?.id) return
+    
+    const systemNotifications = {
+      welcome: {
+        type: 'info',
+        title: '¡Bienvenido a Easy Clase!',
+        message: 'Tu plataforma de aprendizaje personalizado',
+        icon: 'star',
+        color: 'blue'
+      },
+      class_reminder: {
+        type: 'reminder',
+        title: 'Recordatorio de Clase',
+        message: 'Tu clase comienza en 30 minutos',
+        icon: 'clock',
+        color: 'orange'
+      },
+      payment_reminder: {
+        type: 'payment',
+        title: 'Recordatorio de Pago',
+        message: 'Tu próxima clase requiere confirmación de pago',
+        icon: 'credit-card',
+        color: 'yellow'
+      }
+    }
+    
+    const notification = systemNotifications[type]
+    if (notification) {
+      addPersistentNotification(user.id, notification)
+    }
+  }
+
   const getNotificationIcon = (type) => {
     const icons = {
       payment: '💳',
@@ -249,17 +279,6 @@ const Header = () => {
               <>
                 {/* Botón de Notificaciones */}
                 <NotificationBell />
-                
-                {/* Botón de prueba temporal */}
-                <button
-                  onClick={() => {
-                    console.log('🔔 Test button clicked!')
-                    alert('Botón de prueba funciona!')
-                  }}
-                  className="relative p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full transition-colors"
-                >
-                  🔔 TEST
-                </button>
                 
                 {/* Menú de Usuario */}
                 <div className="relative">

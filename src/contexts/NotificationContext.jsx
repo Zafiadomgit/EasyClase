@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { CheckCircle, X, Bell } from 'lucide-react'
+import notificationService from '../services/notificationService'
 
 const NotificationContext = createContext()
 
@@ -13,7 +14,69 @@ export const useNotifications = () => {
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([])
+  const [persistentNotifications, setPersistentNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
+  // Función para cargar notificaciones persistentes del usuario actual
+  const loadPersistentNotifications = (userId) => {
+    if (!userId) return
+    
+    const userNotifications = notificationService.getNotifications(userId)
+    setPersistentNotifications(userNotifications)
+    setUnreadCount(notificationService.getUnreadCount(userId))
+  }
+
+  // Función para agregar notificación persistente
+  const addPersistentNotification = (userId, notification) => {
+    if (!userId) return
+    
+    const newNotification = notificationService.addNotification(userId, notification)
+    if (newNotification) {
+      setPersistentNotifications(prev => [newNotification, ...prev])
+      setUnreadCount(prev => prev + 1)
+    }
+  }
+
+  // Función para marcar como leída
+  const markAsRead = (userId, notificationId) => {
+    if (!userId) return
+    
+    notificationService.markAsRead(userId, notificationId)
+    setPersistentNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, read: true }
+          : notification
+      )
+    )
+    setUnreadCount(prev => Math.max(0, prev - 1))
+  }
+
+  // Función para marcar todas como leídas
+  const markAllAsRead = (userId) => {
+    if (!userId) return
+    
+    notificationService.markAllAsRead(userId)
+    setPersistentNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    )
+    setUnreadCount(0)
+  }
+
+  // Función para eliminar notificación
+  const deleteNotification = (userId, notificationId) => {
+    if (!userId) return
+    
+    notificationService.deleteNotification(userId, notificationId)
+    setPersistentNotifications(prev => 
+      prev.filter(notification => notification.id !== notificationId)
+    )
+    // Recalcular conteo no leído
+    const updatedNotifications = notificationService.getNotifications(userId)
+    setUnreadCount(updatedNotifications.filter(n => !n.read).length)
+  }
+
+  // Función para mostrar notificaciones temporales (toast)
   const addNotification = (notification) => {
     const id = Date.now()
     const newNotification = {
@@ -33,6 +96,104 @@ export const NotificationProvider = ({ children }) => {
     }, newNotification.duration)
 
     return id
+  }
+
+  // Función para mostrar notificaciones del sistema automáticamente
+  const showSystemNotification = (type, userId = null, customData = {}) => {
+    const systemNotifications = {
+      welcome: {
+        type: 'info',
+        title: '¡Bienvenido a Easy Clase!',
+        message: 'Tu plataforma de aprendizaje personalizado está lista para ti',
+        icon: 'star',
+        color: 'blue',
+        data: { action: 'welcome', ...customData }
+      },
+      class_reminder: {
+        type: 'reminder',
+        title: 'Recordatorio de Clase',
+        message: 'Tu clase comienza en 30 minutos. ¡Prepárate!',
+        icon: 'clock',
+        color: 'orange',
+        data: { action: 'class_reminder', ...customData }
+      },
+      payment_reminder: {
+        type: 'payment',
+        title: 'Recordatorio de Pago',
+        message: 'Tu próxima clase requiere confirmación de pago',
+        icon: 'credit-card',
+        color: 'yellow',
+        data: { action: 'payment_reminder', ...customData }
+      },
+      new_message: {
+        type: 'message',
+        title: 'Nuevo Mensaje',
+        message: customData.senderName 
+          ? `Nuevo mensaje de ${customData.senderName}`
+          : 'Tienes un nuevo mensaje en tu chat',
+        icon: 'message-circle',
+        color: 'purple',
+        data: { action: 'new_message', ...customData }
+      },
+      class_confirmed: {
+        type: 'success',
+        title: 'Clase Confirmada',
+        message: customData.tema 
+          ? `Tu clase de "${customData.tema}" ha sido confirmada`
+          : 'Tu clase ha sido confirmada exitosamente',
+        icon: 'check-circle',
+        color: 'green',
+        data: { action: 'class_confirmed', ...customData }
+      },
+      payment_success: {
+        type: 'success',
+        title: '¡Pago Exitoso!',
+        message: customData.amount 
+          ? `Tu pago de $${customData.amount} ha sido procesado correctamente`
+          : 'Tu pago ha sido procesado correctamente',
+        icon: 'credit-card',
+        color: 'green',
+        data: { action: 'payment_success', ...customData }
+      },
+      payment_rejected: {
+        type: 'error',
+        title: 'Pago Rechazado',
+        message: customData.reason 
+          ? `Tu pago fue rechazado: ${customData.reason}`
+          : 'Tu pago fue rechazado. Por favor, intenta nuevamente',
+        icon: 'credit-card',
+        color: 'red',
+        data: { action: 'payment_rejected', ...customData }
+      },
+      class_scheduled: {
+        type: 'success',
+        title: 'Clase Agendada',
+        message: customData.tema 
+          ? `Tu clase de "${customData.tema}" ha sido agendada para ${customData.fecha} a las ${customData.hora}`
+          : 'Tu clase ha sido agendada exitosamente',
+        icon: 'calendar',
+        color: 'blue',
+        data: { action: 'class_scheduled', ...customData }
+      },
+      class_starting_soon: {
+        type: 'reminder',
+        title: '¡Tu clase comienza pronto!',
+        message: customData.tema 
+          ? `Tu clase de "${customData.tema}" comienza en 10 minutos`
+          : 'Tu clase comienza en 10 minutos. ¡Prepárate!',
+        icon: 'clock',
+        color: 'orange',
+        data: { action: 'class_starting_soon', ...customData }
+      }
+    }
+
+    const notification = systemNotifications[type]
+    if (notification && userId) {
+      addPersistentNotification(userId, notification)
+    } else if (notification) {
+      // Si no hay userId, mostrar como notificación temporal
+      addNotification(notification)
+    }
   }
 
   const removeNotification = (id) => {
@@ -64,12 +225,23 @@ export const NotificationProvider = ({ children }) => {
   }
 
   const value = {
+    // Notificaciones temporales (pop-up)
     notifications,
     addNotification,
     removeNotification,
     clearAllNotifications,
     showPaymentSuccess,
-    showClassAdded
+    showClassAdded,
+    showSystemNotification,
+    
+    // Notificaciones persistentes (campanita)
+    persistentNotifications,
+    unreadCount,
+    addPersistentNotification,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    loadPersistentNotifications
   }
 
   return (
