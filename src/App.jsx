@@ -40,6 +40,7 @@ import AdminContenido from './pages/Admin/AdminContenido'
 import AdminSistema from './pages/Admin/AdminSistema'
 import ProfesorDisponibilidad from './pages/Professor/ProfesorDisponibilidad'
 import Premium from './pages/Premium'
+import DetalleClase from './pages/DetalleClase'
 import './App.css'
 
 function App() {
@@ -95,6 +96,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MisClases />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/clase/:id" 
+                element={
+                  <ProtectedRoute>
+                    <DetalleClase />
                   </ProtectedRoute>
                 } 
               />

@@ -504,7 +504,10 @@ const Dashboard = () => {
                           {clase.estado === 'confirmada' && !claseServiceLocal.verificarClaseProxima(clase) && (
                             <p className="text-xs text-green-600">Videollamada disponible 10 min antes</p>
                           )}
-                          <button className="btn-primary text-sm px-3 py-1">
+                          <button 
+                            onClick={() => navigate(`/clase/${clase.id}`, { state: { clase } })}
+                            className="btn-primary text-sm px-3 py-1"
+                          >
                             Ver Detalles
                           </button>
                         </div>
