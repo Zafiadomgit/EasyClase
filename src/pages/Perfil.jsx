@@ -21,7 +21,7 @@ const Perfil = () => {
       const response = await userService.obtenerPerfil()
       setUserData(response.data)
     } catch (error) {
-      console.error('Error cargando perfil:', error)
+      // Error silencioso para no interrumpir el flujo
     } finally {
       setLoading(false)
     }

@@ -51,7 +51,7 @@ const SerProfesor = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     // Aquí implementarías el registro del profesor
-    console.log('Registro de profesor:', formData)
+    
   }
 
   const handleChange = (e) => {

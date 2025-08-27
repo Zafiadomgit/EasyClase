@@ -103,7 +103,7 @@ const CrearServicio = () => {
       })
 
       // Aquí se enviaría a la API
-      console.log('Creando servicio:', servicioData)
+
 
       // Simular envío
       await new Promise(resolve => setTimeout(resolve, 2000))

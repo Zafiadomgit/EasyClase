@@ -46,10 +46,9 @@ const BuscarServicios = () => {
       setLoading(true)
       const response = await servicioService.obtenerServicios()
       setServicios(response.data?.servicios || [])
-    } catch (error) {
-      console.error('Error cargando servicios:', error)
-      setError('Error al cargar los servicios')
-    } finally {
+          } catch (error) {
+        setError('Error al cargar los servicios')
+      } finally {
       setLoading(false)
     }
   }

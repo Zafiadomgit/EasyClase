@@ -95,7 +95,7 @@ const PerfilProfesor = () => {
         const response = await claseService.obtenerInfoDescuentos(profesor.especialidad, profesor.id);
         setDescuentoInfo(response.data);
       } catch (error) {
-        console.error('Error cargando información de descuentos:', error);
+        // Error silencioso para no interrumpir el flujo
       } finally {
         setLoadingDescuento(false);
       }
@@ -136,7 +136,7 @@ const PerfilProfesor = () => {
       } : null
     }
     
-    console.log('Reservando clase:', data)
+    
     navigate('/pago', { state: { reserva: data, profesor } })
   }
 
@@ -180,7 +180,6 @@ const PerfilProfesor = () => {
         })
       }
     } catch (error) {
-      console.error('Error enviando mensaje:', error)
       setChatError('Error al enviar el mensaje. Por favor intenta de nuevo.')
     }
   }

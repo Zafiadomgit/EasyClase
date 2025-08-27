@@ -21,7 +21,7 @@ const MisClases = () => {
       const response = await claseService.obtenerMisClases()
       setClases(response.data?.clases || [])
     } catch (error) {
-      console.error('Error cargando mis clases:', error)
+      // Error silencioso para no interrumpir el flujo
     } finally {
       setLoading(false)
     }

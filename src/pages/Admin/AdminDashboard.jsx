@@ -38,7 +38,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       setError('Error cargando estadísticas del dashboard')
-      console.error('Error:', error)
     } finally {
       setLoading(false)
     }

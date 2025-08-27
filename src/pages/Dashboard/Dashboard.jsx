@@ -128,12 +128,9 @@ const Dashboard = () => {
           localStorage.setItem('easyclase_user_id', userId)
         }
         
-        console.log('Cargando clases para userId:', userId)
         const proximasClases = await claseServiceLocal.obtenerProximasClases(userId)
         setClases(proximasClases)
-        console.log('Clases cargadas:', proximasClases)
       } catch (clasesError) {
-        console.log('Error cargando clases locales:', clasesError)
         setClases([])
       }
 
@@ -143,7 +140,6 @@ const Dashboard = () => {
         setServicios(serviciosResponse.data?.servicios || [])
       } catch (serviciosError) {
         // Si falla, solo logueamos, no es crítico
-        console.log('Error cargando servicios:', serviciosError)
         setServicios([])
       }
 
@@ -153,12 +149,10 @@ const Dashboard = () => {
           const balanceResponse = await profesorService.obtenerBalance()
           setBalanceDisponible(balanceResponse.data?.balanceDisponible || 0)
         } catch (balanceError) {
-          console.log('Error cargando balance:', balanceError)
           setBalanceDisponible(0)
         }
       }
     } catch (error) {
-      console.error('Error cargando datos:', error)
       setError('Error al cargar los datos del dashboard')
     } finally {
       setLoading(false)
@@ -281,86 +275,13 @@ const Dashboard = () => {
         throw new Error('Error al crear el retiro')
       }
     } catch (error) {
-      console.error('Error retirando dinero:', error)
       setError('Error al procesar el retiro. Intenta nuevamente.')
     } finally {
       setLoadingRetiro(false)
     }
   }
 
-  // Función de debug para verificar localStorage
-  const debugLocalStorage = () => {
-    const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
-    console.log('UserId actual:', userId)
-    
-    // Verificar todas las claves en localStorage
-    console.log('Todas las claves en localStorage:')
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      console.log(`${key}:`, localStorage.getItem(key))
-    }
-    
-    // Verificar específicamente las clases
-    const clasesEnStorage = localStorage.getItem(`clases_${userId}`)
-    console.log(`Clases para userId ${userId}:`, clasesEnStorage)
-    
-    if (clasesEnStorage) {
-      try {
-        const clasesParsed = JSON.parse(clasesEnStorage)
-        console.log('Clases parseadas:', clasesParsed)
-      } catch (e) {
-        console.error('Error parseando clases:', e)
-      }
-    }
-  }
-
-  // Función para agregar una clase de prueba
-  const agregarClasePrueba = async () => {
-    try {
-      const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
-      
-      // Crear una clase de prueba para mañana
-      const mañana = new Date()
-      mañana.setDate(mañana.getDate() + 1)
-      const fechaMañana = mañana.toISOString().split('T')[0]
-      
-      const clasePrueba = {
-        userId: userId,
-        tema: 'Clase de Prueba - React',
-        profesorNombre: 'Prof. Juan Pérez',
-        profesorEspecialidad: 'Desarrollo Frontend',
-        fecha: fechaMañana,
-        hora: '15:00',
-        duracion: 2,
-        total: 70000,
-        metodoPago: 'Tarjeta de Crédito',
-        notas: 'Clase de prueba agregada manualmente',
-        estado: 'confirmada'
-      }
-      
-      console.log('🧪 Agregando clase de prueba:', clasePrueba)
-      
-      const claseGuardada = await claseServiceLocal.guardarClase(clasePrueba)
-      console.log('✅ Clase de prueba guardada:', claseGuardada)
-      
-      // Recargar datos
-      await cargarDatos()
-      
-      // Mostrar notificación
-      const fechaFormateada = new Date(clasePrueba.fecha).toLocaleDateString('es-ES', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-      showClassAdded(clasePrueba.tema, fechaFormateada, clasePrueba.hora)
-      
-      alert('Clase de prueba agregada exitosamente. Revisa la consola para más detalles.')
-    } catch (error) {
-      console.error('❌ Error agregando clase de prueba:', error)
-      alert('Error agregando clase de prueba: ' + error.message)
-    }
-  }
+  
 
   // Filtrar clases por estado
   const proximasClases = clases.filter(clase => 
@@ -424,28 +345,7 @@ const Dashboard = () => {
               }
             </p>
           </div>
-                     {/* Botones de debug - siempre visibles para testing */}
-           <div className="text-right">
-             <p className="text-xs text-gray-500 mb-2">Herramientas de debug</p>
-             <button
-               onClick={debugLocalStorage}
-               className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors ml-2"
-             >
-               Debug localStorage
-             </button>
-             <button
-               onClick={agregarClasePrueba}
-               className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors ml-2"
-             >
-               Agregar Clase Prueba
-             </button>
-             <button
-               onClick={crearNotificacionesPrueba}
-               className="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors ml-2"
-             >
-               🔔 Crear Notificaciones Prueba
-             </button>
-           </div>
+
         </div>
       </div>
 

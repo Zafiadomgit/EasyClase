@@ -23,14 +23,6 @@ const Header = () => {
   // Evitar renderizar elementos de usuario mientras se verifica autenticación
   const shouldShowUserElements = !loading && isAuthenticated && user;
   
-  console.log('🔔 Header: shouldShowUserElements:', shouldShowUserElements, 'loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', user?.id)
-  console.log('🔔 Header: User object:', user)
-  console.log('🔔 Header: Auth context details:', { loading, isAuthenticated, user: user ? { id: user.id, nombre: user.nombre, tipoUsuario: user.tipoUsuario } : null })
-  
-  // Debug adicional
-  console.log('🔔 Header: NotificationBell should render:', shouldShowUserElements)
-  console.log('🔔 Header: Component state:', { isMenuOpen, isUserMenuOpen, isCategoriesOpen })
-  
   // Función para mostrar notificaciones del sistema
   const showSystemNotification = (type, title, message) => {
     if (!user?.id) return
@@ -286,21 +278,7 @@ const Header = () => {
                 {/* Botón de Notificaciones */}
                 <NotificationBell />
                 
-                {/* Botón de Debug Temporal */}
-                <button
-                  onClick={() => {
-                    console.log('🔍 Debug: Estado completo del Header')
-                    console.log('  - shouldShowUserElements:', shouldShowUserElements)
-                    console.log('  - loading:', loading)
-                    console.log('  - isAuthenticated:', isAuthenticated)
-                    console.log('  - user:', user)
-                    console.log('  - NotificationBell should render:', shouldShowUserElements)
-                  }}
-                  className="ml-2 p-2 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
-                  title="Debug"
-                >
-                  🐛
-                </button>
+
                 
                 {/* Menú de Usuario */}
                 <div className="relative">

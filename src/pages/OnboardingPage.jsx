@@ -7,7 +7,7 @@ const OnboardingPage = () => {
 
   const handleOnboardingComplete = (preferences) => {
     // Guardar preferencias y redirigir
-    console.log('Onboarding completado con preferencias:', preferences)
+
     navigate('/buscar', { 
       state: { preferences },
       replace: true 
@@ -15,7 +15,7 @@ const OnboardingPage = () => {
   }
 
   const handleOnboardingSkip = () => {
-    console.log('Onboarding saltado')
+
     navigate('/dashboard', { replace: true })
   }
 

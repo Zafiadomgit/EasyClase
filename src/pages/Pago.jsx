@@ -33,15 +33,10 @@ const Pago = () => {
   useEffect(() => {
     // Obtener datos de la reserva desde el state de navegación
     if (location.state && location.state.reserva && location.state.profesor) {
-      console.log('🔍 Pago: Recibiendo datos de reserva:', location.state.reserva)
-      console.log('🔍 Pago: Duración recibida:', location.state.reserva.duracion)
-      console.log('🔍 Pago: Costo recibido:', location.state.reserva.costo)
-      console.log('🔍 Pago: Total recibido:', location.state.reserva.total)
       setReserva(location.state.reserva)
       setProfesor(location.state.profesor)
     } else {
       // Si no hay datos, redirigir de vuelta
-      console.log('❌ Pago: No se recibieron datos de reserva')
       navigate('/buscar')
     }
   }, [location.state, navigate])
@@ -53,7 +48,6 @@ const Pago = () => {
         await mercadopagoService.initializeMercadoPago()
         setMercadopagoInitialized(true)
       } catch (error) {
-        console.error('Error inicializando MercadoPago:', error)
         setError('No se pudo inicializar el sistema de pagos')
       }
     }
@@ -87,14 +81,11 @@ const Pago = () => {
         notas: 'Clase reservada exitosamente'
       }
       
-      console.log('Guardando clase después del pago:', claseData)
-      
       // Guardar usando el servicio local
-      const claseGuardada = await claseServiceLocal.guardarClase(claseData)
-      console.log('Clase guardada exitosamente:', claseGuardada)
+      await claseServiceLocal.guardarClase(claseData)
       
     } catch (error) {
-      console.error('Error guardando clase después del pago:', error)
+      // Error silencioso para no interrumpir el flujo
     }
   }
 
@@ -103,10 +94,7 @@ const Pago = () => {
     setProcesando(true)
     setError('')
 
-    console.log('🚀 Iniciando proceso de pago...')
-    console.log('📋 Método de pago:', metodoPago)
-    console.log('📦 Datos de reserva:', reserva)
-    console.log('👨‍🏫 Datos de profesor:', profesor)
+
 
     try {
       if (metodoPago === 'mercadopago') {
@@ -132,14 +120,9 @@ const Pago = () => {
             costo: reserva.total || reserva.costo
           }
           
-          console.log('💾 Guardando reserva en localStorage:', reservaData)
           localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
           
-          // Verificar que se guardó correctamente
-          const reservaGuardada = localStorage.getItem('reserva_pendiente')
-          console.log('✅ Reserva guardada en localStorage:', reservaGuardada)
-          
-          console.log('🔗 Redirigiendo a MercadoPago:', preference.init_point)
+          // Redirigir a MercadoPago
           // Redirigir a MercadoPago
           window.location.href = preference.init_point
         } else {
@@ -430,8 +413,6 @@ const Pago = () => {
              <div className="mt-4 pt-4 border-t border-secondary-200">
                <button
                  onClick={async () => {
-                   console.log('🧪 Simulando pago exitoso...')
-                   
                    // Guardar datos de la reserva
                    const reservaData = {
                      profesor: profesor,
@@ -442,7 +423,6 @@ const Pago = () => {
                      costo: reserva.total || reserva.costo
                    }
                    
-                   console.log('💾 Guardando reserva de prueba:', reservaData)
                    localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
                    
                    // Simular redirección a PagoSuccess

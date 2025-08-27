@@ -69,7 +69,6 @@ const NotificationBell = () => {
         break
       case 'new_message':
         // Aquí podrías abrir el chat
-        console.log('Abrir chat con:', notification.data.senderName)
         // Navegar al chat o abrir modal de chat
         break
       case 'class_starting_soon':
@@ -155,22 +154,14 @@ const NotificationBell = () => {
   }, [])
 
   if (!user?.id) {
-    console.log('🔔 NotificationBell: No user ID, returning null')
-    console.log('🔔 NotificationBell: User object:', user)
-    console.log('🔔 NotificationBell: Auth context state:', { user, isAuthenticated: user ? true : false })
     return null
   }
-
-  console.log('🔔 NotificationBell: Rendering with user ID:', user.id, 'isOpen:', isOpen, 'unreadCount:', unreadCount)
 
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Botón de la campanita */}
       <button
-        onClick={() => {
-          console.log('🔔 Bell button clicked! Current isOpen:', isOpen)
-          setIsOpen(!isOpen)
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full transition-colors"
       >
         <Bell className="w-5 h-5" />

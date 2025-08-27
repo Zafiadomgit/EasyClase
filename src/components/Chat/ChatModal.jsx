@@ -42,7 +42,7 @@ const ChatModal = ({ isOpen, onClose, profesor, onSendMessage }) => {
         await onSendMessage(newMessage)
       }
     } catch (error) {
-      console.error('Error enviando mensaje:', error)
+      // Error silencioso para no interrumpir el flujo
     } finally {
       setLoading(false)
     }

@@ -39,14 +39,13 @@ export const AuthProvider = ({ children }) => {
             // Establecer usuario inmediatamente desde localStorage
             setUser(parsedUser);
             setIsAuthenticated(true);
-            console.log('Usuario restaurado desde localStorage:', parsedUser.name);
+
             
             // Ya tenemos usuario, no mostrar loading
             setLoading(false);
             return; // Salir temprano
           }
         } catch (error) {
-          console.error('Error parseando usuario guardado:', error);
           localStorage.removeItem('user');
           localStorage.removeItem('token');
         }
@@ -63,17 +62,15 @@ export const AuthProvider = ({ children }) => {
             
             // Actualizar localStorage con datos frescos
             localStorage.setItem('user', JSON.stringify(updatedUser));
-            console.log('Token válido, perfil actualizado:', updatedUser.name);
+
           }
         } catch (error) {
-          console.error('Error verificando perfil, pero manteniendo sesión local:', error);
           // NO hacer logout automático
           // El usuario puede seguir usando la app con datos locales
         }
       }
       
     } catch (error) {
-      console.error('Error verificando estado de autenticación:', error);
       // NO hacer logout automático en caso de error
       // Solo log del error y continuar
     } finally {
@@ -93,7 +90,7 @@ export const AuthProvider = ({ children }) => {
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(userData));
-        console.log('Usuario logueado exitosamente:', userData.name);
+
         
         return response;
       } else {
@@ -120,7 +117,7 @@ export const AuthProvider = ({ children }) => {
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(newUser));
-        console.log('Usuario registrado exitosamente:', newUser.name);
+
         
         return response;
       } else {
@@ -139,7 +136,7 @@ export const AuthProvider = ({ children }) => {
     try {
       authService.logout();
     } catch (error) {
-      console.error('Error en logout:', error);
+      // Error silencioso para no interrumpir el flujo
     } finally {
       setUser(null);
       setIsAuthenticated(false);
@@ -147,7 +144,7 @@ export const AuthProvider = ({ children }) => {
       // Limpiar localStorage
       localStorage.removeItem('user');
       localStorage.removeItem('token');
-      console.log('Usuario deslogueado exitosamente');
+
     }
   };
 
@@ -161,7 +158,7 @@ export const AuthProvider = ({ children }) => {
         
         // Actualizar localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Perfil actualizado exitosamente');
+
         
         return response;
       }

@@ -64,7 +64,7 @@ const ReservarClase = () => {
         idiomas: ['Español', 'Inglés']
       }
       
-      console.log('🔍 ReservarClase: Profesor cargado:', profesorData)
+
       
       setProfesor(profesorData)
     } catch (err) {
@@ -88,11 +88,7 @@ const ReservarClase = () => {
       // Calcular costo total
       const costoTotal = profesor.tarifa * reservaData.duracion
       
-      console.log('🔍 ReservarClase: Cálculo del costo:')
-      console.log('  - Tarifa por hora:', profesor.tarifa)
-      console.log('  - Duración seleccionada:', reservaData.duracion)
-      console.log('  - Cálculo:', `${profesor.tarifa} × ${reservaData.duracion} = ${costoTotal}`)
-      console.log('  - Tipo de datos - Tarifa:', typeof profesor.tarifa, 'Duración:', typeof reservaData.duracion)
+
 
       // Crear reserva
       const reserva = {
@@ -108,13 +104,8 @@ const ReservarClase = () => {
       }
 
       // Aquí se enviaría a la API
-      console.log('🔍 ReservarClase: Creando reserva:', reserva)
-      console.log('🔍 ReservarClase: Duración:', reserva.duracion)
-      console.log('🔍 ReservarClase: Costo total:', reserva.costo)
-      console.log('🔍 ReservarClase: Tarifa por hora:', profesor.tarifa)
 
       // Redirigir al pago
-      console.log('🔍 ReservarClase: Navegando a pago con state:', { reserva, profesor })
       navigate('/pago', { 
         state: { 
           reserva,
@@ -139,11 +130,9 @@ const ReservarClase = () => {
   const handleSendMessage = async (message) => {
     try {
       // Aquí se implementaría el envío real del mensaje a la API
-      console.log('Mensaje enviado:', message)
       // Por ahora solo simulamos el envío exitoso
       return Promise.resolve()
     } catch (error) {
-      console.error('Error enviando mensaje:', error)
       throw error
     }
   }
@@ -179,11 +168,8 @@ const ReservarClase = () => {
 
   const costoTotal = profesor.tarifa * reservaData.duracion
   
-  console.log('🔍 ReservarClase: Resumen renderizado:')
-  console.log('  - Profesor:', profesor.nombre)
-  console.log('  - Tarifa:', profesor.tarifa)
-  console.log('  - Duración:', reservaData.duracion)
-  console.log('  - Costo total:', costoTotal)
+
+
 
   return (
     <div className="reservar-clase-page bg-secondary-50 min-h-screen py-8">

@@ -22,7 +22,7 @@ Sentry.init({
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({
-      // Replay sessions en desarrollo para debugging
+      
       maskAllText: false,
       blockAllMedia: false,
     }),

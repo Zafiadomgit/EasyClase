@@ -127,13 +127,10 @@ const Register = () => {
       await register(registerData)
       
       // Redirigir según el tipo de usuario
-      console.log('Registro exitoso, tipo de usuario:', formData.tipoUsuario)
       if (formData.tipoUsuario === 'estudiante') {
-        console.log('Redirigiendo estudiante a onboarding')
         navigate('/onboarding', { replace: true })
       } else {
         // Profesores van directo al dashboard
-        console.log('Redirigiendo profesor al dashboard')
         navigate('/dashboard', { replace: true })
       }
     } catch (error) {
