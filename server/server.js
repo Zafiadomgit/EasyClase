@@ -2,10 +2,10 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import sequelize, { testConnection, syncDatabase } from "./config/database.js";
 
 // Importar rutas
 import authRoutes from "./routes/auth.js";
@@ -27,8 +27,8 @@ import Review from "./models/Review.js";
 import { verificarPago } from "./services/mercadoPagoService.js";
 import notificationScheduler from "./services/notificationSchedulerService.js";
 
-// Configuración específica para Vercel
-import { vercelConfig, validateConfig } from './vercel-config.js';
+// Configuración específica para Vercel con MySQL
+import { vercelConfig, validateConfig } from './vercel-mysql-config.js';
 
 // Cargar variables de entorno desde la raíz del proyecto
 dotenv.config({ path: '../.env' });
@@ -82,20 +82,28 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Conectar a MongoDB
-mongoose.connect(vercelConfig.MONGODB_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/easyclase')
-  .then(() => {
-    console.log('✅ Conectado a MongoDB');
-    console.log('🌍 Entorno:', vercelConfig.NODE_ENV);
-    console.log('🔗 Base de datos:', vercelConfig.MONGODB_URI ? 'MongoDB Atlas' : 'Local');
-  })
-  .catch((error) => {
-    console.error('❌ Error conectando a MongoDB:', error);
+// Conectar a MySQL
+const connectToMySQL = async () => {
+  try {
+    await testConnection();
+    console.log('✅ Conectado a MySQL (Dreamhost)');
+    console.log('🌍 Entorno:', process.env.NODE_ENV || 'development');
+    console.log('🔗 Base de datos:', process.env.MYSQL_DATABASE || 'easyclasebd');
+    
+    // Sincronizar modelos
+    await syncDatabase(false);
+    console.log('✅ Modelos sincronizados correctamente');
+  } catch (error) {
+    console.error('❌ Error conectando a MySQL:', error);
     if (process.env.NODE_ENV === 'production') {
       console.error('🚨 Error crítico en producción - Verificar variables de entorno en Vercel');
     }
     process.exit(1);
-  });
+  }
+};
+
+// Inicializar conexión a MySQL
+connectToMySQL();
 
 // Rutas de la API
 app.use('/api/auth', authRoutes);

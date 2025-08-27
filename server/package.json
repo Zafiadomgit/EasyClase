@@ -12,6 +12,11 @@
     "create-test-clases": "node scripts/createTestClases.js",
     "setup-test-data": "npm run create-test-users && npm run create-test-clases",
     "test-email": "node scripts/testEmailService.js",
+    "migrate-mysql": "node scripts/migrateToMySQL.js",
+    "test-mysql": "node test-mysql.js",
+    "test-migration": "node test-migration.js",
+    "verify-mysql": "node scripts/verifyMySQLSetup.js",
+    "test-real-connection": "node test-connection-real.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

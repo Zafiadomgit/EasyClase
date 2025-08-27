@@ -6,8 +6,8 @@ dotenv.config({ path: '../../.env' })
 
 // Configuración de la base de datos MySQL
 const sequelize = new Sequelize(
-  process.env.MYSQL_DATABASE || 'easyclasebd',
-  process.env.MYSQL_USER || 'zafiadom',
+  process.env.MYSQL_DATABASE || 'easyclasebd_v2',
+  process.env.MYSQL_USER || 'zafiadombd',
   process.env.MYSQL_PASSWORD || 'tu_contraseña_aqui',
   {
     host: process.env.MYSQL_HOST || 'mysql.easyclaseapp.com',
