@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { formatPrecio } from '../utils/currencyUtils'
 import claseServiceLocal from '../services/claseService'
+import VideoCallRoom from '../components/VideoCall/VideoCallRoom'
 
 const DetalleClase = () => {
   const { id } = useParams()
@@ -25,6 +26,9 @@ const DetalleClase = () => {
   const [clase, setClase] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showVideoCall, setShowVideoCall] = useState(false)
+  const [canJoinCall, setCanJoinCall] = useState(false)
+  const [timeUntilClass, setTimeUntilClass] = useState('')
 
   useEffect(() => {
     const cargarClase = async () => {
@@ -59,6 +63,39 @@ const DetalleClase = () => {
     cargarClase()
   }, [id, user, location.state])
 
+  // Validar tiempo de la clase para videollamada
+  useEffect(() => {
+    if (!clase) return
+
+    const checkClassTime = () => {
+      const now = new Date()
+      const classDate = new Date(clase.fecha + 'T' + clase.hora)
+      const tenMinutesBefore = new Date(classDate.getTime() - 10 * 60 * 1000) // 10 min antes
+      
+      // Calcular el tiempo de finalización basado en la duración real de la clase
+      const classDurationInHours = parseFloat(clase.duracion) || 1 // Default 1 hora si no hay duración
+      const classEndTime = new Date(classDate.getTime() + (classDurationInHours * 60 * 60 * 1000))
+      
+      if (now >= tenMinutesBefore && now <= classEndTime) {
+        setCanJoinCall(true)
+        setTimeUntilClass('')
+      } else if (now < tenMinutesBefore) {
+        setCanJoinCall(false)
+        const diffMs = tenMinutesBefore - now
+        const diffMins = Math.ceil(diffMs / (1000 * 60))
+        setTimeUntilClass(`La videollamada estará disponible en ${diffMins} minutos`)
+      } else {
+        setCanJoinCall(false)
+        setTimeUntilClass('La clase ya ha terminado')
+      }
+    }
+
+    checkClassTime()
+    const interval = setInterval(checkClassTime, 60000) // Verificar cada minuto
+
+    return () => clearInterval(interval)
+  }, [clase])
+
   const handleVolver = () => {
     navigate(-1)
   }
@@ -69,8 +106,13 @@ const DetalleClase = () => {
   }
 
   const handleUnirseAClase = () => {
-    // Aquí podrías implementar la funcionalidad de videollamada
-    navigate('/videollamada', { state: { claseId: id } })
+    if (canJoinCall) {
+      setShowVideoCall(true)
+    }
+  }
+
+  const handleCloseVideoCall = () => {
+    setShowVideoCall(false)
   }
 
   const getEstadoColor = (estado) => {
@@ -262,13 +304,28 @@ const DetalleClase = () => {
               
               <div className="flex flex-col sm:flex-row gap-3">
                 {clase.estado === 'confirmada' && (
-                  <button
-                    onClick={handleUnirseAClase}
-                    className="btn-primary flex items-center justify-center"
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Unirse a la Clase
-                  </button>
+                  <div className="space-y-2">
+                    {canJoinCall ? (
+                      <button
+                        onClick={handleUnirseAClase}
+                        className="btn-primary flex items-center justify-center w-full"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Unirse a la Clase
+                      </button>
+                    ) : (
+                      <div className="text-center">
+                        <button
+                          disabled
+                          className="btn-secondary flex items-center justify-center w-full opacity-50 cursor-not-allowed"
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          Videollamada no disponible
+                        </button>
+                        <p className="text-xs text-gray-500 mt-1">{timeUntilClass}</p>
+                      </div>
+                    )}
+                  </div>
                 )}
                 
                 <button
@@ -314,20 +371,31 @@ const DetalleClase = () => {
               </div>
             </div>
 
-            {/* Recordatorios */}
-            {clase.estado === 'confirmada' && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  Recordatorio
-                </h3>
-                <p className="text-blue-700 dark:text-blue-300 text-sm">
-                  La videollamada estará disponible 10 minutos antes del inicio de la clase.
-                </p>
-              </div>
-            )}
+                         {/* Recordatorios */}
+             {clase.estado === 'confirmada' && (
+               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                 <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                   Recordatorio
+                 </h3>
+                 <p className="text-blue-700 dark:text-blue-300 text-sm">
+                   La videollamada estará disponible 10 minutos antes del inicio de la clase y se cerrará automáticamente al finalizar.
+                 </p>
+                 <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
+                   ⏰ Duración: {clase.duracion} horas
+                 </p>
+               </div>
+             )}
           </div>
         </div>
       </div>
+
+      {/* Modal de Videollamada */}
+      {showVideoCall && (
+        <VideoCallRoom 
+          claseId={clase.id} 
+          onLeave={handleCloseVideoCall}
+        />
+      )}
     </div>
   )
 }

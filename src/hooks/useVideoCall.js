@@ -15,6 +15,7 @@ const useVideoCall = (roomId, userId, userType) => {
   const [isCallActive, setIsCallActive] = useState(false)
   const [error, setError] = useState(null)
   const [chatMessages, setChatMessages] = useState([])
+  const [classEndTime, setClassEndTime] = useState(null)
   
   const localVideoRef = useRef()
   const remoteVideoRef = useRef()
@@ -39,7 +40,14 @@ const useVideoCall = (roomId, userId, userType) => {
       })
 
       newSocket.on('chat-message', (message) => {
-        setChatMessages(prev => [...prev, message])
+        // Validar mensaje antes de mostrarlo
+        const validation = validateChatMessage(message.message)
+        if (validation.isValid) {
+          setChatMessages(prev => [...prev, message])
+        } else {
+          // Notificar al usuario que el mensaje fue bloqueado
+          console.warn('Mensaje bloqueado por seguridad:', validation.error)
+        }
       })
 
       return () => {
@@ -50,6 +58,28 @@ const useVideoCall = (roomId, userId, userType) => {
       setError('Error de conexión al servidor')
     }
   }, [roomId, userId, userType])
+
+  // Validar mensajes del chat para evitar información personal
+  const validateChatMessage = (text) => {
+    const phonePattern = /(\+?[0-9]{1,4}[\s-]?[0-9]{1,4}[\s-]?[0-9]{1,4}[\s-]?[0-9]{1,4})/g
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+    
+    if (phonePattern.test(text)) {
+      return {
+        isValid: false,
+        error: 'No se permite compartir números de teléfono por seguridad'
+      }
+    }
+    
+    if (emailPattern.test(text)) {
+      return {
+        isValid: false,
+        error: 'No se permite compartir direcciones de email por seguridad'
+      }
+    }
+    
+    return { isValid: true }
+  }
 
   // Inicializar cámara local
   const initializeLocalStream = useCallback(async () => {
@@ -84,9 +114,38 @@ const useVideoCall = (roomId, userId, userType) => {
   }, [])
 
   // Funciones de control simplificadas
-  const startCall = useCallback(async () => {
+  const startCall = useCallback(async (classDuration = 1) => {
+    // Validar que estemos en el horario permitido (10 min antes hasta la duración real de la clase)
+    const now = new Date()
+    const classTime = new Date() // Aquí deberías obtener el tiempo real de la clase
+    const tenMinutesBefore = new Date(classTime.getTime() - 10 * 60 * 1000)
+    
+    // Calcular el tiempo de finalización basado en la duración real de la clase
+    const classDurationInHours = parseFloat(classDuration) || 1
+    const classEndTime = new Date(classTime.getTime() + (classDurationInHours * 60 * 60 * 1000))
+    
+    if (now < tenMinutesBefore) {
+      setError('La videollamada no está disponible aún. Estará disponible 10 minutos antes de la clase.')
+      return
+    }
+    
+    if (now > classEndTime) {
+      setError('La clase ya ha terminado. La videollamada se cierra automáticamente al finalizar la clase.')
+      return
+    }
+    
+    // Calcular tiempo de cierre automático
+    const timeUntilClose = classEndTime.getTime() - now.getTime()
+    setClassEndTime(classEndTime)
+    
+    // Programar cierre automático
+    setTimeout(() => {
+      endCall()
+      setError('La videollamada se ha cerrado automáticamente al finalizar la clase.')
+    }, timeUntilClose)
+    
     await initializeLocalStream()
-  }, [initializeLocalStream])
+  }, [initializeLocalStream, endCall])
 
   const endCall = useCallback(() => {
     if (localStream) {
@@ -148,6 +207,13 @@ const useVideoCall = (roomId, userId, userType) => {
 
   const sendChatMessage = useCallback((message) => {
     if (socket && message.trim()) {
+      // Validar mensaje antes de enviarlo
+      const validation = validateChatMessage(message.trim())
+      if (!validation.isValid) {
+        setError(validation.error)
+        return
+      }
+      
       const chatMsg = {
         id: Date.now(),
         text: message,

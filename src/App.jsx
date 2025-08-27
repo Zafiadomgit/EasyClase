@@ -41,6 +41,7 @@ import AdminSistema from './pages/Admin/AdminSistema'
 import ProfesorDisponibilidad from './pages/Professor/ProfesorDisponibilidad'
 import Premium from './pages/Premium'
 import DetalleClase from './pages/DetalleClase'
+import Chat from './pages/Chat'
 import './App.css'
 
 function App() {
@@ -104,6 +105,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DetalleClase />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/chat" 
+                element={
+                  <ProtectedRoute>
+                    <Chat />
                   </ProtectedRoute>
                 } 
               />
