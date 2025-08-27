@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
+import notificationScheduler from '../services/notificationSchedulerService.js';
 
 // Generar JWT token
 const generateToken = (userId) => {
@@ -44,6 +45,18 @@ export const register = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Enviar correo de bienvenida
+    try {
+      if (newUser.tipoUsuario === 'profesor') {
+        await notificationScheduler.sendImmediateNotification('welcome_professor', { profesor: newUser });
+      } else {
+        await notificationScheduler.sendImmediateNotification('welcome', { user: newUser });
+      }
+    } catch (emailError) {
+      console.error('Error enviando correo de bienvenida:', emailError);
+      // No fallar el registro si falla el correo
+    }
 
     // Generar token
     const token = generateToken(newUser._id);
@@ -104,6 +117,18 @@ export const login = async (req, res) => {
 
     // Generar token
     const token = generateToken(user._id);
+
+    // Enviar notificación de login
+    try {
+      const loginInfo = {
+        device: req.headers['user-agent'] || 'No especificado',
+        location: req.ip || 'No especificada'
+      };
+      await notificationScheduler.sendImmediateNotification('login_notification', { user, loginInfo });
+    } catch (emailError) {
+      console.error('Error enviando notificación de login:', emailError);
+      // No fallar el login si falla el correo
+    }
 
     // Respuesta sin la contraseña
     const userResponse = user.getPublicProfile();

@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import Review from '../models/Review.js';
 import User from '../models/User.js';
 import Clase from '../models/Clase.js';
+import notificationScheduler from '../services/notificationSchedulerService.js';
 
 // Crear una nueva reseña
 export const crearReview = async (req, res) => {
@@ -65,6 +66,20 @@ export const crearReview = async (req, res) => {
 
     // Actualizar estadísticas del profesor
     await actualizarEstadisticasProfesor(clase.profesor);
+
+    // Enviar notificación al profesor sobre la nueva reseña
+    try {
+      const profesor = await User.findById(clase.profesor);
+      if (profesor) {
+        await notificationScheduler.sendImmediateNotification('new_review', {
+          profesor,
+          review: nuevaReview
+        });
+      }
+    } catch (emailError) {
+      console.error('Error enviando notificación de nueva reseña:', emailError);
+      // No fallar la creación de la reseña si falla el correo
+    }
 
     res.status(201).json({
       success: true,

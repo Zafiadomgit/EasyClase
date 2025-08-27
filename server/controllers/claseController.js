@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Review from '../models/Review.js';
 import { crearPagoMercadoPago } from '../services/mercadoPagoService.js';
 import { calcularDescuento, aplicarDescuento } from '../services/descuentoService.js';
+import notificationScheduler from '../services/notificationSchedulerService.js';
 
 // Solicitar una nueva clase
 export const solicitarClase = async (req, res) => {
@@ -199,6 +200,29 @@ export const responderSolicitud = async (req, res) => {
     }
 
     await clase.save();
+
+    // Enviar correo de confirmación si la clase fue aceptada
+    if (accion === 'aceptar') {
+      try {
+        // Poblar los datos necesarios para el correo
+        await clase.populate([
+          { path: 'estudiante', select: 'nombre email' },
+          { path: 'profesor', select: 'nombre email' }
+        ]);
+
+        // Enviar correo al estudiante
+        await notificationScheduler.sendImmediateNotification('reservation_confirmation', {
+          user: clase.estudiante,
+          clase: {
+            ...clase.toObject(),
+            profesorNombre: clase.profesor.nombre
+          }
+        });
+      } catch (emailError) {
+        console.error('Error enviando correo de confirmación:', emailError);
+        // No fallar la confirmación si falla el correo
+      }
+    }
 
     res.json({
       success: true,

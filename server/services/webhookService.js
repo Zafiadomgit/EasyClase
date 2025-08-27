@@ -4,6 +4,7 @@ import Clase from '../models/Clase.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import { crearEscrow } from './escrowService.js';
+import notificationScheduler from './notificationSchedulerService.js';
 
 // Verificar la firma del webhook de MercadoPago
 const verificarFirmaWebhook = (req) => {
@@ -107,6 +108,31 @@ const procesarPagoAprobado = async (paymentData) => {
       // No fallar el webhook por error en escrow
     }
 
+    // Enviar correo de confirmación de pago al estudiante
+    try {
+      // Poblar los datos necesarios para el correo
+      await clase.populate([
+        { path: 'estudiante', select: 'nombre email' },
+        { path: 'profesor', select: 'nombre' }
+      ]);
+
+      const paymentInfo = {
+        amount: transaction_amount,
+        paymentMethod: payment_method?.type || 'No especificado',
+        reference: `PAY-${paymentId}`
+      };
+
+      await notificationScheduler.sendImmediateNotification('payment_success', {
+        user: clase.estudiante,
+        paymentInfo
+      });
+
+      console.log(`📧 Correo de confirmación de pago enviado a ${clase.estudiante.email}`);
+    } catch (emailError) {
+      console.error('Error enviando correo de confirmación de pago:', emailError);
+      // No fallar el webhook por error en el correo
+    }
+
     // Notificar al profesor (aquí podrías enviar email/notificación)
     console.log(`✅ Clase confirmada, pagada y escrow creado: ${external_reference}`);
     
@@ -143,6 +169,22 @@ const procesarPagoRechazado = async (paymentData) => {
     clase.estado = 'cancelada';
     
     await clase.save();
+
+    // Enviar correo de pago rechazado al estudiante
+    try {
+      await clase.populate([
+        { path: 'estudiante', select: 'nombre email' }
+      ]);
+
+      await notificationScheduler.sendImmediateNotification('payment_failed', {
+        user: clase.estudiante,
+        clase: clase
+      });
+
+      console.log(`📧 Correo de pago rechazado enviado a ${clase.estudiante.email}`);
+    } catch (emailError) {
+      console.error('Error enviando correo de pago rechazado:', emailError);
+    }
 
     // Notificar al estudiante sobre el pago rechazado
     console.log(`✅ Clase cancelada por pago rechazado: ${external_reference}`);

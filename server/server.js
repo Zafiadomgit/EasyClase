@@ -25,12 +25,13 @@ import Review from "./models/Review.js";
 
 // Importar servicios
 import { verificarPago } from "./services/mercadoPagoService.js";
+import notificationScheduler from "./services/notificationSchedulerService.js";
 
 // Configuración específica para Vercel
 import { vercelConfig, validateConfig } from './vercel-config.js';
 
-// Cargar variables de entorno
-dotenv.config();
+// Cargar variables de entorno desde la raíz del proyecto
+dotenv.config({ path: '../.env' });
 
 // Validar configuración en producción
 if (process.env.NODE_ENV === 'production') {
@@ -270,4 +271,12 @@ httpServer.listen(PORT, () => {
   console.log(`📚 API disponible en http://localhost:${PORT}/api`);
   console.log(`🎥 Socket.io para videollamadas habilitado`);
   console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Iniciar programador de notificaciones
+  try {
+    notificationScheduler.start();
+    console.log(`📧 Sistema de notificaciones por correo iniciado`);
+  } catch (error) {
+    console.error(`❌ Error iniciando sistema de notificaciones:`, error);
+  }
 });
