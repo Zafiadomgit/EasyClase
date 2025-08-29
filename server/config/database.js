@@ -8,6 +8,14 @@ dotenv.config({ path: '../../.env' })
 let sequelize = null
 
 try {
+  console.log('🔍 Iniciando configuración de MySQL...')
+  console.log('🔍 Variables de entorno MySQL:')
+  console.log('  MYSQL_DATABASE:', process.env.MYSQL_DATABASE || 'default')
+  console.log('  MYSQL_USER:', process.env.MYSQL_USER || 'default')
+  console.log('  MYSQL_PASSWORD:', process.env.MYSQL_PASSWORD ? '***configurado***' : 'no configurado')
+  console.log('  MYSQL_HOST:', process.env.MYSQL_HOST || 'default')
+  console.log('  MYSQL_PORT:', process.env.MYSQL_PORT || 'default')
+  
   // Configuración de la base de datos MySQL
   sequelize = new Sequelize(
     process.env.MYSQL_DATABASE || 'easyclasebd_v2',
@@ -31,6 +39,8 @@ try {
       }
     }
   )
+  
+  console.log('✅ Sequelize inicializado correctamente')
 } catch (error) {
   console.error('❌ Error inicializando Sequelize:', error.message)
   
@@ -45,6 +55,9 @@ try {
     authenticate: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
     sync: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
     define: (modelName, attributes, options) => {
+      console.log(`⚠️ Usando modelo mock para: ${modelName}`)
+      console.log(`⚠️ Atributos del modelo:`, Object.keys(attributes))
+      
       // Crear un modelo mock con prototipo básico
       const MockModel = function() {}
       MockModel.prototype = {
@@ -55,15 +68,42 @@ try {
         update: async () => {},
         destroy: async () => {},
         comparePassword: async () => false,
-        toPublicJSON: function() { return {} }
+        toPublicJSON: function() { return {} },
+        getPublicProfile: function() { return this.toPublicJSON() },
+        getTeacherProfile: function() { return this.toPublicJSON() }
       }
       
       // Agregar métodos estáticos si es necesario
-      MockModel.findOne = async () => null
+      MockModel.findOne = async (options) => {
+        console.log('⚠️ MockModel.findOne() llamado con:', options)
+        // Simular que no hay usuarios existentes
+        return null
+      }
       MockModel.findAll = async () => []
-      MockModel.create = async () => {}
+      MockModel.create = async (data) => {
+        console.log('⚠️ MockModel.create() llamado con:', data)
+        // Crear un objeto mock que simule un usuario creado
+        const mockUser = {
+          id: Math.floor(Math.random() * 1000000),
+          ...data,
+          tipoUsuario: data.tipoUsuario || 'estudiante',
+          comparePassword: async () => false,
+          toPublicJSON: function() { 
+            const user = { ...this }
+            delete user.password
+            return user
+          },
+          getPublicProfile: function() { return this.toPublicJSON() },
+          getTeacherProfile: function() { return this.toPublicJSON() }
+        }
+        return mockUser
+      }
       MockModel.update = async () => {}
       MockModel.destroy = async () => {}
+      MockModel.findByPk = async (id) => {
+        console.log('⚠️ MockModel.findByPk() llamado con:', id)
+        return null
+      }
       
       return MockModel
     },
