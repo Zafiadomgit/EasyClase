@@ -41,6 +41,8 @@ export const register = async (req, res) => {
     
     let newUser;
     try {
+      console.log('🔍 Contraseña antes de crear usuario (longitud):', password ? password.length : 'undefined')
+      
       newUser = await User.create({
         nombre,
         email,
@@ -49,6 +51,10 @@ export const register = async (req, res) => {
         password,
         tipoUsuario
       });
+      
+      console.log('🔍 Contraseña después de crear usuario (longitud):', newUser.password ? newUser.password.length : 'undefined')
+      console.log('🔍 ¿La contraseña se hasheó?', newUser.password !== password ? 'SÍ' : 'NO')
+      
     } catch (dbError) {
       console.error('❌ Error en User.create():', dbError)
       // Fallback: crear usuario mock si falla la base de datos
@@ -130,12 +136,24 @@ export const login = async (req, res) => {
     // Buscar usuario por email
     let user;
     try {
+      console.log('🔍 Buscando usuario con email:', email)
+      console.log('🔍 Usando filtro activo:', true)
+      
       user = await User.findOne({ 
         where: { 
           email: email, 
           activo: true
         } 
       });
+      
+      console.log('🔍 Resultado de búsqueda:', user ? 'Usuario encontrado' : 'Usuario no encontrado')
+      if (user) {
+        console.log('🔍 Usuario encontrado - ID:', user.id)
+        console.log('🔍 Usuario encontrado - Email:', user.email)
+        console.log('🔍 Usuario encontrado - Tipo:', user.tipoUsuario)
+        console.log('🔍 Usuario encontrado - Activo:', user.activo)
+        console.log('🔍 Método comparePassword disponible:', !!user.comparePassword)
+      }
     } catch (dbError) {
       console.error('❌ Error en User.findOne():', dbError)
       // Fallback: usuario mock para testing
@@ -144,6 +162,7 @@ export const login = async (req, res) => {
     }
     
     if (!user) {
+      console.log('❌ Usuario no encontrado o inactivo')
       return res.status(401).json({
         success: false,
         message: 'Credenciales inválidas'
@@ -151,7 +170,16 @@ export const login = async (req, res) => {
     }
 
     // Verificar contraseña
-    const isPasswordValid = await user.comparePassword(password);
+    console.log('🔍 Verificando contraseña...')
+    let isPasswordValid = false;
+    try {
+      isPasswordValid = await user.comparePassword(password);
+      console.log('🔍 Resultado de verificación de contraseña:', isPasswordValid)
+    } catch (passwordError) {
+      console.error('❌ Error verificando contraseña:', passwordError)
+      isPasswordValid = false;
+    }
+    
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
