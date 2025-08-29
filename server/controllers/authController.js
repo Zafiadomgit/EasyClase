@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     const { nombre, email, codigoPais, telefono, password, tipoUsuario } = req.body;
 
     // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -35,7 +35,7 @@ export const register = async (req, res) => {
     }
 
     // Crear nuevo usuario
-    const newUser = new User({
+    const newUser = await User.create({
       nombre,
       email,
       codigoPais: codigoPais || '+57', // Colombia por defecto
@@ -43,8 +43,6 @@ export const register = async (req, res) => {
       password,
       tipoUsuario
     });
-
-    await newUser.save();
 
     // Enviar correo de bienvenida
     try {
@@ -59,10 +57,10 @@ export const register = async (req, res) => {
     }
 
     // Generar token
-    const token = generateToken(newUser._id);
+    const token = generateToken(newUser.id); // Cambiar _id por id
 
     // Respuesta sin la contraseña
-    const userResponse = newUser.getPublicProfile();
+    const userResponse = newUser.toPublicJSON(); // Cambiar getPublicProfile por toPublicJSON
 
     res.status(201).json({
       success: true,
@@ -98,7 +96,12 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Buscar usuario por email
-    const user = await User.findOne({ email, activo: true });
+    const user = await User.findOne({ 
+      where: { 
+        email: email, 
+        activo: true
+      } 
+    });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -116,7 +119,7 @@ export const login = async (req, res) => {
     }
 
     // Generar token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id); // Cambiar _id por id
 
     // Enviar notificación de login
     try {
@@ -131,7 +134,7 @@ export const login = async (req, res) => {
     }
 
     // Respuesta sin la contraseña
-    const userResponse = user.getPublicProfile();
+    const userResponse = user.toPublicJSON(); // Cambiar getPublicProfile por toPublicJSON
 
     res.json({
       success: true,
@@ -154,7 +157,7 @@ export const login = async (req, res) => {
 // Obtener perfil del usuario actual
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findByPk(req.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -198,20 +201,18 @@ export const updateProfile = async (req, res) => {
     delete updateData.email;
     delete updateData.password;
     delete updateData.tipoUsuario;
-    delete updateData._id;
+    delete updateData.id;
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
+    const user = await User.findByPk(req.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'Usuario no encontrado'
       });
     }
+
+    // Actualizar usuario
+    await user.update(updateData);
 
     const userResponse = user.tipoUsuario === 'profesor' 
       ? user.getTeacherProfile() 
@@ -227,7 +228,7 @@ export const updateProfile = async (req, res) => {
     console.error('Error actualizando perfil:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+        message: 'Error interno del servidor'
     });
   }
 };
@@ -248,7 +249,7 @@ export const verifyToken = async (req, res, next) => {
     req.userId = decoded.userId;
 
     // Verificar que el usuario existe y está activo
-    const user = await User.findById(decoded.userId);
+    const user = await User.findByPk(decoded.userId);
     if (!user || !user.activo) {
       return res.status(401).json({
         success: false,
@@ -271,7 +272,7 @@ export const obtenerPreferencias = async (req, res) => {
   try {
     const userId = req.userId;
     
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -327,7 +328,7 @@ export const actualizarPreferencias = async (req, res) => {
       return res.status(400).json({ message: 'Debes proporcionar al menos un tipo de preferencia' });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -348,7 +349,7 @@ export const actualizarPreferencias = async (req, res) => {
       user.preferencias.theme = { ...user.preferencias.theme, ...theme };
     }
 
-    await user.save();
+    await user.update({ preferencias: user.preferencias });
 
     res.json({
       success: true,

@@ -28,6 +28,10 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('estudiante', 'profesor', 'admin'),
     defaultValue: 'estudiante'
   },
+  tipoUsuario: {
+    type: DataTypes.ENUM('estudiante', 'profesor', 'admin'),
+    defaultValue: 'estudiante'
+  },
   telefono: {
     type: DataTypes.STRING(20),
     allowNull: true
@@ -44,6 +48,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(50),
     allowNull: true
   },
+  codigoPais: {
+    type: DataTypes.STRING(10),
+    allowNull: true,
+    defaultValue: '+57'
+  },
   ciudad: {
     type: DataTypes.STRING(50),
     allowNull: true
@@ -59,6 +68,10 @@ const User = sequelize.define('User', {
   estado: {
     type: DataTypes.ENUM('activo', 'inactivo', 'suspendido'),
     defaultValue: 'activo'
+  },
+  activo: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   emailVerificado: {
     type: DataTypes.BOOLEAN,
@@ -84,10 +97,24 @@ const User = sequelize.define('User', {
       if (user.password) {
         user.password = await bcrypt.hash(user.password, 12)
       }
+      // Sincronizar tipo y tipoUsuario
+      if (user.tipo && !user.tipoUsuario) {
+        user.tipoUsuario = user.tipo
+      }
+      if (user.tipoUsuario && !user.tipo) {
+        user.tipo = user.tipoUsuario
+      }
     },
     beforeUpdate: async (user) => {
       if (user.changed('password')) {
         user.password = await bcrypt.hash(user.password, 12)
+      }
+      // Sincronizar tipo y tipoUsuario
+      if (user.changed('tipo') && !user.changed('tipoUsuario')) {
+        user.tipoUsuario = user.tipo
+      }
+      if (user.changed('tipoUsuario') && !user.changed('tipo')) {
+        user.tipo = user.tipoUsuario
       }
     }
   }
@@ -103,6 +130,16 @@ User.prototype.toPublicJSON = function() {
   const user = this.toJSON()
   delete user.password
   return user
+}
+
+// Método para mantener compatibilidad con código existente
+User.prototype.getPublicProfile = function() {
+  return this.toPublicJSON()
+}
+
+// Método para obtener perfil de profesor (mantener compatibilidad)
+User.prototype.getTeacherProfile = function() {
+  return this.toPublicJSON()
 }
 
 export default User
