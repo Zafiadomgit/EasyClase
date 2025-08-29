@@ -40,10 +40,25 @@ try {
     console.error('💡 O verificar que esté en package.json')
   }
   
-  // Crear un objeto mock para evitar crash
+  // Crear un objeto mock más completo para evitar crash
   sequelize = {
     authenticate: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
-    sync: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') }
+    sync: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
+    define: () => {
+      // Retornar un modelo mock básico
+      return {
+        sync: async () => {},
+        findOne: async () => null,
+        findAll: async () => [],
+        create: async () => {},
+        update: async () => {},
+        destroy: async () => {}
+      }
+    },
+    transaction: async () => ({
+      commit: async () => {},
+      rollback: async () => {}
+    })
   }
 }
 
