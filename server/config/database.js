@@ -15,6 +15,21 @@ try {
   console.log('  MYSQL_PASSWORD:', process.env.MYSQL_PASSWORD ? '***configurado***' : 'no configurado')
   console.log('  MYSQL_HOST:', process.env.MYSQL_HOST || 'default')
   console.log('  MYSQL_PORT:', process.env.MYSQL_PORT || 'default')
+  console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '***configurado***' : 'no configurado')
+  console.log('  NODE_ENV:', process.env.NODE_ENV || 'no configurado')
+  
+  // Verificar si las variables críticas están disponibles
+  if (!process.env.MYSQL_DATABASE || !process.env.MYSQL_USER || !process.env.MYSQL_PASSWORD || !process.env.MYSQL_HOST) {
+    console.log('❌ Variables críticas de MySQL NO están configuradas')
+    console.log('❌ Usando configuración por defecto o mock')
+    console.log('❌ MYSQL_DATABASE presente:', !!process.env.MYSQL_DATABASE)
+    console.log('❌ MYSQL_USER presente:', !!process.env.MYSQL_USER)
+    console.log('❌ MYSQL_PASSWORD presente:', !!process.env.MYSQL_PASSWORD)
+    console.log('❌ MYSQL_HOST presente:', !!process.env.MYSQL_HOST)
+  } else {
+    console.log('✅ Variables críticas de MySQL están configuradas')
+    console.log('✅ Intentando conectar a MySQL...')
+  }
   
   // Configuración de la base de datos MySQL
   sequelize = new Sequelize(
