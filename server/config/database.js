@@ -44,16 +44,28 @@ try {
   sequelize = {
     authenticate: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
     sync: async () => { throw new Error('MySQL no disponible - mysql2 no instalado') },
-    define: () => {
-      // Retornar un modelo mock básico
-      return {
+    define: (modelName, attributes, options) => {
+      // Crear un modelo mock con prototipo básico
+      const MockModel = function() {}
+      MockModel.prototype = {
         sync: async () => {},
         findOne: async () => null,
         findAll: async () => [],
         create: async () => {},
         update: async () => {},
-        destroy: async () => {}
+        destroy: async () => {},
+        comparePassword: async () => false,
+        toPublicJSON: function() { return {} }
       }
+      
+      // Agregar métodos estáticos si es necesario
+      MockModel.findOne = async () => null
+      MockModel.findAll = async () => []
+      MockModel.create = async () => {}
+      MockModel.update = async () => {}
+      MockModel.destroy = async () => {}
+      
+      return MockModel
     },
     transaction: async () => ({
       commit: async () => {},
