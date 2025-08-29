@@ -12,19 +12,19 @@
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "@sentry/react": "^10.5.0",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
     "fabric": "^6.7.1",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
     "mercadopago": "^2.8.0",
+    "mysql2": "^3.14.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
-    "simple-peer": "^9.11.1",
-    "socket.io-client": "^4.8.1",
-    "mysql2": "^3.14.3",
     "sequelize": "^6.37.7",
-    "express": "^4.21.2",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "simple-peer": "^9.11.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "^4.1.1",
