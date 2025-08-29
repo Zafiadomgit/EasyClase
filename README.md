@@ -116,4 +116,4 @@ MIT License - ver [LICENSE](LICENSE) para más detalles.
 
 **EasyClase** - Aprende habilidades útiles, paga por hora, sin riesgos. 🎓✨
 
-**¡Ahora con sistema completo de retiro de ganancias!** 💰🚀
+**¡Ahora con sistema completo de retiro de ganancias!** 💰🚀# Forzar redeploy
