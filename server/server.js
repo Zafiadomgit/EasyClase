@@ -107,6 +107,50 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
+// Ruta de prueba para servicios (sin autenticación)
+app.get('/api/test-servicios', async (req, res) => {
+  try {
+    console.log('🔍 /api/test-servicios llamado');
+    
+    // Verificar que el modelo Servicio esté disponible
+    if (!sequelize.models.Servicio) {
+      return res.status(500).json({
+        success: false,
+        message: 'Modelo Servicio no disponible',
+        models: Object.keys(sequelize.models)
+      });
+    }
+    
+    // Intentar contar servicios
+    const totalServicios = await sequelize.models.Servicio.count();
+    
+    res.json({
+      success: true,
+      message: 'Prueba de servicios exitosa',
+      totalServicios,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Error en /api/test-servicios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en prueba de servicios',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Ruta de prueba simple (sin base de datos)
+app.get('/api/test-simple', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API funcionando sin base de datos',
+    timestamp: new Date().toISOString(),
+    models: Object.keys(sequelize.models || {})
+  });
+});
+
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
   console.error('Error en servidor:', err);

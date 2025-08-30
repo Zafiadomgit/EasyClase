@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import setupAssociations from './associations.js';
 
 // Configuración de la base de datos
 const sequelize = new Sequelize(
@@ -47,8 +46,24 @@ export const initializeDatabase = async () => {
     await sequelize.authenticate();
     console.log('✅ Conectado a MySQL (Dreamhost)');
     
+    // Importar modelos dinámicamente para evitar problemas de importación circular
+    console.log('🔍 Importando modelos...');
+    
+    // Importar modelos
+    await import('../models/User.js');
+    await import('../models/Servicio.js');
+    await import('../models/Clase.js');
+    await import('../models/Transaction.js');
+    await import('../models/PerfilEnriquecido.js');
+    await import('../models/Review.js');
+    
+    console.log('✅ Modelos importados correctamente');
+    
     // Configurar asociaciones entre modelos
+    console.log('🔍 Configurando asociaciones...');
+    const { setupAssociations } = await import('./associations.js');
     setupAssociations();
+    console.log('✅ Asociaciones configuradas correctamente');
     
     // Sincronizar modelos con la base de datos
     await sequelize.sync({ force: false, alter: true });
@@ -59,6 +74,7 @@ export const initializeDatabase = async () => {
     
   } catch (error) {
     console.error('❌ Error inicializando Sequelize:', error.message);
+    console.error('❌ Stack trace:', error.stack);
     
     // Si es error de mysql2, mostrar instrucción clara
     if (error.message.includes('mysql2')) {
@@ -109,64 +125,16 @@ export const initializeDatabase = async () => {
     
     MockModel.findOne = async (options) => {
       console.log('⚠️ MockModel.findOne() llamado con:', options);
-      if (options?.where?.email) {
-        return {
-          id: 2,
-          nombre: 'Usuario Mock',
-          email: options.where.email,
-          tipoUsuario: 'estudiante',
-          comparePassword: async (password) => password === '123456',
-          toPublicJSON: function() {
-            return {
-              id: this.id,
-              nombre: this.nombre,
-              email: this.email,
-              tipoUsuario: this.tipoUsuario
-            };
-          },
-          getPublicProfile: function() {
-            return this.toPublicJSON();
-          },
-          getTeacherProfile: function() {
-            return this.toPublicJSON();
-          }
-        };
-      }
       return null;
     };
     
     MockModel.findByPk = async (id) => {
       console.log('⚠️ MockModel.findByPk() llamado con:', id);
-      return {
-        id: parseInt(id),
-        nombre: 'Usuario Mock',
-        email: 'mock@example.com',
-        tipoUsuario: 'estudiante',
-        comparePassword: async () => false,
-        toPublicJSON: function() {
-          return {
-            id: this.id,
-            nombre: this.nombre,
-            email: this.email,
-            tipoUsuario: this.tipoUsuario
-          };
-        },
-        getPublicProfile: function() {
-          return this.toPublicJSON();
-        },
-        getTeacherProfile: function() {
-          return this.toPublicJSON();
-        }
-      };
+      return null;
     };
     
-    // Reemplazar modelos reales con mocks
-    sequelize.models.User = MockModel;
-    sequelize.models.Clase = MockModel;
-    sequelize.models.Transaction = MockModel;
-    sequelize.models.Servicio = MockModel;
-    sequelize.models.PerfilEnriquecido = MockModel;
-    sequelize.models.Review = MockModel;
+    // Agregar MockModel a sequelize.models
+    sequelize.models.MockModel = MockModel;
     
     console.log('⚠️ Modelos mock creados como fallback');
   }
