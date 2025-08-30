@@ -1,178 +1,210 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const transactionSchema = new mongoose.Schema({
+const Transaction = sequelize.define('Transaction', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   // Información básica
   transactionId: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true
   },
   
   // Tipo de transacción
   type: {
-    type: String,
-    enum: ['pago_clase', 'retiro_profesor', 'reembolso'],
-    required: true
+    type: DataTypes.ENUM('pago_clase', 'retiro_profesor', 'reembolso'),
+    allowNull: false
   },
   
   // Estado de la transacción
   status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected', 'cancelled', 'in_process'],
-    required: true
+    type: DataTypes.ENUM('pending', 'approved', 'rejected', 'cancelled', 'in_process'),
+    allowNull: false
   },
   
   // Montos
   amount: {
-    type: Number,
-    required: true
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   },
   
   amountNet: {
-    type: Number,
-    required: true
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   },
   
   commission: {
-    type: Number,
-    default: 0
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0
   },
   
   currency: {
-    type: String,
-    default: 'COP'
+    type: DataTypes.STRING(3),
+    defaultValue: 'COP'
   },
   
   // Referencias
   claseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clase',
-    required: function() {
-      return this.type === 'pago_clase';
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'clases',
+      key: 'id'
     }
   },
   
   profesorId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: function() {
-      return this.type === 'retiro_profesor';
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
     }
   },
   
   estudianteId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: function() {
-      return this.type === 'pago_clase';
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
     }
   },
   
   // Información de MercadoPago
   mercadoPagoId: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   
   externalReference: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   
   // Información del pagador
-  payer: {
-    email: String,
-    name: String,
-    identification: {
-      type: String,
-      number: String
-    }
+  payer_email: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  
+  payer_name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  
+  payer_identification_type: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  
+  payer_identification_number: {
+    type: DataTypes.STRING(50),
+    allowNull: true
   },
   
   // Método de pago
-  paymentMethod: {
-    type: String,
-    paymentType: String,
-    installments: Number
+  paymentMethod_type: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  
+  paymentMethod_paymentType: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  
+  paymentMethod_installments: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   
   // Metadata adicional
   metadata: {
-    type: Map,
-    of: String
+    type: DataTypes.JSON,
+    allowNull: true
   },
   
   // Fechas
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  
   processedAt: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   },
   
   // Información de procesamiento
   processingNotes: {
-    type: String
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   
   // Para reembolsos
   refundReason: {
-    type: String
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   
   refundAmount: {
-    type: Number
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true
   }
 }, {
-  timestamps: true
+  tableName: 'transactions',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  hooks: {
+    beforeUpdate: async (transaction) => {
+      transaction.updated_at = new Date();
+      
+      if (['approved', 'rejected', 'cancelled'].includes(transaction.status)) {
+        transaction.processedAt = new Date();
+      }
+    }
+  }
 });
 
-// Índices para optimizar consultas (transactionId ya tiene índice único por unique: true)
-transactionSchema.index({ mercadoPagoId: 1 });
-transactionSchema.index({ externalReference: 1 });
-transactionSchema.index({ type: 1, status: 1 });
-transactionSchema.index({ profesorId: 1, createdAt: -1 });
-transactionSchema.index({ estudianteId: 1, createdAt: -1 });
-transactionSchema.index({ claseId: 1 });
-
 // Métodos estáticos
-transactionSchema.statics.findByMercadoPagoId = function(mercadoPagoId) {
-  return this.findOne({ mercadoPagoId });
+Transaction.findByMercadoPagoId = function(mercadoPagoId) {
+  return this.findOne({ where: { mercadoPagoId } });
 };
 
-transactionSchema.statics.findByExternalReference = function(externalReference) {
-  return this.findOne({ externalReference });
+Transaction.findByExternalReference = function(externalReference) {
+  return this.findOne({ where: { externalReference } });
 };
 
-transactionSchema.statics.findByClaseId = function(claseId) {
-  return this.find({ claseId }).sort({ createdAt: -1 });
+Transaction.findByClaseId = function(claseId) {
+  return this.findAll({ 
+    where: { claseId },
+    order: [['created_at', 'DESC']]
+  });
 };
 
-transactionSchema.statics.findByProfesorId = function(profesorId, limit = 50) {
-  return this.find({ profesorId })
-    .sort({ createdAt: -1 })
-    .limit(limit);
+Transaction.findByProfesorId = function(profesorId, limit = 50) {
+  return this.findAll({
+    where: { profesorId },
+    order: [['created_at', 'DESC']],
+    limit
+  });
 };
 
-transactionSchema.statics.findByEstudianteId = function(estudianteId, limit = 50) {
-  return this.find({ estudianteId })
-    .sort({ createdAt: -1 })
-    .limit(limit);
+Transaction.findByEstudianteId = function(estudianteId, limit = 50) {
+  return this.findAll({
+    where: { estudianteId },
+    order: [['created_at', 'DESC']],
+    limit
+  });
 };
 
 // Métodos de instancia
-transactionSchema.methods.updateStatus = function(newStatus, notes = '') {
+Transaction.prototype.updateStatus = function(newStatus, notes = '') {
   this.status = newStatus;
-  this.updatedAt = new Date();
+  this.updated_at = new Date();
   
-  if (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'cancelled') {
+  if (['approved', 'rejected', 'cancelled'].includes(newStatus)) {
     this.processedAt = new Date();
   }
   
@@ -183,30 +215,18 @@ transactionSchema.methods.updateStatus = function(newStatus, notes = '') {
   return this.save();
 };
 
-transactionSchema.methods.addMetadata = function(key, value) {
+Transaction.prototype.addMetadata = function(key, value) {
   if (!this.metadata) {
-    this.metadata = new Map();
+    this.metadata = {};
   }
-  this.metadata.set(key, value);
+  this.metadata[key] = value;
   return this.save();
 };
 
-// Middleware para actualizar updatedAt
-transactionSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
-
 // Virtual para calcular el porcentaje de comisión
-transactionSchema.virtual('commissionPercentage').get(function() {
-  if (this.amount === 0) return 0;
-  return (this.commission / this.amount) * 100;
-});
-
-// Configurar virtuals en JSON
-transactionSchema.set('toJSON', { virtuals: true });
-transactionSchema.set('toObject', { virtuals: true });
-
-const Transaction = mongoose.model('Transaction', transactionSchema);
+Transaction.prototype.getCommissionPercentage = function() {
+  if (parseFloat(this.amount) === 0) return 0;
+  return (parseFloat(this.commission) / parseFloat(this.amount)) * 100;
+};
 
 export default Transaction;

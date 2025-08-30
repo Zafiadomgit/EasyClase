@@ -1,23 +1,28 @@
-import mongoose from 'mongoose';
-import { COMISIONES } from '../config/comisiones.js';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const servicioSchema = new mongoose.Schema({
+const Servicio = sequelize.define('Servicio', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   titulo: {
-    type: String,
-    required: [true, 'El título del servicio es obligatorio'],
-    trim: true,
-    maxLength: [100, 'El título no puede exceder 100 caracteres']
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    validate: {
+      len: [1, 100]
+    }
   },
   descripcion: {
-    type: String,
-    required: [true, 'La descripción del servicio es obligatoria'],
-    trim: true,
-    maxLength: [2000, 'La descripción no puede exceder 2000 caracteres']
+    type: DataTypes.TEXT,
+    allowNull: false,
+    validate: {
+      len: [1, 2000]
+    }
   },
   categoria: {
-    type: String,
-    required: [true, 'La categoría del servicio es obligatoria'],
-    enum: [
+    type: DataTypes.ENUM(
       'Tesis y Trabajos Académicos',
       'Desarrollo Web',
       'Desarrollo de Apps',
@@ -33,149 +38,165 @@ const servicioSchema = new mongoose.Schema({
       'Arquitectura y Diseño',
       'Ingeniería',
       'Otros'
-    ]
+    ),
+    allowNull: false
   },
   subcategoria: {
-    type: String,
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: true
   },
   precio: {
-    type: Number,
-    required: [true, 'El precio del servicio es obligatorio'],
-    min: [10000, 'El precio mínimo es $10,000 COP']
-  },
-  tiempoPrevisto: {
-    valor: {
-      type: Number,
-      required: true
-    },
-    unidad: {
-      type: String,
-      required: true,
-      enum: ['horas', 'días', 'semanas', 'meses']
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      min: 10000
     }
   },
+  tiempoPrevisto_valor: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  tiempoPrevisto_unidad: {
+    type: DataTypes.ENUM('horas', 'días', 'semanas', 'meses'),
+    allowNull: false
+  },
   modalidad: {
-    type: String,
-    required: true,
-    enum: ['presencial', 'virtual', 'mixta']
+    type: DataTypes.ENUM('presencial', 'virtual', 'mixta'),
+    allowNull: false
   },
   proveedor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   // Requisitos específicos para el servicio
-  requisitos: [{
-    type: String,
-    trim: true
-  }],
+  requisitos: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Entregables del servicio
-  entregables: [{
-    type: String,
-    trim: true
-  }],
+  entregables: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Tecnologías o herramientas que usa
-  tecnologias: [{
-    type: String,
-    trim: true
-  }],
+  tecnologias: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Portfolio o ejemplos de trabajos anteriores
-  portfolio: [{
-    titulo: String,
-    descripcion: String,
-    imagen: String,
-    enlace: String
-  }],
+  portfolio: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Estado del servicio
   estado: {
-    type: String,
-    enum: ['activo', 'pausado', 'inactivo'],
-    default: 'activo'
+    type: DataTypes.ENUM('activo', 'pausado', 'inactivo'),
+    defaultValue: 'activo'
   },
   // Nivel de experiencia requerido del cliente
   nivelCliente: {
-    type: String,
-    enum: ['principiante', 'intermedio', 'avanzado', 'cualquiera'],
-    default: 'cualquiera'
+    type: DataTypes.ENUM('principiante', 'intermedio', 'avanzado', 'cualquiera'),
+    defaultValue: 'cualquiera'
   },
   // Número de revisiones incluidas
   revisionesIncluidas: {
-    type: Number,
-    default: 2,
-    min: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 2,
+    validate: {
+      min: 0
+    }
   },
   // Si es un servicio premium
   premium: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   // Calificaciones del servicio
   calificacionPromedio: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
+    type: DataTypes.DECIMAL(3, 2),
+    defaultValue: 0,
+    validate: {
+      min: 0,
+      max: 5
+    }
   },
   totalReviews: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   // Contador de servicios vendidos
   totalVentas: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   // Etiquetas para búsqueda
-  etiquetas: [{
-    type: String,
-    trim: true
-  }],
+  etiquetas: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Preguntas frecuentes sobre el servicio
-  faq: [{
-    pregunta: String,
-    respuesta: String
-  }],
+  faq: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   // Disponibilidad
   disponible: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   // Fecha límite para solicitar el servicio
   fechaLimite: {
-    type: Date
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
-  timestamps: true
+  tableName: 'servicios',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  indexes: [
+    {
+      fields: ['categoria']
+    },
+    {
+      fields: ['proveedor']
+    },
+    {
+      fields: ['estado']
+    },
+    {
+      fields: ['calificacionPromedio']
+    },
+    {
+      fields: ['precio']
+    }
+  ]
 });
 
-// Índices para búsquedas eficientes
-servicioSchema.index({ categoria: 1 });
-servicioSchema.index({ proveedor: 1 });
-servicioSchema.index({ estado: 1 });
-servicioSchema.index({ calificacionPromedio: -1 });
-servicioSchema.index({ precio: 1 });
-servicioSchema.index({ titulo: 'text', descripcion: 'text', etiquetas: 'text' });
-
-// Middleware para calcular comisión
-servicioSchema.methods.calcularComision = async function() {
+// Métodos de instancia
+Servicio.prototype.calcularComision = async function() {
   // Obtener el usuario proveedor para verificar si es premium
-  await this.populate('proveedor', 'premium');
-  const esPremium = this.proveedor?.premium || false;
+  const User = sequelize.models.User;
+  const proveedor = await User.findByPk(this.proveedor);
+  const esPremium = proveedor?.premium || false;
   
   // Comisión: 15% para premium, 20% para usuarios regulares
-  const porcentajeComision = esPremium ? COMISIONES.PREMIUM : COMISIONES.ESTANDAR;
-  return this.precio * porcentajeComision;
+  const porcentajeComision = esPremium ? 0.15 : 0.20;
+  return parseFloat(this.precio) * porcentajeComision;
 };
 
-servicioSchema.methods.calcularPrecioFinal = async function() {
+Servicio.prototype.calcularPrecioFinal = async function() {
   const comision = await this.calcularComision();
-  return this.precio - comision;
+  return parseFloat(this.precio) - comision;
 };
 
 // Método para obtener datos públicos del servicio
-servicioSchema.methods.getPublicData = async function() {
-  const servicio = this.toObject();
+Servicio.prototype.getPublicData = async function() {
+  const servicio = this.toJSON();
   const comision = await this.calcularComision();
   const precioFinal = await this.calcularPrecioFinal();
   
@@ -183,8 +204,31 @@ servicioSchema.methods.getPublicData = async function() {
     ...servicio,
     comision,
     precioFinal,
-    esPremium: this.proveedor?.premium || false
+    esPremium: this.premium || false
   };
 };
 
-export default mongoose.model('Servicio', servicioSchema);
+// Métodos estáticos
+Servicio.findByCategoria = function(categoria) {
+  return this.findAll({ where: { categoria } });
+};
+
+Servicio.findByProveedor = function(proveedorId) {
+  return this.findAll({ where: { proveedor: proveedorId } });
+};
+
+Servicio.findByEstado = function(estado) {
+  return this.findAll({ where: { estado } });
+};
+
+Servicio.findByPrecio = function(precioMin, precioMax) {
+  return this.findAll({
+    where: {
+      precio: {
+        [sequelize.Op.between]: [precioMin, precioMax]
+      }
+    }
+  });
+};
+
+export default Servicio;

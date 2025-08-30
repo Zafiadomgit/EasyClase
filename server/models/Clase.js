@@ -1,221 +1,246 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const claseSchema = new mongoose.Schema({
+const Clase = sequelize.define('Clase', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   estudiante: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'El estudiante es obligatorio']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   profesor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'El profesor es obligatorio']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   materia: {
-    type: String,
-    required: [true, 'La materia es obligatoria'],
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   descripcion: {
-    type: String,
-    trim: true,
-    maxLength: [500, 'La descripción no puede exceder 500 caracteres']
+    type: DataTypes.TEXT,
+    allowNull: true,
+    validate: {
+      len: [0, 500]
+    }
   },
   fecha: {
-    type: Date,
-    required: [true, 'La fecha es obligatoria']
+    type: DataTypes.DATEONLY,
+    allowNull: false
   },
   horaInicio: {
-    type: String,
-    required: [true, 'La hora de inicio es obligatoria']
+    type: DataTypes.STRING(10),
+    allowNull: false
   },
   duracion: {
-    type: Number,
-    required: [true, 'La duración es obligatoria'],
-    min: [1, 'La duración mínima es 1 hora'],
-    max: [8, 'La duración máxima es 8 horas']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      min: 1,
+      max: 8
+    }
   },
   modalidad: {
-    type: String,
-    enum: ['online', 'presencial'],
-    required: [true, 'La modalidad es obligatoria']
+    type: DataTypes.ENUM('online', 'presencial'),
+    allowNull: false
   },
   precio: {
-    type: Number,
-    required: [true, 'El precio es obligatorio'],
-    min: [5000, 'El precio mínimo es $5,000 COP']
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      min: 5000
+    }
   },
   total: {
-    type: Number,
-    required: [true, 'El total es obligatorio']
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   },
   estado: {
-    type: String,
-    enum: ['solicitada', 'confirmada', 'rechazada', 'completada', 'cancelada'],
-    default: 'solicitada'
+    type: DataTypes.ENUM('solicitada', 'confirmada', 'rechazada', 'completada', 'cancelada'),
+    defaultValue: 'solicitada'
   },
   // Información de pago
   pagoId: {
-    type: String,
-    default: null
+    type: DataTypes.STRING,
+    allowNull: true
   },
   estadoPago: {
-    type: String,
-    enum: ['pendiente', 'pagado', 'reembolsado', 'liberado'],
-    default: 'pendiente'
+    type: DataTypes.ENUM('pendiente', 'pagado', 'reembolsado', 'liberado'),
+    defaultValue: 'pendiente'
   },
   montoPagado: {
-    type: Number,
-    default: 0
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0
   },
   fechaPago: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   transactionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Transaction',
-    default: null
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'transactions',
+      key: 'id'
+    }
   },
   // Sistema de Escrow
   escrowStatus: {
-    type: String,
-    enum: ['pending', 'released', 'refunded', 'disputed', 'expired'],
-    default: null
+    type: DataTypes.ENUM('pending', 'released', 'refunded', 'disputed', 'expired'),
+    allowNull: true
   },
   escrowCreatedAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   escrowExpiresAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   escrowReleasedAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   escrowReleasedBy: {
-    type: String,
-    default: null
+    type: DataTypes.STRING,
+    allowNull: true
   },
   escrowRefundedAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   escrowRefundReason: {
-    type: String,
-    default: null
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   escrowDisputedAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   escrowDisputedBy: {
-    type: String,
-    default: null
+    type: DataTypes.STRING,
+    allowNull: true
   },
   escrowDisputeReason: {
-    type: String,
-    default: null
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   escrowExpiredAt: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   // Enlaces para clase online
   enlaceReunion: {
-    type: String,
-    default: null
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   // Confirmaciones de ambas partes
   confirmadoPorProfesor: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   confirmadoPorEstudiante: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   // Fechas importantes
   fechaConfirmacion: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   fechaComplecion: {
-    type: Date,
-    default: null
+    type: DataTypes.DATE,
+    allowNull: true
   },
   // Notas adicionales
   notasProfesor: {
-    type: String,
-    trim: true,
-    maxLength: [1000, 'Las notas no pueden exceder 1000 caracteres']
+    type: DataTypes.TEXT,
+    allowNull: true,
+    validate: {
+      len: [0, 1000]
+    }
   },
   notasEstudiante: {
-    type: String,
-    trim: true,
-    maxLength: [1000, 'Las notas no pueden exceder 1000 caracteres']
+    type: DataTypes.TEXT,
+    allowNull: true,
+    validate: {
+      len: [0, 1000]
+    }
   },
   // Sistema de descuentos
-  descuento: {
-    aplicado: {
-      type: Boolean,
-      default: false
-    },
-    porcentaje: {
-      type: Number,
-      default: 0,
+  descuento_aplicado: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  descuento_porcentaje: {
+    type: DataTypes.DECIMAL(5, 2),
+    defaultValue: 0,
+    validate: {
       min: 0,
       max: 100
-    },
-    montoDescuento: {
-      type: Number,
-      default: 0
-    },
-    categoria: {
-      type: String,
-      default: null
-    },
-    asumidoPor: {
-      type: String,
-      enum: ['profesor', 'plataforma'],
-      default: 'profesor'
     }
+  },
+  descuento_montoDescuento: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0
+  },
+  descuento_categoria: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  descuento_asumidoPor: {
+    type: DataTypes.ENUM('profesor', 'plataforma'),
+    defaultValue: 'profesor'
   }
 }, {
-  timestamps: true
-});
-
-// Índices para búsquedas eficientes
-claseSchema.index({ estudiante: 1 });
-claseSchema.index({ profesor: 1 });
-claseSchema.index({ fecha: 1 });
-claseSchema.index({ estado: 1 });
-claseSchema.index({ estadoPago: 1 });
-claseSchema.index({ escrowStatus: 1 });
-claseSchema.index({ escrowExpiresAt: 1 });
-claseSchema.index({ transactionId: 1 });
-
-// Middleware para calcular el total antes de guardar
-claseSchema.pre('save', function(next) {
-  if (this.isModified('precio') || this.isModified('duracion') || this.isModified('descuento')) {
-    const subtotal = this.precio * this.duracion;
-    
-    // Aplicar descuento si está configurado
-    if (this.descuento.aplicado && this.descuento.porcentaje > 0) {
-      this.descuento.montoDescuento = (subtotal * this.descuento.porcentaje) / 100;
-      this.total = subtotal - this.descuento.montoDescuento;
-    } else {
-      this.total = subtotal;
-      this.descuento.montoDescuento = 0;
+  tableName: 'clases',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  hooks: {
+    beforeCreate: async (clase) => {
+      // Calcular total antes de crear
+      if (clase.precio && clase.duracion) {
+        const subtotal = parseFloat(clase.precio) * clase.duracion;
+        
+        if (clase.descuento_aplicado && clase.descuento_porcentaje > 0) {
+          clase.descuento_montoDescuento = (subtotal * parseFloat(clase.descuento_porcentaje)) / 100;
+          clase.total = subtotal - parseFloat(clase.descuento_montoDescuento);
+        } else {
+          clase.total = subtotal;
+          clase.descuento_montoDescuento = 0;
+        }
+      }
+    },
+    beforeUpdate: async (clase) => {
+      // Calcular total antes de actualizar
+      if (clase.changed('precio') || clase.changed('duracion') || clase.changed('descuento_aplicado') || clase.changed('descuento_porcentaje')) {
+        const subtotal = parseFloat(clase.precio || clase.previous('precio')) * (clase.duracion || clase.previous('duracion'));
+        
+        if (clase.descuento_aplicado && clase.descuento_porcentaje > 0) {
+          clase.descuento_montoDescuento = (subtotal * parseFloat(clase.descuento_porcentaje)) / 100;
+          clase.total = subtotal - parseFloat(clase.descuento_montoDescuento);
+        } else {
+          clase.total = subtotal;
+          clase.descuento_montoDescuento = 0;
+        }
+      }
     }
   }
-  next();
 });
 
-// Método para verificar si la clase puede ser cancelada
-claseSchema.methods.puedeSerCancelada = function() {
+// Métodos de instancia
+Clase.prototype.puedeSerCancelada = function() {
   const ahora = new Date();
   const fechaClase = new Date(this.fecha);
   const horasHastaClase = (fechaClase - ahora) / (1000 * 60 * 60);
@@ -223,12 +248,32 @@ claseSchema.methods.puedeSerCancelada = function() {
   return horasHastaClase >= 2 && ['solicitada', 'confirmada'].includes(this.estado);
 };
 
-// Método para verificar si la clase puede ser confirmada como completada
-claseSchema.methods.puedeSerCompletada = function() {
+Clase.prototype.puedeSerCompletada = function() {
   const ahora = new Date();
   const fechaClase = new Date(this.fecha);
   
   return ahora >= fechaClase && this.estado === 'confirmada';
 };
 
-export default mongoose.model('Clase', claseSchema);
+// Métodos estáticos
+Clase.findByEstudiante = function(estudianteId) {
+  return this.findAll({ where: { estudiante: estudianteId } });
+};
+
+Clase.findByProfesor = function(profesorId) {
+  return this.findAll({ where: { profesor: profesorId } });
+};
+
+Clase.findByEstado = function(estado) {
+  return this.findAll({ where: { estado } });
+};
+
+Clase.findByEstadoPago = function(estadoPago) {
+  return this.findAll({ where: { estadoPago } });
+};
+
+Clase.findByEscrowStatus = function(escrowStatus) {
+  return this.findAll({ where: { escrowStatus } });
+};
+
+export default Clase;

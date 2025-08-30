@@ -1,85 +1,144 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const reviewSchema = new mongoose.Schema({
+const Review = sequelize.define('Review', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   clase: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clase',
-    required: [true, 'La clase es obligatoria']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true,
+    references: {
+      model: 'clases',
+      key: 'id'
+    }
   },
   estudiante: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'El estudiante es obligatorio']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   profesor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'El profesor es obligatorio']
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   calificacion: {
-    type: Number,
-    required: [true, 'La calificación es obligatoria'],
-    min: [1, 'La calificación mínima es 1'],
-    max: [5, 'La calificación máxima es 5']
-  },
-  comentario: {
-    type: String,
-    required: [true, 'El comentario es obligatorio'],
-    trim: true,
-    minLength: [10, 'El comentario debe tener al menos 10 caracteres'],
-    maxLength: [500, 'El comentario no puede exceder 500 caracteres']
-  },
-  aspectos: {
-    puntualidad: {
-      type: Number,
-      min: 1,
-      max: 5
-    },
-    claridad: {
-      type: Number,
-      min: 1,
-      max: 5
-    },
-    paciencia: {
-      type: Number,
-      min: 1,
-      max: 5
-    },
-    conocimiento: {
-      type: Number,
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
       min: 1,
       max: 5
     }
   },
+  comentario: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+    validate: {
+      len: [10, 500]
+    }
+  },
+  aspectos: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   recomendaria: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   // Respuesta del profesor (opcional)
-  respuestaProfesor: {
-    comentario: String,
-    fecha: Date
+  respuestaProfesor_comentario: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  respuestaProfesor_fecha: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
-  timestamps: true
+  tableName: 'reviews',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  indexes: [
+    {
+      fields: ['profesor']
+    },
+    {
+      fields: ['estudiante']
+    },
+    {
+      fields: ['clase'],
+      unique: true
+    },
+    {
+      fields: ['calificacion']
+    }
+  ]
 });
 
-// Índices
-reviewSchema.index({ profesor: 1 });
-reviewSchema.index({ estudiante: 1 });
-reviewSchema.index({ clase: 1 }, { unique: true }); // Una reseña por clase
-reviewSchema.index({ calificacion: -1 });
-
 // Método para obtener reseña pública
-reviewSchema.methods.getPublicReview = function() {
-  const review = this.toObject();
+Review.prototype.getPublicReview = function() {
+  const review = this.toJSON();
   return {
     ...review,
     estudiante: {
-      nombre: review.estudiante.nombre,
+      nombre: review.estudiante?.nombre,
       // No incluir datos sensibles del estudiante
     }
   };
 };
 
-export default mongoose.model('Review', reviewSchema);
+// Métodos estáticos
+Review.findByProfesor = function(profesorId) {
+  return this.findAll({ where: { profesor: profesorId } });
+};
+
+Review.findByEstudiante = function(estudianteId) {
+  return this.findAll({ where: { estudiante: estudianteId } });
+};
+
+Review.findByClase = function(claseId) {
+  return this.findOne({ where: { clase: claseId } });
+};
+
+Review.findByCalificacion = function(calificacion) {
+  return this.findAll({ where: { calificacion } });
+};
+
+Review.findByCalificacionRange = function(min, max) {
+  return this.findAll({
+    where: {
+      calificacion: {
+        [sequelize.Op.between]: [min, max]
+      }
+    }
+  });
+};
+
+// Método para calcular calificación promedio de un profesor
+Review.calcularCalificacionPromedio = async function(profesorId) {
+  const result = await this.findOne({
+    where: { profesor: profesorId },
+    attributes: [
+      [sequelize.fn('AVG', sequelize.col('calificacion')), 'promedio'],
+      [sequelize.fn('COUNT', sequelize.col('id')), 'total']
+    ]
+  });
+  
+  return {
+    promedio: parseFloat(result?.dataValues?.promedio || 0),
+    total: parseInt(result?.dataValues?.total || 0)
+  };
+};
+
+export default Review;
