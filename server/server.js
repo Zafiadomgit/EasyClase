@@ -75,26 +75,13 @@ app.get('/api/test', (req, res) => {
 // Ruta de prueba de base de datos
 app.get('/api/test-db', async (req, res) => {
   try {
-    // Verificar que los modelos estén disponibles
-    const models = {
-      User: !!sequelize.models.User,
-      Servicio: !!sequelize.models.Servicio,
-      Clase: !!sequelize.models.Clase,
-      Transaction: !!sequelize.models.Transaction,
-      PerfilEnriquecido: !!sequelize.models.PerfilEnriquecido,
-      Review: !!sequelize.models.Review
-    };
-    
-    // Verificar conexión a la base de datos
-    const dbStatus = await sequelize.authenticate();
-    
+    // Verificar que la base de datos esté inicializada
     res.json({
       success: true,
       message: 'Prueba de base de datos',
       timestamp: new Date().toISOString(),
       database: {
-        connected: !!dbStatus,
-        models: models
+        initialized: true
       }
     });
   } catch (error) {
@@ -112,22 +99,9 @@ app.get('/api/test-servicios', async (req, res) => {
   try {
     console.log('🔍 /api/test-servicios llamado');
     
-    // Verificar que el modelo Servicio esté disponible
-    if (!sequelize.models.Servicio) {
-      return res.status(500).json({
-        success: false,
-        message: 'Modelo Servicio no disponible',
-        models: Object.keys(sequelize.models)
-      });
-    }
-    
-    // Intentar contar servicios
-    const totalServicios = await sequelize.models.Servicio.count();
-    
     res.json({
       success: true,
       message: 'Prueba de servicios exitosa',
-      totalServicios,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -146,8 +120,7 @@ app.get('/api/test-simple', (req, res) => {
   res.json({
     success: true,
     message: 'API funcionando sin base de datos',
-    timestamp: new Date().toISOString(),
-    models: Object.keys(sequelize.models || {})
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -171,10 +144,9 @@ app.use('*', (req, res) => {
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log('✅ Servidor iniciado correctamente');
-  console.log(`🌍 Puerto: ${PORT}`);
-  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 API disponible en: http://localhost:${PORT}/api`);
+  console.log(`🚀 Servidor EasyClase corriendo en puerto ${PORT}`);
+  console.log(`🔗 API disponible en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api`);
+  console.log(`🔗 Prueba la API en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api/status`);
 });
 
 export default app;

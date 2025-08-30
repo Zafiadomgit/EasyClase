@@ -143,4 +143,27 @@ export const initializeDatabase = async () => {
 // Inicializar base de datos
 initializeDatabase();
 
+// Funciones de utilidad para testing
+export const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Conexión a MySQL exitosa');
+    return true;
+  } catch (error) {
+    console.error('❌ Error conectando a MySQL:', error.message);
+    return false;
+  }
+};
+
+export const syncDatabase = async (force = false) => {
+  try {
+    await sequelize.sync({ force, alter: !force });
+    console.log('✅ Base de datos sincronizada');
+    return true;
+  } catch (error) {
+    console.error('❌ Error sincronizando base de datos:', error.message);
+    return false;
+  }
+};
+
 export default sequelize;
