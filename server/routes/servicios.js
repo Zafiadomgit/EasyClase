@@ -2,7 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import {
   obtenerServicios,
-  obtenerServicio,
+  obtenerServicioPorId,
   crearServicio,
   actualizarServicio,
   eliminarServicio,
@@ -78,7 +78,7 @@ const servicioValidation = [
 // Rutas públicas
 router.get('/', obtenerServicios);
 router.get('/categorias', obtenerCategorias);
-router.get('/:id', obtenerServicio);
+router.get('/:id', obtenerServicioPorId);
 
 // Rutas protegidas
 router.get('/usuario/mis-servicios', verifyToken, obtenerMisServicios);

@@ -72,26 +72,34 @@ export const obtenerServicios = async (req, res) => {
     // Calcular paginación
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // Ejecutar consulta
+    // Ejecutar consulta sin includes complejos por ahora
     const servicios = await Servicio.findAll({
       where: filtros,
-      include: [{
-        model: User,
-        as: 'proveedor',
-        attributes: ['nombre', 'foto', 'calificacionPromedio', 'totalReviews', 'verificado', 'premium']
-      }],
       order: ordenamiento,
       offset,
       limit: parseInt(limit)
     });
 
+    console.log('🔍 Servicios encontrados:', servicios.length);
+
     // Contar total para paginación
     const total = await Servicio.count({ where: filtros });
 
-    // Generar datos públicos de servicios con comisiones calculadas
-    const serviciosConDatos = await Promise.all(
-      servicios.map(async (servicio) => await servicio.getPublicData())
-    );
+    // Generar datos básicos de servicios
+    const serviciosConDatos = servicios.map(servicio => {
+      try {
+        return servicio.toJSON();
+      } catch (error) {
+        console.error('❌ Error convirtiendo servicio a JSON:', error);
+        return {
+          id: servicio.id,
+          titulo: servicio.titulo,
+          descripcion: servicio.descripcion,
+          categoria: servicio.categoria,
+          precio: servicio.precio
+        };
+      }
+    });
 
     res.json({
       success: true,
@@ -119,14 +127,9 @@ export const obtenerServicios = async (req, res) => {
 export const obtenerServicioPorId = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('🔍 Buscando servicio con ID:', id);
 
-    const servicio = await Servicio.findByPk(id, {
-      include: [{
-        model: User,
-        as: 'proveedor',
-        attributes: ['id', 'nombre', 'foto', 'calificacionPromedio', 'totalReviews', 'verificado', 'premium', 'descripcion', 'especialidades']
-      }]
-    });
+    const servicio = await Servicio.findByPk(id);
 
     if (!servicio) {
       return res.status(404).json({
@@ -135,8 +138,10 @@ export const obtenerServicioPorId = async (req, res) => {
       });
     }
 
-    // Generar datos públicos del servicio
-    const servicioConDatos = await servicio.getPublicData();
+    console.log('🔍 Servicio encontrado:', servicio.id);
+
+    // Generar datos básicos del servicio
+    const servicioConDatos = servicio.toJSON();
 
     res.json({
       success: true,
@@ -144,10 +149,12 @@ export const obtenerServicioPorId = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo servicio:', error);
+    console.error('❌ Error obteniendo servicio:', error);
+    console.error('❌ Stack trace:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
     });
   }
 };
