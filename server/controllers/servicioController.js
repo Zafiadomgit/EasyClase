@@ -341,13 +341,31 @@ export const eliminarServicio = async (req, res) => {
 // Obtener servicios del usuario actual
 export const obtenerMisServicios = async (req, res) => {
   try {
+    console.log('🔍 obtenerMisServicios llamado');
+    console.log('🔍 req.userId:', req.userId);
+    console.log('🔍 req.headers:', req.headers);
+    
     const { estado, page = 1, limit = 10 } = req.query;
+    console.log('🔍 Query params:', { estado, page, limit });
+
+    // Verificar que userId esté disponible
+    if (!req.userId) {
+      console.error('❌ req.userId no está disponible');
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
 
     const filtros = { proveedor: req.userId };
     if (estado) filtros.estado = estado;
+    
+    console.log('🔍 Filtros aplicados:', filtros);
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
+    console.log('🔍 Buscando servicios con filtros:', filtros);
+    
     const servicios = await Servicio.findAll({
       where: filtros,
       order: [['created_at', 'DESC']],
@@ -355,12 +373,24 @@ export const obtenerMisServicios = async (req, res) => {
       limit: parseInt(limit)
     });
 
+    console.log('🔍 Servicios encontrados:', servicios.length);
+
     const total = await Servicio.count({ where: filtros });
+    console.log('🔍 Total de servicios:', total);
 
     // Generar datos públicos de servicios con comisiones calculadas
     const serviciosConDatos = await Promise.all(
-      servicios.map(async (servicio) => await servicio.getPublicData())
+      servicios.map(async (servicio) => {
+        try {
+          return await servicio.getPublicData();
+        } catch (error) {
+          console.error('❌ Error generando datos públicos para servicio:', servicio.id, error);
+          return servicio.toJSON(); // Fallback a datos básicos
+        }
+      })
     );
+    
+    console.log('🔍 Servicios con datos públicos generados:', serviciosConDatos.length);
     
     res.json({
       success: true,
@@ -376,10 +406,19 @@ export const obtenerMisServicios = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo mis servicios:', error);
+    console.error('❌ Error obteniendo mis servicios:', error);
+    console.error('❌ Stack trace:', error.stack);
+    
+    // Respuesta de error más detallada
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno',
+      details: process.env.NODE_ENV === 'development' ? {
+        name: error.name,
+        code: error.code,
+        stack: error.stack
+      } : undefined
     });
   }
 };

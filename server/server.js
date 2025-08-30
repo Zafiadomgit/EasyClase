@@ -32,21 +32,27 @@ initializeDatabase().then(() => {
   console.error('❌ Error inicializando base de datos:', error);
 });
 
-// Importar rutas
+// Importar rutas existentes
 import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
+import profesoresRoutes from './routes/profesores.js';
 import claseRoutes from './routes/clases.js';
 import servicioRoutes from './routes/servicios.js';
 import transactionRoutes from './routes/transactions.js';
 import reviewRoutes from './routes/reviews.js';
+import perfilEnriquecidoRoutes from './routes/perfilEnriquecido.js';
+import adminRoutes from './routes/admin.js';
+import escrowRoutes from './routes/escrow.js';
 
 // Usar rutas
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/profesores', profesoresRoutes);
 app.use('/api/clases', claseRoutes);
 app.use('/api/servicios', servicioRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/escrow', escrowRoutes);
 
 // Ruta de estado
 app.get('/api/status', (req, res) => {
@@ -64,6 +70,41 @@ app.get('/api/test', (req, res) => {
     message: 'API funcionando correctamente',
     timestamp: new Date().toISOString()
   });
+});
+
+// Ruta de prueba de base de datos
+app.get('/api/test-db', async (req, res) => {
+  try {
+    // Verificar que los modelos estén disponibles
+    const models = {
+      User: !!sequelize.models.User,
+      Servicio: !!sequelize.models.Servicio,
+      Clase: !!sequelize.models.Clase,
+      Transaction: !!sequelize.models.Transaction,
+      PerfilEnriquecido: !!sequelize.models.PerfilEnriquecido,
+      Review: !!sequelize.models.Review
+    };
+    
+    // Verificar conexión a la base de datos
+    const dbStatus = await sequelize.authenticate();
+    
+    res.json({
+      success: true,
+      message: 'Prueba de base de datos',
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: !!dbStatus,
+        models: models
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error en prueba de base de datos',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Middleware de manejo de errores
