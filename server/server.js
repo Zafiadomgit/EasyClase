@@ -30,8 +30,29 @@ import notificationScheduler from "./services/notificationSchedulerService.js";
 // Configuración específica para Vercel con MySQL
 import { vercelConfig, validateConfig } from './vercel-mysql-config.js';
 
-// Cargar variables de entorno desde la raíz del proyecto
-dotenv.config({ path: '../.env' });
+// Verificar dependencias críticas
+console.log('🔍 Verificando dependencias críticas...')
+
+try {
+  const mysql2 = await import('mysql2')
+  console.log('✅ mysql2 está disponible')
+} catch (error) {
+  console.error('❌ ERROR CRÍTICO: mysql2 NO está disponible:', error.message)
+  console.error('❌ El sistema NO puede conectar a MySQL')
+  console.error('❌ Usando modelos mock como fallback')
+}
+
+try {
+  const { Sequelize } = await import('sequelize')
+  console.log('✅ Sequelize está disponible')
+} catch (error) {
+  console.error('❌ ERROR CRÍTICO: Sequelize NO está disponible:', error.message)
+}
+
+console.log('🔍 Verificación de dependencias completada')
+
+// Cargar variables de entorno
+dotenv.config()
 
 // Validar configuración en producción
 if (process.env.NODE_ENV === 'production') {
