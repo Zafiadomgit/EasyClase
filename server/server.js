@@ -3,6 +3,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './config/database.js';
 
+// Importar rutas
+import authRoutes from './routes/auth.js';
+import profesorRoutes from './routes/profesores.js';
+import claseRoutes from './routes/clases.js';
+import reviewRoutes from './routes/reviews.js';
+import servicioRoutes from './routes/servicios.js';
+import perfilEnriquecidoRoutes from './routes/perfilEnriquecido.js';
+import adminRoutes from './routes/admin.js';
+import escrowRoutes from './routes/escrow.js';
+import transactionRoutes from './routes/transactions.js';
+
 // Cargar variables de entorno
 dotenv.config();
 
@@ -24,43 +35,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Inicializar base de datos
-console.log('🔍 Iniciando servidor...');
-initializeDatabase().then(() => {
-  console.log('✅ Base de datos inicializada');
-}).catch((error) => {
-  console.error('❌ Error inicializando base de datos:', error);
-});
-
-// Importar rutas existentes
-import authRoutes from './routes/auth.js';
-import profesoresRoutes from './routes/profesores.js';
-import claseRoutes from './routes/clases.js';
-import servicioRoutes from './routes/servicios.js';
-import transactionRoutes from './routes/transactions.js';
-import reviewRoutes from './routes/reviews.js';
-import perfilEnriquecidoRoutes from './routes/perfilEnriquecido.js';
-import adminRoutes from './routes/admin.js';
-import escrowRoutes from './routes/escrow.js';
-
-// Usar rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/profesores', profesoresRoutes);
-app.use('/api/clases', claseRoutes);
-app.use('/api/servicios', servicioRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/escrow', escrowRoutes);
-
 // Ruta de estado
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'OK',
     message: 'EasyClase API funcionando correctamente',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: 'Conectando...'
   });
 });
 
@@ -72,57 +54,53 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Ruta de prueba de base de datos
-app.get('/api/test-db', async (req, res) => {
-  try {
-    // Verificar que la base de datos esté inicializada
-    res.json({
-      success: true,
-      message: 'Prueba de base de datos',
-      timestamp: new Date().toISOString(),
-      database: {
-        initialized: true
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error en prueba de base de datos',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Ruta de prueba para servicios (sin autenticación)
-app.get('/api/test-servicios', async (req, res) => {
-  try {
-    console.log('🔍 /api/test-servicios llamado');
-    
-    res.json({
-      success: true,
-      message: 'Prueba de servicios exitosa',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Error en /api/test-servicios:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error en prueba de servicios',
-      error: error.message,
-      stack: error.stack
-    });
-  }
-});
-
-// Ruta de prueba simple (sin base de datos)
-app.get('/api/test-simple', (req, res) => {
+// Ruta raíz
+app.get('/', (req, res) => {
   res.json({
-    success: true,
-    message: 'API funcionando sin base de datos',
-    timestamp: new Date().toISOString()
+    message: 'EasyClase API funcionando',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
+
+// ========================================
+// MONTAR RUTAS DE LA API
+// ========================================
+
+// Rutas de autenticación
+app.use('/api/auth', authRoutes);
+
+// Rutas de profesores
+app.use('/api/profesores', profesorRoutes);
+
+// Rutas de clases
+app.use('/api/clases', claseRoutes);
+
+// Rutas de reseñas
+app.use('/api/reviews', reviewRoutes);
+
+// Rutas de servicios
+app.use('/api/servicios', servicioRoutes);
+
+// Rutas de perfil enriquecido
+app.use('/api/perfil-enriquecido', perfilEnriquecidoRoutes);
+
+// Rutas de admin
+app.use('/api/admin', adminRoutes);
+
+// Rutas de escrow (pagos)
+app.use('/api/escrow', escrowRoutes);
+
+// Rutas de transacciones
+app.use('/api/transactions', transactionRoutes);
+
+// ========================================
+// INICIALIZAR BASE DE DATOS
+// ========================================
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  // Solo inicializar en desarrollo local
+  initializeDatabase();
+}
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
@@ -142,11 +120,19 @@ app.use('*', (req, res) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor EasyClase corriendo en puerto ${PORT}`);
+// Iniciar servidor solo en desarrollo local
+// En Vercel, el servidor se maneja automáticamente
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor EasyClase corriendo en puerto ${PORT}`);
+    console.log(`🔗 API disponible en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api`);
+    console.log(`🔗 Prueba la API en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api/status`);
+    console.log(`🔗 Login disponible en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api/auth/login`);
+  });
+} else {
+  console.log('🚀 Servidor EasyClase corriendo en Vercel');
   console.log(`🔗 API disponible en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api`);
-  console.log(`🔗 Prueba la API en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api/status`);
-});
+  console.log(`🔗 Login disponible en: ${process.env.FRONTEND_URL || 'https://easyclaseapp.com'}/api/auth/login`);
+}
 
 export default app;

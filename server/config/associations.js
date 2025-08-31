@@ -14,7 +14,7 @@ export const setupAssociations = () => {
   });
   Clase.belongsTo(User, {
     foreignKey: 'estudiante',
-    as: 'estudiante'
+    as: 'usuarioEstudiante'
   });
 
   // Usuario tiene muchas clases como profesor
@@ -24,7 +24,7 @@ export const setupAssociations = () => {
   });
   Clase.belongsTo(User, {
     foreignKey: 'profesor',
-    as: 'profesor'
+    as: 'usuarioProfesor'
   });
 
   // Usuario tiene muchos servicios
@@ -34,7 +34,7 @@ export const setupAssociations = () => {
   });
   Servicio.belongsTo(User, {
     foreignKey: 'proveedor',
-    as: 'proveedor'
+    as: 'usuarioProveedor'
   });
 
   // Usuario tiene un perfil enriquecido
@@ -44,7 +44,7 @@ export const setupAssociations = () => {
   });
   PerfilEnriquecido.belongsTo(User, {
     foreignKey: 'usuario',
-    as: 'usuario'
+    as: 'usuarioPerfil'
   });
 
   // Clase tiene muchas transacciones
@@ -84,7 +84,7 @@ export const setupAssociations = () => {
   });
   Review.belongsTo(Clase, {
     foreignKey: 'clase',
-    as: 'clase'
+    as: 'claseReview'
   });
 
   // Usuario tiene muchas reviews como estudiante
@@ -94,7 +94,7 @@ export const setupAssociations = () => {
   });
   Review.belongsTo(User, {
     foreignKey: 'estudiante',
-    as: 'estudiante'
+    as: 'usuarioEstudianteReview'
   });
 
   // Usuario tiene muchas reviews como profesor
@@ -104,7 +104,7 @@ export const setupAssociations = () => {
   });
   Review.belongsTo(User, {
     foreignKey: 'profesor',
-    as: 'profesor'
+    as: 'usuarioProfesorReview'
   });
 
   console.log('✅ Asociaciones entre modelos configuradas correctamente');

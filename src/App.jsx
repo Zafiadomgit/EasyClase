@@ -169,9 +169,6 @@ function App() {
               <Route path="content" element={<AdminContenido />} />
               <Route path="system" element={<AdminSistema />} />
             </Route>
-            
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Register />} />
           </Routes>
                   </div>
         </Router>

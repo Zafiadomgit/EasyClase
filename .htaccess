@@ -1,0 +1,146 @@
+# ========================================
+# .htaccess para PRODUCCIÓN - EasyClase
+# COMPATIBLE CON DREAMHOST SHARED HOSTING
+# MANTIENE TODA LA SEGURIDAD A+ (implementada en código)
+# ========================================
+
+# ----------------------------------------------------------------------
+# REDIRECCIÓN HTTP A HTTPS (SSL obligatorio en producción)
+# ----------------------------------------------------------------------
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ----------------------------------------------------------------------
+# HEADERS DE SEGURIDAD A+ - NO TOCAR
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none';"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# ----------------------------------------------------------------------
+# MANEJO DE RUTAS PARA SINGLE PAGE APPLICATION (SPA)
+# ----------------------------------------------------------------------
+RewriteBase /
+
+# IMPORTANTE: Las rutas de API NO deben redirigirse a index.html
+# Si la ruta empieza con /api, NO hacer nada (dejar que pase)
+RewriteCond %{REQUEST_URI} !^/api
+
+# Si el archivo o directorio existe, servirlo directamente
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirigir solo las rutas del frontend a index.html
+RewriteRule . /index.html [L]
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA ACCESO A ARCHIVOS SENSIBLES
+# ----------------------------------------------------------------------
+<Files "*.env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.config.js">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "package.json">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "package-lock.json">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.log">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.md">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA DIRECTORY BROWSING
+# ----------------------------------------------------------------------
+Options -Indexes
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA ACCESO A CARPETAS DEL SERVIDOR
+# ----------------------------------------------------------------------
+RewriteRule ^\.git/.*$ - [F,L]
+RewriteRule ^node_modules/.*$ - [F,L]
+RewriteRule ^server/.*$ - [F,L]
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA ATAQUES COMUNES
+# ----------------------------------------------------------------------
+# Bloquear User-Agents maliciosos
+RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+RewriteCond %{HTTP_USER_AGENT} ^(java|curl|wget).* [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ^.*(libwww-perl|curl|wget|python|nikto|wkito|pikto|acunetix|scan|acunetix).* [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ^.*(winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner).* [NC]
+RewriteRule .* - [F,L]
+
+# Bloquear métodos HTTP peligrosos
+<LimitExcept GET POST>
+    Deny from all
+</LimitExcept>
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA HOTLINKING
+# ----------------------------------------------------------------------
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?easyclaseapp\.com [NC]
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?easy-clase.*\.vercel\.app [NC]
+RewriteRule \.(jpg|jpeg|png|gif|webp|css|js)$ - [F,L]
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN CONTRA INYECCIÓN DE CÓDIGO
+# ----------------------------------------------------------------------
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PERMITIR SOLO NUESTRO ARCHIVO DE SEGURIDAD
+<Files "security-headers.php">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# ----------------------------------------------------------------------
+# PROTECCIÓN ADICIONAL PARA APLICACIONES FINANCIERAS
+# ----------------------------------------------------------------------
+RewriteRule ^(api/admin|api/payment|api/user) - [F,L]
+
+# ----------------------------------------------------------------------
+# VERIFICACIÓN DE INTEGRIDAD
+# ----------------------------------------------------------------------
+# Este archivo mantiene TODAS las protecciones de seguridad A+:
+# ✅ Redirección HTTPS obligatoria
+# ✅ Headers de seguridad A+ implementados
+# ✅ Rutas de API protegidas (NO redirigen a index.html)
+# ✅ Protección contra directory browsing
+# ✅ Bloqueo de archivos sensibles
+# ✅ Protección contra hotlinking
+# ✅ Bloqueo de métodos HTTP peligrosos
+# ✅ Protección contra User-Agents maliciosos
+# ✅ Bloqueo de archivos ejecutables
+# ✅ Protección de rutas financieras
+
+# ----------------------------------------------------------------------
+# FIN DEL ARCHIVO .htaccess SEGURO A+
+# ----------------------------------------------------------------------

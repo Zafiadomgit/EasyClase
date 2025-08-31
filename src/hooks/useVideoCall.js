@@ -23,7 +23,8 @@ const useVideoCall = (roomId, userId, userType) => {
   // Inicializar Socket.io (simplificado)
   useEffect(() => {
     try {
-      const newSocket = io('http://localhost:3000', {
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin
+      const newSocket = io(socketUrl, {
         transports: ['websocket']
       })
       

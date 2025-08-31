@@ -1,5 +1,9 @@
 // Configuración base para las llamadas a la API
-const API_BASE_URL = '/api';
+// En desarrollo: usa proxy local (/api)
+// En producción: usa URL absoluta de Vercel
+const API_BASE_URL = import.meta.env.PROD 
+  ? import.meta.env.VITE_API_URL || 'https://easy-clase-jresq2a1d-davidpieters12-gmailcoms-projects.vercel.app/api'
+  : '/api';
 
 // Helper para manejar errores de la API
 const handleApiError = (error) => {
@@ -29,7 +33,14 @@ const apiRequest = async (url, options = {}) => {
       ...options,
     };
 
-    const response = await fetch(`${API_BASE_URL}${url}`, config);
+    // Construir URL completa
+    const fullUrl = API_BASE_URL.endsWith('/') 
+      ? `${API_BASE_URL}${url.startsWith('/') ? url.slice(1) : url}`
+      : `${API_BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+
+    console.log('🌐 API Request URL:', fullUrl); // Debug
+
+    const response = await fetch(fullUrl, config);
     const data = await response.json();
 
     if (!response.ok) {
