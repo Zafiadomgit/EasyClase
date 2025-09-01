@@ -1,8 +1,8 @@
 // Configuración base para las llamadas a la API
 // En desarrollo: usa proxy local (/api)
-// En producción: usa URL absoluta de Vercel
+// En producción: usa URL absoluta de Dreamhost con .php
 const API_BASE_URL = import.meta.env.PROD 
-  ? import.meta.env.VITE_API_URL || 'https://easy-clase-jresq2a1d-davidpieters12-gmailcoms-projects.vercel.app/api'
+  ? import.meta.env.VITE_API_URL || 'https://easyclaseapp.com/api'
   : '/api';
 
 // Helper para manejar errores de la API
@@ -34,9 +34,19 @@ const apiRequest = async (url, options = {}) => {
     };
 
     // Construir URL completa
-    const fullUrl = API_BASE_URL.endsWith('/') 
-      ? `${API_BASE_URL}${url.startsWith('/') ? url.slice(1) : url}`
-      : `${API_BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+    let fullUrl;
+    
+    if (import.meta.env.PROD) {
+      // En producción: agregar .php a las rutas de autenticación
+      if (url.startsWith('/auth/')) {
+        fullUrl = `${API_BASE_URL}${url}.php`;
+      } else {
+        fullUrl = `${API_BASE_URL}${url}`;
+      }
+    } else {
+      // En desarrollo: usar proxy local
+      fullUrl = `${API_BASE_URL}${url}`;
+    }
 
     console.log('🌐 API Request URL:', fullUrl); // Debug
 
