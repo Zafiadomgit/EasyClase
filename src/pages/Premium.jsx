@@ -4,15 +4,58 @@ import { CheckCircle, Star, TrendingUp, Eye, Shield, Clock, Award, ArrowRight, B
 import { useAuth } from '../contexts/AuthContext'
 
 const Premium = () => {
-  const { user } = useAuth()
+  const { user, isAuthenticated, loading } = useAuth()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState('mensual')
+
+  // Debug: Mostrar información del usuario
+  console.log('🔍 Premium Debug:', { user, isAuthenticated, loading })
+
+  // Si está cargando, mostrar loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Verificar que es un profesor
   if (!user || user.tipoUsuario !== 'profesor') {
-    navigate('/dashboard')
-    return null
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+              <Star className="w-8 h-8 text-amber-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Solo para Profesores
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              La funcionalidad Premium está disponible únicamente para profesores registrados.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/ser-profesor')}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              >
+                Convertirse en Profesor
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              >
+                Volver al Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const beneficios = [

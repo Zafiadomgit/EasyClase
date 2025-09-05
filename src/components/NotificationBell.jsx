@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, X, Check, Trash2, MessageCircle, Calendar, CreditCard, Clock, Star, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 
 const NotificationBell = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { 
     persistentNotifications, 
     unreadCount, 
@@ -46,6 +48,18 @@ const NotificationBell = () => {
     if (!user?.id) return
     
     markAllAsRead(user.id)
+  }
+
+  const handleClearAll = () => {
+    if (!user?.id) return
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar todas las notificaciones?')) {
+      // Importar el servicio de notificaciones
+      import('../services/notificationService').then(({ default: notificationService }) => {
+        notificationService.clearAllNotifications(user.id)
+        loadPersistentNotifications(user.id)
+      })
+    }
   }
 
   const handleDeleteNotification = (notificationId) => {
@@ -178,81 +192,110 @@ const NotificationBell = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 z-50 max-h-96 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-secondary-200 dark:border-gray-600">
-            <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100">Notificaciones</h3>
-            <div className="flex items-center space-x-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline"
-                >
-                  Marcar todas como leídas
-                </button>
-              )}
+          <div className="p-3 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Notificaciones
+              </h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
+            
+            {/* Action buttons */}
+            {(unreadCount > 0 || persistentNotifications.length > 0) && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+                    >
+                      <Check className="w-3 h-3 mr-1" />
+                      Marcar todas
+                    </button>
+                  )}
+                  {persistentNotifications.length > 0 && (
+                    <button
+                      onClick={handleClearAll}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Limpiar todas
+                    </button>
+                  )}
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {persistentNotifications.length} notificación{persistentNotifications.length !== 1 ? 'es' : ''}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Lista de notificaciones */}
           <div className="max-h-80 overflow-y-auto">
             {persistentNotifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-                <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p className="text-sm font-medium">No tienes notificaciones</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Te notificaremos cuando tengas novedades</p>
+              <div className="p-6 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <Bell className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h4 className="text-xs font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  No tienes notificaciones
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Te notificaremos cuando tengas novedades
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-secondary-100 dark:divide-gray-700">
                 {persistentNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-secondary-50 dark:hover:bg-gray-700 cursor-pointer transition-colors border-l-2 ${
+                    className={`group p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all duration-200 border-l-3 ${
                       !notification.read 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border-l-blue-500' 
-                        : 'border-l-transparent'
+                        ? 'bg-blue-50/30 dark:bg-blue-900/5 border-l-blue-500' 
+                        : 'border-l-transparent hover:border-l-gray-200 dark:hover:border-l-gray-600'
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-start space-x-2.5">
                       {/* Icono */}
-                      <div className={`flex-shrink-0 p-2 rounded-full ${getColorClasses(notification.color)}`}>
+                      <div className={`flex-shrink-0 p-1.5 rounded-lg ${getColorClasses(notification.color)}`}>
                         {getIcon(notification.icon)}
                       </div>
 
                       {/* Contenido */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm font-medium text-secondary-900 dark:text-gray-100">
+                        <div className="flex items-start justify-between mb-0.5">
+                          <h4 className="text-xs font-medium text-gray-900 dark:text-gray-100 leading-tight">
                             {notification.title}
-                          </p>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-xs text-secondary-500 dark:text-gray-400">
+                          </h4>
+                          <div className="flex items-center space-x-1.5 ml-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {formatTime(notification.timestamp)}
                             </span>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-secondary-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">
                           {notification.message}
                         </p>
                       </div>
 
                       {/* Acciones */}
-                      <div className="flex-shrink-0 flex items-center space-x-1">
+                      <div className="flex-shrink-0 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         {!notification.read && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               handleMarkAsRead(notification.id)
                             }}
-                            className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-all duration-200"
                             title="Marcar como leída"
                           >
                             <Check className="w-3 h-3" />
@@ -263,8 +306,8 @@ const NotificationBell = () => {
                             e.stopPropagation()
                             handleDeleteNotification(notification.id)
                           }}
-                          className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                          title="Eliminar"
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all duration-200"
+                          title="Eliminar notificación"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -278,11 +321,22 @@ const NotificationBell = () => {
 
           {/* Footer */}
           {persistentNotifications.length > 0 && (
-            <div className="p-3 border-t border-secondary-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-              <div className="flex items-center justify-center space-x-2 text-xs text-secondary-500 dark:text-gray-400">
-                <span>{unreadCount} sin leer</span>
-                <span>•</span>
-                <span>{persistentNotifications.length} total</span>
+            <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></div>
+                    {unreadCount} sin leer
+                  </span>
+                  <span className="text-gray-300 dark:text-gray-600">•</span>
+                  <span>{persistentNotifications.length} total</span>
+                </div>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium hover:underline"
+                >
+                  Ver todas
+                </button>
               </div>
             </div>
           )}

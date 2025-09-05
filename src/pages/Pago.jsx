@@ -31,15 +31,29 @@ const Pago = () => {
 
 
   useEffect(() => {
-    // Obtener datos de la reserva desde el state de navegación
-    if (location.state && location.state.reserva && location.state.profesor) {
-      setReserva(location.state.reserva)
-      setProfesor(location.state.profesor)
+    // Obtener datos de la reserva desde localStorage
+    const reservaData = localStorage.getItem('reservaPendiente')
+    
+    if (reservaData) {
+      try {
+        const reserva = JSON.parse(reservaData)
+        setReserva(reserva)
+        
+        // Crear objeto profesor con los datos disponibles
+        setProfesor({
+          id: reserva.profesorId,
+          nombre: reserva.profesorNombre,
+          precioHora: reserva.precio
+        })
+      } catch (error) {
+        console.error('Error al parsear datos de reserva:', error)
+        navigate('/buscar')
+      }
     } else {
       // Si no hay datos, redirigir de vuelta
       navigate('/buscar')
     }
-  }, [location.state, navigate])
+  }, [navigate])
 
   // Inicializar MercadoPago cuando se carga la página
   useEffect(() => {
@@ -70,15 +84,16 @@ const Pago = () => {
       // Crear datos de la clase
       const claseData = {
         userId: userId,
-        tema: reserva.tema || 'Clase de Programación',
+        tema: 'Clase de Programación',
         profesorNombre: profesor.nombre,
-        profesorEspecialidad: profesor.especialidad || 'Desarrollo Web',
+        profesorEspecialidad: 'Desarrollo Web',
         fecha: reserva.fecha,
         hora: reserva.hora,
-        duracion: reserva.duracion,
-        total: reserva.total || reserva.costo,
+        duracion: 60,
+        total: reserva.precio,
         metodoPago: 'Tarjeta de Crédito/Débito',
-        notas: 'Clase reservada exitosamente'
+        notas: `Clase ${reserva.tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} reservada exitosamente`,
+        tipoAgenda: reserva.tipoAgenda
       }
       
       // Guardar usando el servicio local
@@ -100,11 +115,14 @@ const Pago = () => {
       if (metodoPago === 'mercadopago') {
         // Crear preferencia de pago en MercadoPago
         const paymentData = {
-          amount: reserva.total || reserva.costo,
+          amount: reserva.precio,
           profesor: profesor,
-          reservaId: reserva.id || Date.now(),
+          reservaId: Date.now(),
           payerName: user?.nombre || 'Usuario',
-          payerEmail: user?.email || 'usuario@example.com'
+          payerEmail: user?.email || 'usuario@example.com',
+          tipoAgenda: reserva.tipoAgenda,
+          fecha: reserva.fecha,
+          hora: reserva.hora
         }
 
         const preference = await mercadopagoService.createPaymentPreference(paymentData)
@@ -113,11 +131,12 @@ const Pago = () => {
           // Guardar datos de la reserva antes de redirigir
           const reservaData = {
             profesor: profesor,
-            tema: reserva.tema || 'Clase de Programación',
+            tema: 'Clase de Programación',
             fecha: reserva.fecha,
             hora: reserva.hora,
-            duracion: reserva.duracion,
-            costo: reserva.total || reserva.costo
+            duracion: 60,
+            costo: reserva.precio,
+            tipoAgenda: reserva.tipoAgenda
           }
           
           localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
@@ -145,10 +164,13 @@ const Pago = () => {
         
         // Procesar pago con tarjeta
         const paymentData = {
-          amount: reserva.total || reserva.costo,
+          amount: reserva.precio,
           profesor: profesor,
-          reservaId: reserva.id || Date.now(),
-          payerEmail: user?.email || 'usuario@example.com'
+          reservaId: Date.now(),
+          payerEmail: user?.email || 'usuario@example.com',
+          tipoAgenda: reserva.tipoAgenda,
+          fecha: reserva.fecha,
+          hora: reserva.hora
         }
 
         const cardData = {
@@ -396,12 +418,12 @@ const Pago = () => {
                      {metodoPago === 'mercadopago' ? (
                        <>
                          <ExternalLink className="w-5 h-5 mr-2" />
-                         Pagar con MercadoPago - {formatPrecio(reserva.total || reserva.costo)}
+                         Pagar con MercadoPago - {formatPrecio(reserva.precio)}
                        </>
                      ) : (
                        <>
                          <Lock className="w-5 h-5 mr-2" />
-                         Pagar {formatPrecio(reserva.total || reserva.costo)} con tarjeta
+                         Pagar {formatPrecio(reserva.precio)} con tarjeta
                        </>
                      )}
                    </>
@@ -416,11 +438,12 @@ const Pago = () => {
                    // Guardar datos de la reserva
                    const reservaData = {
                      profesor: profesor,
-                     tema: reserva.tema || 'Clase de Programación',
+                     tema: 'Clase de Programación',
                      fecha: reserva.fecha,
                      hora: reserva.hora,
-                     duracion: reserva.duracion,
-                     costo: reserva.total || reserva.costo
+                     duracion: 60,
+                     costo: reserva.precio,
+                     tipoAgenda: reserva.tipoAgenda
                    }
                    
                    localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
@@ -478,7 +501,7 @@ const Pago = () => {
                   <Clock className="w-5 h-5 text-primary-600 mr-3 mt-1" />
                   <div>
                     <p className="font-semibold text-secondary-900">
-                      {reserva.hora} - {reserva.duracion} hora(s)
+                      {reserva.hora} - 1 hora
                     </p>
                     <p className="text-secondary-600">Horario</p>
                   </div>
@@ -486,7 +509,7 @@ const Pago = () => {
 
                 <div className="bg-secondary-50 rounded-xl p-4">
                   <p className="font-semibold text-secondary-900 mb-1">Tema a aprender:</p>
-                  <p className="text-secondary-700">{reserva.tema}</p>
+                  <p className="text-secondary-700">Clase de Programación</p>
                   {reserva.notas && (
                     <>
                       <p className="font-semibold text-secondary-900 mt-3 mb-1">Notas adicionales:</p>
@@ -504,15 +527,15 @@ const Pago = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Tarifa por hora:</span>
-                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}</span>
+                  <span className="font-semibold">{formatPrecio(profesor.precioHora)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Duración:</span>
-                  <span className="font-semibold">{reserva.duracion} hora(s)</span>
+                  <span className="font-semibold">1 hora</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Subtotal:</span>
-                  <span className="font-semibold">{formatPrecio(reserva.costo)}</span>
+                  <span className="font-semibold">{formatPrecio(reserva.precio)}</span>
                 </div>
                 {reserva.descuento && reserva.descuento.aplicado && (
                   <div className="flex justify-between text-green-600">
@@ -527,7 +550,7 @@ const Pago = () => {
                  <hr className="my-3" />
                  <div className="flex justify-between text-lg font-bold text-primary-600">
                    <span>Total a pagar:</span>
-                   <span>{formatPrecio(reserva.total || reserva.costo)}</span>
+                   <span>{formatPrecio(reserva.precio)}</span>
                  </div>
               </div>
             </div>

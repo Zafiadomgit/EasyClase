@@ -12,7 +12,12 @@ class NotificationService {
   getNotifications(userId) {
     try {
       const notifications = localStorage.getItem(`${this.storageKey}_${userId}`)
-      return notifications ? JSON.parse(notifications) : []
+      if (notifications) {
+        const parsed = JSON.parse(notifications)
+        // Limitar a máximo 10 notificaciones para evitar spam
+        return parsed.slice(0, 10)
+      }
+      return []
     } catch (error) {
       console.error('Error obteniendo notificaciones:', error)
       return []
@@ -36,8 +41,8 @@ class NotificationService {
       
       notifications.unshift(newNotification) // Agregar al inicio
       
-      // Mantener solo las últimas 50 notificaciones
-      const limitedNotifications = notifications.slice(0, 50)
+      // Mantener solo las últimas 20 notificaciones (más realista)
+      const limitedNotifications = notifications.slice(0, 20)
       
       localStorage.setItem(`${this.storageKey}_${userId}`, JSON.stringify(limitedNotifications))
       
@@ -117,6 +122,25 @@ class NotificationService {
       }))
     } catch (error) {
       console.error('Error eliminando notificación:', error)
+    }
+  }
+
+  /**
+   * Limpia todas las notificaciones del usuario
+   * @param {string} userId - ID del usuario
+   */
+  clearAllNotifications(userId) {
+    try {
+      localStorage.removeItem(`${this.storageKey}_${userId}`)
+      
+      // Disparar evento personalizado
+      window.dispatchEvent(new CustomEvent('notificationsUpdated', { 
+        detail: { userId, notifications: [] } 
+      }))
+      
+      return []
+    } catch (error) {
+      console.error('Error limpiando notificaciones:', error)
     }
   }
 

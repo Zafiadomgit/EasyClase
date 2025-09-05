@@ -21,18 +21,90 @@ const ProfesorDisponibilidad = () => {
     { value: 'domingo', label: 'Domingo' }
   ]
 
+  // Generar opciones de hora solo en punto y :30
+  const generarOpcionesHora = () => {
+    const opciones = []
+    for (let hora = 6; hora <= 22; hora++) {
+      // Hora en punto
+      opciones.push({
+        value: `${hora.toString().padStart(2, '0')}:00`,
+        label: `${hora.toString().padStart(2, '0')}:00`
+      })
+      // Hora y media (solo hasta 21:30)
+      if (hora < 22) {
+        opciones.push({
+          value: `${hora.toString().padStart(2, '0')}:30`,
+          label: `${hora.toString().padStart(2, '0')}:30`
+        })
+      }
+    }
+    return opciones
+  }
+
+  const opcionesHora = generarOpcionesHora()
+
   // Cargar horarios existentes
   useEffect(() => {
-    const horariosEjemplo = [
-      { id: 1, dia: 'lunes', horaInicio: '09:00', horaFin: '12:00', disponible: true },
-      { id: 2, dia: 'lunes', horaInicio: '14:00', horaFin: '18:00', disponible: true },
-      { id: 3, dia: 'miercoles', horaInicio: '10:00', horaFin: '15:00', disponible: true },
-      { id: 4, dia: 'viernes', horaInicio: '08:00', horaFin: '12:00', disponible: true }
-    ]
-    setHorarios(horariosEjemplo)
+    cargarHorarios()
   }, [])
 
-  const agregarHorario = () => {
+  const cargarHorarios = async () => {
+    try {
+      const response = await fetch('/api/profesor/horarios.php')
+      const data = await response.json()
+      
+      if (data.success) {
+        setHorarios(data.data.horarios || [])
+      } else {
+        // Si no hay horarios guardados, usar ejemplos
+        const horariosEjemplo = [
+          { id: 1, dia: 'lunes', horaInicio: '09:00', horaFin: '12:00', disponible: true },
+          { id: 2, dia: 'lunes', horaInicio: '14:00', horaFin: '18:00', disponible: true },
+          { id: 3, dia: 'miercoles', horaInicio: '10:00', horaFin: '15:00', disponible: true },
+          { id: 4, dia: 'viernes', horaInicio: '08:00', horaFin: '12:00', disponible: true }
+        ]
+        setHorarios(horariosEjemplo)
+      }
+    } catch (error) {
+      console.error('Error al cargar horarios:', error)
+      // Usar ejemplos si falla la carga
+      const horariosEjemplo = [
+        { id: 1, dia: 'lunes', horaInicio: '09:00', horaFin: '12:00', disponible: true },
+        { id: 2, dia: 'lunes', horaInicio: '14:00', horaFin: '18:00', disponible: true },
+        { id: 3, dia: 'miercoles', horaInicio: '10:00', horaFin: '15:00', disponible: true },
+        { id: 4, dia: 'viernes', horaInicio: '08:00', horaFin: '12:00', disponible: true }
+      ]
+      setHorarios(horariosEjemplo)
+    }
+  }
+
+  const guardarHorarios = async (nuevosHorarios) => {
+    try {
+      const response = await fetch('/api/profesor/horarios.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ horarios: nuevosHorarios })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setMensaje('Horarios guardados correctamente')
+        setTimeout(() => setMensaje(''), 3000)
+      } else {
+        setMensaje('Error al guardar los horarios')
+        setTimeout(() => setMensaje(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error al guardar horarios:', error)
+      setMensaje('Error al guardar los horarios')
+      setTimeout(() => setMensaje(''), 3000)
+    }
+  }
+
+  const agregarHorario = async () => {
     if (!nuevoHorario.dia || !nuevoHorario.horaInicio || !nuevoHorario.horaFin) {
       setMensaje('Por favor completa todos los campos')
       return
@@ -44,23 +116,30 @@ const ProfesorDisponibilidad = () => {
     }
 
     const id = Math.max(...horarios.map(h => h.id), 0) + 1
-    setHorarios([...horarios, { ...nuevoHorario, id }])
+    const nuevosHorarios = [...horarios, { ...nuevoHorario, id }]
+    setHorarios(nuevosHorarios)
     setNuevoHorario({ dia: '', horaInicio: '', horaFin: '', disponible: true })
-    setMensaje('Horario agregado correctamente')
     
-    setTimeout(() => setMensaje(''), 3000)
+    // Guardar automáticamente
+    await guardarHorarios(nuevosHorarios)
   }
 
-  const eliminarHorario = (id) => {
-    setHorarios(horarios.filter(h => h.id !== id))
-    setMensaje('Horario eliminado')
-    setTimeout(() => setMensaje(''), 3000)
+  const eliminarHorario = async (id) => {
+    const nuevosHorarios = horarios.filter(h => h.id !== id)
+    setHorarios(nuevosHorarios)
+    
+    // Guardar automáticamente
+    await guardarHorarios(nuevosHorarios)
   }
 
-  const toggleDisponibilidad = (id) => {
-    setHorarios(horarios.map(h => 
+  const toggleDisponibilidad = async (id) => {
+    const nuevosHorarios = horarios.map(h => 
       h.id === id ? { ...h, disponible: !h.disponible } : h
-    ))
+    )
+    setHorarios(nuevosHorarios)
+    
+    // Guardar automáticamente
+    await guardarHorarios(nuevosHorarios)
   }
 
   const guardarCambios = () => {
@@ -117,24 +196,36 @@ const ProfesorDisponibilidad = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Hora de inicio
             </label>
-            <input
-              type="time"
+            <select
               value={nuevoHorario.horaInicio}
               onChange={(e) => setNuevoHorario({...nuevoHorario, horaInicio: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
+              <option value="">Selecciona una hora</option>
+              {opcionesHora.map(opcion => (
+                <option key={opcion.value} value={opcion.value}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Hora de fin
             </label>
-            <input
-              type="time"
+            <select
               value={nuevoHorario.horaFin}
               onChange={(e) => setNuevoHorario({...nuevoHorario, horaFin: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            >
+              <option value="">Selecciona una hora</option>
+              {opcionesHora.map(opcion => (
+                <option key={opcion.value} value={opcion.value}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
           </div>
           
           <div className="flex items-end">

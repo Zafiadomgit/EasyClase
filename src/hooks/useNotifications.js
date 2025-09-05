@@ -125,9 +125,9 @@ export const useNotifications = () => {
 
     setNotifications(getBaseNotifications())
 
-    // Simular notificaciones en tiempo real cada 30 segundos
+    // Simular notificaciones en tiempo real cada 5 minutos (menos frecuente)
     const interval = setInterval(() => {
-      const shouldAddNotification = Math.random() > 0.7 // 30% de probabilidad
+      const shouldAddNotification = Math.random() > 0.9 // 10% de probabilidad (más realista)
 
       if (shouldAddNotification) {
         const newNotification = generateRandomNotification(user.tipoUsuario)
@@ -135,7 +135,7 @@ export const useNotifications = () => {
           setNotifications(prev => [newNotification, ...prev.slice(0, 9)]) // Mantener máximo 10
         }
       }
-    }, 30000)
+    }, 300000) // 5 minutos en lugar de 30 segundos
 
     return () => clearInterval(interval)
   }, [isAuthenticated, user])

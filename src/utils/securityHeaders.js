@@ -13,20 +13,18 @@ export const implementSecurityHeaders = () => {
   // EJECUTAR INMEDIATAMENTE - NO ESPERAR DOMContentLoaded
   console.log('🛡️ Implementando headers de seguridad A+...');
   
-  // Content-Security-Policy (CSP) - Calificación A+
+  // Content-Security-Policy (CSP) - Temporalmente relajado para React
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https: http:",
-    "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://easy-clase-jresq2a1d-davidpieters12-gmailcoms-projects.vercel.app https://easyclaseapp.com wss://easyclaseapp.com",
-    "frame-src 'self' https://www.google.com https://www.facebook.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *",
+    "style-src 'self' 'unsafe-inline' *",
+    "img-src 'self' data: *",
+    "font-src 'self' *",
+    "connect-src 'self' *",
+    "frame-src 'self' *",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
+    "form-action 'self'"
   ].join('; ');
 
   // Implementar CSP via meta tag

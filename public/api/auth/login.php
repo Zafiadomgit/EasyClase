@@ -1,13 +1,13 @@
 <?php
 // ========================================
-// ENDPOINT DE LOGIN PARA DREAMHOST
+// ENDPOINT DE LOGIN PARA DREAMHOST - CON BD REAL
 // ========================================
 
 // Headers de seguridad
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Manejar preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -24,6 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
     exit();
 }
+
+// Incluir clases necesarias
+require_once '../models/User.php';
+require_once '../utils/JWT.php';
 
 try {
     // Obtener datos del POST
@@ -45,22 +49,37 @@ try {
         throw new Exception('Email inválido');
     }
     
-    // TODO: Aquí iría la conexión a MySQL y validación real
-    // Por ahora, mock de respuesta para testing
+    // Instanciar clases
+    $userModel = new User();
+    $jwt = new JWT();
     
-    // Simular validación exitosa
-    if ($email === 'test@test.com' && $password === '123456') {
+    // Autenticar usuario
+    $user = $userModel->authenticate($email, $password);
+    
+    if ($user) {
+        // Generar token JWT
+        $token = $jwt->generateToken($user);
+        $refresh_token = $jwt->generateRefreshToken($user['id']);
+        
         $response = [
             'success' => true,
             'message' => 'Login exitoso',
             'data' => [
                 'user' => [
-                    'id' => 1,
-                    'nombre' => 'Usuario Test',
-                    'email' => $email,
-                    'tipoUsuario' => 'estudiante'
+                    'id' => $user['id'],
+                    'nombre' => $user['nombre'],
+                    'email' => $user['email'],
+                    'tipoUsuario' => $user['tipo_usuario'],
+                    'calificacionPromedio' => $user['calificacion_promedio'] ?? 0,
+                    'telefono' => $user['telefono'] ?? '',
+                    'direccion' => $user['direccion'] ?? '',
+                    'bio' => $user['bio'] ?? '',
+                    'avatarUrl' => $user['avatar_url'] ?? '',
+                    'fechaRegistro' => $user['fecha_registro'] ?? ''
                 ],
-                'token' => 'mock_jwt_token_' . time()
+                'token' => $token,
+                'refresh_token' => $refresh_token,
+                'expires_in' => 3600
             ]
         ];
     } else {
@@ -73,10 +92,11 @@ try {
     echo json_encode($response);
     
 } catch (Exception $e) {
-    http_response_code(400);
+    error_log("Error en login: " . $e->getMessage());
+    http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

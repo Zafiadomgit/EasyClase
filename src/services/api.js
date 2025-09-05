@@ -37,12 +37,8 @@ const apiRequest = async (url, options = {}) => {
     let fullUrl;
     
     if (import.meta.env.PROD) {
-      // En producción: agregar .php a las rutas de autenticación
-      if (url.startsWith('/auth/')) {
-        fullUrl = `${API_BASE_URL}${url}.php`;
-      } else {
-        fullUrl = `${API_BASE_URL}${url}`;
-      }
+      // En producción: agregar .php a todas las rutas
+      fullUrl = `${API_BASE_URL}${url}.php`;
     } else {
       // En desarrollo: usar proxy local
       fullUrl = `${API_BASE_URL}${url}`;

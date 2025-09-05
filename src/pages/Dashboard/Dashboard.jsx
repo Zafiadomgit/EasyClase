@@ -394,7 +394,7 @@ const Dashboard = () => {
             </div>
             <div className="card text-center">
               <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{user?.calificacionPromedio?.toFixed(1) || '0.0'}</p>
+              <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
               <p className="text-secondary-600">Tu Progreso</p>
             </div>
             <div className="card text-center">
@@ -451,7 +451,7 @@ const Dashboard = () => {
             </div>
             <div className="card text-center">
               <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{user?.calificacionPromedio?.toFixed(1) || '0.0'}</p>
+              <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
               <p className="text-secondary-600">Calificación Promedio</p>
             </div>
             <div className="card text-center">

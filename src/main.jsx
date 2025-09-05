@@ -1,11 +1,11 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from "@sentry/react"
-import App from './App.jsx'
+import App from './AppWithAuth.jsx'
 import './index.css'
 
 // 🛡️ IMPLEMENTAR HEADERS DE SEGURIDAD A+ INMEDIATAMENTE
-import './utils/securityHeaders.js'
+// import './utils/securityHeaders.js'
 
 // Configurar Sentry para monitoreo de errores
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {

@@ -1,156 +1,42 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  User, 
-  DollarSign, 
-  MessageCircle,
-  Video,
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  Clock as ClockIcon
-} from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { formatPrecio } from '../utils/currencyUtils'
-import claseServiceLocal from '../services/claseService'
-import VideoCallRoom from '../components/VideoCall/VideoCallRoom'
+import { useParams, useNavigate } from 'react-router-dom'
 
 const DetalleClase = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
-  const { user } = useAuth()
   const [clase, setClase] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showVideoCall, setShowVideoCall] = useState(false)
-  const [canJoinCall, setCanJoinCall] = useState(false)
-  const [timeUntilClass, setTimeUntilClass] = useState('')
 
   useEffect(() => {
-    const cargarClase = async () => {
-      try {
-        setLoading(true)
-        
-        // Si tenemos datos de la clase en el estado de navegación, usarlos
-        if (location.state?.clase) {
-          setClase(location.state.clase)
-        } else {
-          // Si no, intentar cargar desde el servicio local
-          const userId = user?.id || localStorage.getItem('easyclase_user_id')
-          if (userId) {
-            const clases = await claseServiceLocal.obtenerProximasClases(userId)
-            const claseEncontrada = clases.find(c => c.id === id)
-            if (claseEncontrada) {
-              setClase(claseEncontrada)
-            } else {
-              setError('Clase no encontrada')
-            }
-          } else {
-            setError('Usuario no identificado')
-          }
-        }
-      } catch (error) {
-        setError('Error al cargar los detalles de la clase')
-      } finally {
-        setLoading(false)
-      }
-    }
+    cargarDetalleClase()
+  }, [id])
 
-    cargarClase()
-  }, [id, user, location.state])
-
-  // Validar tiempo de la clase para videollamada
-  useEffect(() => {
-    if (!clase) return
-
-    const checkClassTime = () => {
-      const now = new Date()
-      const classDate = new Date(clase.fecha + 'T' + clase.hora)
-      const tenMinutesBefore = new Date(classDate.getTime() - 10 * 60 * 1000) // 10 min antes
+  const cargarDetalleClase = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/clases/reservar.php?id=${id}`)
+      const data = await response.json()
       
-      // Calcular el tiempo de finalización basado en la duración real de la clase
-      const classDurationInHours = parseFloat(clase.duracion) || 1 // Default 1 hora si no hay duración
-      const classEndTime = new Date(classDate.getTime() + (classDurationInHours * 60 * 60 * 1000))
-      
-      if (now >= tenMinutesBefore && now <= classEndTime) {
-        setCanJoinCall(true)
-        setTimeUntilClass('')
-      } else if (now < tenMinutesBefore) {
-        setCanJoinCall(false)
-        const diffMs = tenMinutesBefore - now
-        const diffMins = Math.ceil(diffMs / (1000 * 60))
-        setTimeUntilClass(`La videollamada estará disponible en ${diffMins} minutos`)
+      if (data.success) {
+        setClase(data.data.clase)
       } else {
-        setCanJoinCall(false)
-        setTimeUntilClass('La clase ya ha terminado')
+        setError('Error al cargar el detalle de la clase')
       }
-    }
-
-    checkClassTime()
-    const interval = setInterval(checkClassTime, 60000) // Verificar cada minuto
-
-    return () => clearInterval(interval)
-  }, [clase])
-
-  const handleVolver = () => {
-    navigate(-1)
-  }
-
-  const handleContactar = () => {
-    // Aquí podrías implementar la funcionalidad de chat
-    navigate('/chat')
-  }
-
-  const handleUnirseAClase = () => {
-    if (canJoinCall) {
-      setShowVideoCall(true)
-    }
-  }
-
-  const handleCloseVideoCall = () => {
-    setShowVideoCall(false)
-  }
-
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case 'confirmada':
-        return 'bg-green-100 text-green-800'
-      case 'solicitada':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'completada':
-        return 'bg-blue-100 text-blue-800'
-      case 'cancelada':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getEstadoIcon = (estado) => {
-    switch (estado) {
-      case 'confirmada':
-        return <CheckCircle className="w-4 h-4" />
-      case 'solicitada':
-        return <ClockIcon className="w-4 h-4" />
-      case 'completada':
-        return <CheckCircle className="w-4 h-4" />
-      case 'cancelada':
-        return <AlertCircle className="w-4 h-4" />
-      default:
-        return <ClockIcon className="w-4 h-4" />
+    } catch (error) {
+      console.error('Error:', error)
+      setError('Error al cargar el detalle de la clase')
+    } finally {
+      setLoading(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-lg text-gray-600">Cargando detalles de la clase...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando detalle...</p>
         </div>
       </div>
     )
@@ -158,16 +44,14 @@ const DetalleClase = () => {
 
   if (error || !clase) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error || 'Clase no encontrada'}</p>
+          <p className="text-red-600 mb-4">{error || 'Clase no encontrada'}</p>
           <button
-            onClick={handleVolver}
-            className="btn-primary"
+            onClick={() => navigate('/buscar')}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            Volver
+            Volver a buscar
           </button>
         </div>
       </div>
@@ -175,227 +59,85 @@ const DetalleClase = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={handleVolver}
-            className="inline-flex items-center text-secondary-600 hover:text-secondary-800 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </button>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Detalle de la Clase</h1>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-secondary-900 dark:text-white">
-                {clase.tema}
-              </h1>
-              <p className="text-secondary-600 dark:text-gray-400 mt-2">
-                Clase programada
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getEstadoColor(clase.estado)}`}>
-                {getEstadoIcon(clase.estado)}
-                <span className="ml-2 capitalize">{clase.estado}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Información principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Columna principal */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Detalles de la clase */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
-                Información de la Clase
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Calendar className="w-5 h-5 text-secondary-500 mr-3" />
-                  <div>
-                    <p className="font-medium text-secondary-900 dark:text-white">
-                      Fecha
-                    </p>
-                    <p className="text-secondary-600 dark:text-gray-400">
-                      {new Date(clase.fecha + 'T00:00:00').toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 text-secondary-500 mr-3" />
-                  <div>
-                    <p className="font-medium text-secondary-900 dark:text-white">
-                      Hora y Duración
-                    </p>
-                    <p className="text-secondary-600 dark:text-gray-400">
-                      {clase.hora} ({clase.duracion} horas)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <MapPin className="w-5 h-5 text-secondary-500 mr-3" />
-                  <div>
-                    <p className="font-medium text-secondary-900 dark:text-white">
-                      Modalidad
-                    </p>
-                    <p className="text-secondary-600 dark:text-gray-400">
-                      {clase.modalidad || 'Online'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <DollarSign className="w-5 h-5 text-secondary-500 mr-3" />
-                  <div>
-                    <p className="font-medium text-secondary-900 dark:text-white">
-                      Precio Total
-                    </p>
-                    <p className="text-secondary-600 dark:text-gray-400">
-                      {formatPrecio(clase.total)} • {clase.metodoPago}
-                    </p>
-                  </div>
+          {/* Información del profesor */}
+          <div className="border rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Profesor</h2>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-xl font-bold text-blue-600">
+                  {clase.profesor.nombre.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">{clase.profesor.nombre}</h3>
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span className="flex items-center">
+                    ⭐ {clase.profesor.calificacionPromedio} ({clase.profesor.totalResenas} reseñas)
+                  </span>
+                  <span>${clase.profesor.precioHora.toLocaleString()}/hora</span>
+                  {clase.profesor.esPremium && (
+                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      Premium
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
-
-            {/* Información del participante */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
-                {user?.tipoUsuario === 'profesor' ? 'Estudiante' : 'Profesor'}
-              </h2>
-              
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-secondary-900 dark:text-white text-lg">
-                    {user?.tipoUsuario === 'profesor' 
-                      ? clase.estudiante?.nombre || 'Estudiante'
-                      : clase.profesorNombre || 'Profesor'
-                    }
-                  </p>
-                  <p className="text-secondary-600 dark:text-gray-400">
-                    {user?.tipoUsuario === 'profesor' ? 'Estudiante' : 'Profesor'} de la clase
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold text-secondary-900 dark:text-white mb-4">
-                Acciones
-              </h2>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                {clase.estado === 'confirmada' && (
-                  <div className="space-y-2">
-                    {canJoinCall ? (
-                      <button
-                        onClick={handleUnirseAClase}
-                        className="btn-primary flex items-center justify-center w-full"
-                      >
-                        <Video className="w-4 h-4 mr-2" />
-                        Unirse a la Clase
-                      </button>
-                    ) : (
-                      <div className="text-center">
-                        <button
-                          disabled
-                          className="btn-secondary flex items-center justify-center w-full opacity-50 cursor-not-allowed"
-                        >
-                          <Clock className="w-4 h-4 mr-2" />
-                          Videollamada no disponible
-                        </button>
-                        <p className="text-xs text-gray-500 mt-1">{timeUntilClass}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <button
-                  onClick={handleContactar}
-                  className="btn-secondary flex items-center justify-center"
+            <div className="flex flex-wrap gap-2 mt-4">
+              {clase.profesor.especialidades.map((especialidad, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Contactar
-                </button>
-              </div>
+                  {especialidad}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Barra lateral */}
-          <div className="space-y-6">
-            {/* Resumen */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-4">
-                Resumen
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-secondary-600 dark:text-gray-400">Estado:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(clase.estado)}`}>
-                    {clase.estado}
-                  </span>
+          {/* Disponibilidad */}
+          <div className="border rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Horarios Disponibles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(clase.disponibilidad).map(([dia, horarios]) => (
+                <div key={dia} className="border rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 capitalize mb-2">{dia}</h3>
+                  <div className="space-y-1">
+                    {horarios.map((horario, index) => (
+                      <span
+                        key={index}
+                        className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2 mb-1"
+                      >
+                        {horario}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-secondary-600 dark:text-gray-400">Duración:</span>
-                  <span className="font-medium text-secondary-900 dark:text-white">
-                    {clase.duracion} horas
-                  </span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-secondary-600 dark:text-gray-400">Precio:</span>
-                  <span className="font-medium text-primary-600">
-                    {formatPrecio(clase.total)}
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
+          </div>
 
-                         {/* Recordatorios */}
-             {clase.estado === 'confirmada' && (
-               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                 <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                   Recordatorio
-                 </h3>
-                 <p className="text-blue-700 dark:text-blue-300 text-sm">
-                   La videollamada estará disponible 10 minutos antes del inicio de la clase y se cerrará automáticamente al finalizar.
-                 </p>
-                 <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
-                   ⏰ Duración: {clase.duracion} horas
-                 </p>
-               </div>
-             )}
+          <div className="flex space-x-4 pt-6">
+            <button
+              onClick={() => navigate(`/profesor/${id}`)}
+              className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium"
+            >
+              Ver Perfil Completo
+            </button>
+            <button
+              onClick={() => navigate(`/reservar/${id}`)}
+              className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Reservar Clase
+            </button>
           </div>
         </div>
       </div>
-
-      {/* Modal de Videollamada */}
-      {showVideoCall && (
-        <VideoCallRoom 
-          claseId={clase.id} 
-          onLeave={handleCloseVideoCall}
-        />
-      )}
     </div>
   )
 }

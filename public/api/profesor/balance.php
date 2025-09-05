@@ -13,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Respuesta temporal para que el Dashboard funcione
 $response = [
     'success' => true,
-    'message' => 'Servicios obtenidos correctamente',
+    'message' => 'Balance obtenido correctamente',
     'data' => [
-        'servicios' => []
+        'balanceDisponible' => 0
     ]
 ];
 

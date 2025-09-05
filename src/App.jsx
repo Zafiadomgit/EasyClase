@@ -7,6 +7,7 @@ import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
+import RegisterSimple from './pages/Auth/RegisterSimple'
 import BuscarClases from './pages/BuscarClases'
 import PerfilProfesor from './pages/PerfilProfesor'
 import Perfil from './pages/Perfil'
@@ -55,7 +56,7 @@ function App() {
             {/* Rutas independientes (sin Layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<RegisterSimple />} />
             
             {/* Rutas públicas */}
             <Route path="/" element={<Layout />}>

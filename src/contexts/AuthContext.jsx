@@ -83,18 +83,21 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.login(credentials);
       
-      if (response && response.data && response.data.user) {
+      // Verificar si el login fue exitoso
+      if (response && response.success && response.data && response.data.user) {
         const userData = response.data.user;
         setUser(userData);
         setIsAuthenticated(true);
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('token', response.data.token);
 
-        
         return response;
       } else {
-        throw new Error('Respuesta de login inválida');
+        // El servidor devolvió success: false, mostrar el mensaje de error
+        const errorMessage = response?.message || 'Error al iniciar sesión';
+        throw new Error(errorMessage);
       }
     } catch (error) {
       setUser(null);
@@ -110,18 +113,21 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.register(userData);
       
-      if (response && response.data && response.data.user) {
+      // Verificar si el registro fue exitoso
+      if (response && response.success && response.data && response.data.user) {
         const newUser = response.data.user;
         setUser(newUser);
         setIsAuthenticated(true);
         
         // Persistir usuario en localStorage
         localStorage.setItem('user', JSON.stringify(newUser));
+        localStorage.setItem('token', response.data.token);
 
-        
         return response;
       } else {
-        throw new Error('Respuesta de registro inválida');
+        // El servidor devolvió success: false, mostrar el mensaje de error
+        const errorMessage = response?.message || 'Error al crear la cuenta';
+        throw new Error(errorMessage);
       }
     } catch (error) {
       setUser(null);

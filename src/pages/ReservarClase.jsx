@@ -1,419 +1,360 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Star, Clock, DollarSign, Shield, Calendar, User, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import ChatModal from '../components/Chat/ChatModal'
-import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
 const ReservarClase = () => {
-  const { profesorId } = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuth()
-  const [profesor, setProfesor] = useState(null)
+  const [clase, setClase] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [reservando, setReservando] = useState(false)
   const [error, setError] = useState('')
-  const [showChat, setShowChat] = useState(false)
+  const [fechaSeleccionada, setFechaSeleccionada] = useState('')
+  const [horaSeleccionada, setHoraSeleccionada] = useState('')
+  const [tipoAgenda, setTipoAgenda] = useState('') // 'individual' o 'grupal'
+  const [reservando, setReservando] = useState(false)
 
-  const [reservaData, setReservaData] = useState({
-    fecha: '',
-    hora: '',
-    duracion: 1,
-    tema: '',
-    notas: ''
-  })
+  // Generar opciones de hora solo en punto y :30
+  const generarOpcionesHora = () => {
+    const opciones = []
+    for (let hora = 6; hora <= 22; hora++) {
+      // Hora en punto
+      opciones.push({
+        value: `${hora.toString().padStart(2, '0')}:00`,
+        label: `${hora.toString().padStart(2, '0')}:00`
+      })
+      // Hora y media (solo hasta 21:30)
+      if (hora < 22) {
+        opciones.push({
+          value: `${hora.toString().padStart(2, '0')}:30`,
+          label: `${hora.toString().padStart(2, '0')}:30`
+        })
+      }
+    }
+    return opciones
+  }
 
-  const horasDisponibles = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', 
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-  ]
+  const opcionesHora = generarOpcionesHora()
 
-
+  // Estado del horario seleccionado
+  const [estadoHorario, setEstadoHorario] = useState(null) // null, 'disponible', 'individual', 'grupal'
+  const [alumnosInscritos, setAlumnosInscritos] = useState(0)
 
   useEffect(() => {
-    // Verificar autenticación
-    if (!isAuthenticated) {
-      navigate('/login', { 
-        state: { from: { pathname: `/reservar/${profesorId}` } }
-      })
-      return
+    cargarInformacionClase()
+  }, [id])
+
+  // Verificar estado del horario cuando se selecciona
+  useEffect(() => {
+    if (fechaSeleccionada && horaSeleccionada) {
+      verificarEstadoHorario()
     }
+  }, [fechaSeleccionada, horaSeleccionada])
 
-    // Cargar datos del profesor
-    cargarProfesor()
-  }, [profesorId, isAuthenticated])
-
-  const cargarProfesor = async () => {
+  const cargarInformacionClase = async () => {
     try {
       setLoading(true)
-      // Simular carga de datos del profesor
-      // En la implementación real, esto vendría de la API
-      const profesorData = {
-        id: profesorId,
-        nombre: 'María González',
-        especialidad: 'Excel Avanzado',
-        rating: 4.9,
-        reviews: 127,
-        tarifa: 35000,
-        precioPorHora: 35000, // Agregar para consistencia
-        experiencia: '5 años',
-        descripcion: 'Especialista en Excel con certificación Microsoft. He ayudado a más de 500 profesionales a dominar las herramientas avanzadas de Excel.',
-        foto: '/api/placeholder/150/150',
-        disponibilidad: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'],
-        certificaciones: ['Microsoft Excel Expert', 'Google Workspace'],
-        idiomas: ['Español', 'Inglés']
+      const response = await fetch(`/api/clases/reservar.php?id=${id}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setClase(data.data.clase)
+      } else {
+        setError('Error al cargar la información de la clase')
       }
-      
-
-      
-      setProfesor(profesorData)
-    } catch (err) {
-      setError('Error al cargar los datos del profesor')
+    } catch (error) {
+      console.error('Error:', error)
+      setError('Error al cargar la información de la clase')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleReserva = async (e) => {
-    e.preventDefault()
-    setReservando(true)
-    setError('')
+  const verificarEstadoHorario = async () => {
+    try {
+      const response = await fetch(`/api/clases/verificar-horario.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&hora=${horaSeleccionada}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setEstadoHorario(data.data.estado) // 'disponible', 'individual', 'grupal'
+        setAlumnosInscritos(data.data.alumnosInscritos || 0)
+      } else {
+        setEstadoHorario('disponible')
+        setAlumnosInscritos(0)
+      }
+    } catch (error) {
+      console.error('Error al verificar horario:', error)
+      setEstadoHorario('disponible')
+      setAlumnosInscritos(0)
+    }
+  }
+
+  const reservar = async () => {
+    if (!fechaSeleccionada || !horaSeleccionada || !tipoAgenda) {
+      alert('Por favor completa todos los campos')
+      return
+    }
+
+    // Validar según el estado del horario
+    if (estadoHorario === 'individual' && tipoAgenda !== 'individual') {
+      alert('Este horario ya fue reservado como individual')
+      return
+    }
+    
+    if (estadoHorario === 'grupal' && tipoAgenda !== 'grupal') {
+      alert('Este horario ya fue reservado como grupal')
+      return
+    }
+
+    if (estadoHorario === 'grupal' && alumnosInscritos >= 5) {
+      alert('Este horario grupal ya está completo (máximo 5 alumnos)')
+      return
+    }
 
     try {
-      // Validar datos
-      if (!reservaData.fecha || !reservaData.hora || !reservaData.tema) {
-        throw new Error('Por favor completa todos los campos obligatorios')
-      }
-
-      // Calcular costo total
-      const costoTotal = profesor.tarifa * reservaData.duracion
-      
-
-
-      // Crear reserva
-      const reserva = {
-        profesorId: profesor.id,
-        estudianteId: user.id,
-        fecha: reservaData.fecha,
-        hora: reservaData.hora,
-        duracion: reservaData.duracion,
-        tema: reservaData.tema,
-        notas: reservaData.notas,
-        costo: costoTotal,
-        estado: 'pendiente'
-      }
-
-      // Aquí se enviaría a la API
-
-      // Redirigir al pago
-      navigate('/pago', { 
-        state: { 
-          reserva,
-          profesor: profesor
-        }
+      setReservando(true)
+      const response = await fetch('/api/clases/reservar.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profesorId: id,
+          fecha: fechaSeleccionada,
+          hora: horaSeleccionada,
+          tipoAgenda: tipoAgenda
+        })
       })
-
-    } catch (err) {
-      setError(err.message)
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Redirigir al sistema de pagos en lugar de reservar directamente
+        const reservaData = {
+          profesorId: id,
+          fecha: fechaSeleccionada,
+          hora: horaSeleccionada,
+          tipoAgenda: tipoAgenda,
+          precio: tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 0) * 0.7),
+          profesorNombre: clase?.profesor?.nombre
+        }
+        
+        // Guardar datos de reserva en localStorage para el pago
+        localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
+        
+        // Redirigir a la página de pago
+        navigate('/pago')
+      } else {
+        alert('Error al procesar la reserva: ' + data.message)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al reservar la clase')
     } finally {
       setReservando(false)
     }
   }
 
-  const handleChange = (e) => {
-    setReservaData({
-      ...reservaData,
-      [e.target.name]: e.target.value
-    })
-  }
-
-  const handleSendMessage = async (message) => {
-    try {
-      // Aquí se implementaría el envío real del mensaje a la API
-      // Por ahora solo simulamos el envío exitoso
-      return Promise.resolve()
-    } catch (error) {
-      throw error
-    }
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-secondary-600">Cargando información del profesor...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando información...</p>
         </div>
       </div>
     )
   }
 
-  if (!profesor) {
+  if (error || !clase) {
     return (
-      <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-secondary-900 mb-2">Profesor no encontrado</h2>
-          <p className="text-secondary-600 mb-4">El profesor que buscas no existe o no está disponible.</p>
+          <p className="text-red-600 mb-4">{error || 'Clase no encontrada'}</p>
           <button
             onClick={() => navigate('/buscar')}
-            className="btn-primary"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            Buscar otros profesores
+            Volver a buscar
           </button>
         </div>
       </div>
     )
   }
 
-  const costoTotal = profesor.tarifa * reservaData.duracion
-  
-
-
-
   return (
-    <div className="reservar-clase-page bg-secondary-50 min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            <div className="w-24 h-24 bg-primary-100 rounded-2xl flex items-center justify-center">
-              <User className="w-12 h-12 text-primary-600" />
-            </div>
-            
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-secondary-900 mb-2">{profesor.nombre}</h1>
-              <p className="text-xl text-primary-600 font-semibold mb-2">{profesor.especialidad}</p>
-              
-              <div className="flex flex-wrap items-center gap-4 text-sm text-secondary-600">
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                  <span className="font-semibold">{profesor.rating}</span>
-                  <span className="ml-1">({profesor.reviews} reseñas)</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span>{profesor.experiencia} de experiencia</span>
-                </div>
-                <div className="flex items-center">
-                  <DollarSign className="w-4 h-4 mr-1" />
-                  <span className="font-semibold">{formatPrecioPorHora(profesor.tarifa)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Reservar Clase</h1>
           
-          {/* Formulario de Reserva */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-secondary-900 mb-6">Reservar Clase</h2>
-              
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6">
-                  {error}
-                </div>
+          {/* Información del profesor */}
+          <div className="border rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">{clase.profesor.nombre}</h2>
+            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+              <span className="flex items-center">
+                ⭐ {clase.profesor.calificacionPromedio} ({clase.profesor.totalResenas} reseñas)
+              </span>
+              <span>${clase.profesor.precioHora.toLocaleString()}/hora</span>
+              {clase.profesor.esPremium && (
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  Premium
+                </span>
               )}
-
-              <form onSubmit={handleReserva} className="space-y-6">
-                
-                {/* Fecha y Hora */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                      Fecha de la clase *
-                    </label>
-                    <input
-                      type="date"
-                      name="fecha"
-                      value={reservaData.fecha}
-                      onChange={handleChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                      Hora de inicio *
-                    </label>
-                    <select
-                      name="hora"
-                      value={reservaData.hora}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                      required
-                    >
-                      <option value="">Selecciona una hora</option>
-                      {horasDisponibles.map((hora) => (
-                        <option key={hora} value={hora}>{hora}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Duración */}
-                <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                    Duración (horas) *
-                  </label>
-                  <select
-                    name="duracion"
-                    value={reservaData.duracion}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                    required
-                  >
-                    <option value={1}>1 hora</option>
-                    <option value={2}>2 horas</option>
-                    <option value={3}>3 horas</option>
-                    <option value={4}>4 horas</option>
-                  </select>
-                </div>
-
-                {/* Tema */}
-                <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                    ¿Qué quieres aprender? *
-                  </label>
-                  <input
-                    type="text"
-                    name="tema"
-                    value={reservaData.tema}
-                    onChange={handleChange}
-                    placeholder="Ej: Tablas dinámicas en Excel, Funciones avanzadas, etc."
-                    className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                    required
-                  />
-                </div>
-
-                {/* Notas adicionales */}
-                <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                    Notas adicionales (opcional)
-                  </label>
-                  <textarea
-                    name="notas"
-                    value={reservaData.notas}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Información adicional que quieras compartir con el profesor..."
-                    className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={reservando}
-                  className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {clase.profesor.especialidades.map((especialidad, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
                 >
-                  {reservando ? 'Procesando...' : `Continuar al Pago (${formatPrecio(costoTotal)})`}
-                </button>
-              </form>
+                  {especialidad}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Resumen y Seguridad */}
-          <div className="space-y-6">
-            
-            {/* Resumen de la reserva */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-secondary-900 mb-4">Resumen de tu reserva</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-secondary-600">Profesor:</span>
-                  <span className="font-semibold">{profesor.nombre}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary-600">Especialidad:</span>
-                  <span className="font-semibold">{profesor.especialidad}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary-600">Tarifa por hora:</span>
-                  <span className="font-semibold">{formatPrecio(profesor.tarifa)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary-600">Duración:</span>
-                  <span className="font-semibold">{reservaData.duracion} hora(s)</span>
-                </div>
-                <hr className="my-3" />
-                <div className="flex justify-between text-lg font-bold text-primary-600">
-                  <span>Total:</span>
-                  <span>{formatPrecio(costoTotal)}</span>
-                </div>
-              </div>
+          {/* Formulario de reserva */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fecha
+              </label>
+              <input
+                type="date"
+                value={fechaSeleccionada}
+                onChange={(e) => setFechaSeleccionada(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
 
-            {/* Garantías */}
-            <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-secondary-900 mb-4 flex items-center">
-                <Shield className="w-5 h-5 text-primary-600 mr-2" />
-                Tu dinero está protegido
-              </h3>
-              
-              <div className="space-y-3 text-sm text-secondary-700">
-                <div className="flex items-start">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>El pago se libera solo cuando confirmes que recibiste la clase</span>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Reembolso completo si el profesor no se presenta</span>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Soporte 24/7 para resolver cualquier problema</span>
-                </div>
-                                 <div className="flex items-start">
-                   <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                   <span>Comisión incluida en el precio - no pagas extra</span>
-                 </div>
-              </div>
-            </div>
-
-            {/* Información del profesor */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-secondary-900 mb-4">Sobre el profesor</h3>
-              <p className="text-sm text-secondary-600 mb-4">{profesor.descripcion}</p>
-              
-              <div className="space-y-2 text-sm mb-4">
-                <div>
-                  <span className="font-semibold text-secondary-700">Certificaciones:</span>
-                  <p className="text-secondary-600">{profesor.certificaciones.join(', ')}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-secondary-700">Idiomas:</span>
-                  <p className="text-secondary-600">{profesor.idiomas.join(', ')}</p>
-                </div>
-              </div>
-
-              {/* Botón de Chat */}
-              <button
-                onClick={() => setShowChat(true)}
-                className="w-full flex items-center justify-center space-x-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 px-4 py-3 rounded-lg transition-colors"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hora
+              </label>
+              <select
+                value={horaSeleccionada}
+                onChange={(e) => setHoraSeleccionada(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>Enviar mensaje al profesor</span>
+                <option value="">Selecciona una hora</option>
+                {opcionesHora.map(opcion => (
+                  <option key={opcion.value} value={opcion.value}>
+                    {opcion.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selector de tipo de agenda */}
+            {fechaSeleccionada && horaSeleccionada && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Clase
+                </label>
+                
+                {/* Estado del horario */}
+                {estadoHorario && (
+                  <div className="mb-4 p-3 rounded-lg border">
+                    {estadoHorario === 'disponible' && (
+                      <div className="text-green-600 font-medium">
+                        ✅ Horario disponible - Eres el primero en agendar
+                      </div>
+                    )}
+                    {estadoHorario === 'individual' && (
+                      <div className="text-red-600 font-medium">
+                        ❌ Horario ocupado - Ya fue reservado como individual
+                      </div>
+                    )}
+                    {estadoHorario === 'grupal' && (
+                      <div className="text-blue-600 font-medium">
+                        👥 Clase grupal - {alumnosInscritos}/5 alumnos inscritos
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Opciones de tipo */}
+                <div className="space-y-3">
+                  {/* Individual */}
+                  <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    tipoAgenda === 'individual' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : estadoHorario === 'individual' 
+                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="tipoAgenda"
+                      value="individual"
+                      checked={tipoAgenda === 'individual'}
+                      onChange={(e) => setTipoAgenda(e.target.value)}
+                      disabled={estadoHorario === 'individual'}
+                      className="mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Clase Individual</div>
+                      <div className="text-sm text-gray-600">
+                        Clase privada de 1 hora - ${clase?.profesor?.precioHora?.toLocaleString() || '0'}/hora
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Grupal */}
+                  <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    tipoAgenda === 'grupal' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : estadoHorario === 'individual' 
+                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="tipoAgenda"
+                      value="grupal"
+                      checked={tipoAgenda === 'grupal'}
+                      onChange={(e) => setTipoAgenda(e.target.value)}
+                      disabled={estadoHorario === 'individual' || (estadoHorario === 'grupal' && alumnosInscritos >= 5)}
+                      className="mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Clase Grupal</div>
+                      <div className="text-sm text-gray-600">
+                        Clase compartida (máx 5 alumnos) - ${Math.round((clase?.profesor?.precioHora || 0) * 0.7).toLocaleString()}/hora
+                      </div>
+                      {estadoHorario === 'grupal' && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          {alumnosInscritos} de 5 alumnos inscritos
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-4 pt-4">
+              <button
+                onClick={() => navigate('/buscar')}
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={reservar}
+                disabled={reservando || !fechaSeleccionada || !horaSeleccionada || !tipoAgenda || estadoHorario === 'individual'}
+                className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {reservando ? 'Reservando...' : (
+                  tipoAgenda ? 
+                    `Reservar Clase ${tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} - $${tipoAgenda === 'individual' ? clase?.profesor?.precioHora?.toLocaleString() || '0' : Math.round((clase?.profesor?.precioHora || 0) * 0.7).toLocaleString()}` :
+                    'Reservar Clase'
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Chat Modal */}
-      {showChat && (
-        <ChatModal
-          isOpen={showChat}
-          onClose={() => setShowChat(false)}
-          onSendMessage={handleSendMessage}
-          profesor={profesor}
-        />
-      )}
     </div>
   )
 }
