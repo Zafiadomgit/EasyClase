@@ -1,0 +1,38 @@
+# Configuración básica de SPA (Single Page Application)
+RewriteEngine On
+
+# Excluir archivos estáticos y API del rewrite
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$ [NC]
+RewriteCond %{REQUEST_URI} !^/index\.html$
+
+# Redirigir todas las demás rutas a index.html para React Router
+RewriteRule ^.*$ /index.html [L]
+
+# Configuración de tipos MIME básicos
+<IfModule mod_mime.c>
+  AddType text/javascript .js
+  AddType text/css .css
+</IfModule>
+
+# Headers de seguridad - Implementación gradual
+<IfModule mod_headers.c>
+  # X-Content-Type-Options (más compatible)
+  Header always set X-Content-Type-Options "nosniff"
+  
+  # X-Frame-Options (más compatible)
+  Header always set X-Frame-Options "DENY"
+  
+  # Referrer-Policy (más compatible)
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  
+  # HSTS - Strict-Transport-Security (Fase 2)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  
+  # CSP - Content-Security-Policy (Fase 3 - Ajustado)
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' data: https://api.mercadopago.com; frame-ancestors 'none';"
+  
+  # Permissions-Policy (Fase 4 - Último para A+)
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+</IfModule>

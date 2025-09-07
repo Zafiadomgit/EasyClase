@@ -138,7 +138,9 @@ const ReservarClase = () => {
         }
         
         // Guardar datos de reserva en localStorage para el pago
+        console.log('Guardando reserva en localStorage:', reservaData)
         localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
+        console.log('Reserva guardada, verificando:', localStorage.getItem('reservaPendiente'))
         
         // Redirigir a la página de pago
         navigate('/pago')

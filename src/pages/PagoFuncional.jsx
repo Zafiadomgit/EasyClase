@@ -4,8 +4,8 @@ import { Shield, CreditCard, Lock, CheckCircle, Calendar, Clock, User, ExternalL
 import { useAuth } from '../contexts/AuthContext'
 import { formatPrecio } from '../utils/currencyUtils'
 
-const Pago = () => {
-  console.log('🚀 Pago.jsx - Componente iniciado')
+const PagoFuncional = () => {
+  console.log('🚀 PagoFuncional.jsx - Componente iniciado')
   
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -35,24 +35,24 @@ const Pago = () => {
   }
 
   useEffect(() => {
-    console.log('Pago.jsx - useEffect iniciado')
+    console.log('PagoFuncional.jsx - useEffect iniciado')
     
     // SIEMPRE establecer datos de prueba inmediatamente
-    console.log('Pago.jsx - Estableciendo datos de prueba')
+    console.log('PagoFuncional.jsx - Estableciendo datos de prueba')
     setReserva(reservaPrueba)
     setProfesor(profesorPrueba)
-    console.log('Pago.jsx - Datos de prueba establecidos:', reservaPrueba, profesorPrueba)
+    console.log('PagoFuncional.jsx - Datos de prueba establecidos:', reservaPrueba, profesorPrueba)
 
     // Intentar cargar datos reales de localStorage
     const cargarDatosReales = () => {
-      console.log('Pago.jsx - Buscando reservaPendiente en localStorage')
+      console.log('PagoFuncional.jsx - Buscando reservaPendiente en localStorage')
       const reservaData = localStorage.getItem('reservaPendiente')
-      console.log('Pago.jsx - Datos raw de localStorage:', reservaData)
+      console.log('PagoFuncional.jsx - Datos raw de localStorage:', reservaData)
       
       if (reservaData) {
         try {
           const reservaReal = JSON.parse(reservaData)
-          console.log('Pago.jsx - Reserva real encontrada:', reservaReal)
+          console.log('PagoFuncional.jsx - Reserva real encontrada:', reservaReal)
           setReserva(reservaReal)
           
           // Crear objeto profesor con los datos disponibles
@@ -62,7 +62,7 @@ const Pago = () => {
             precioHora: reservaReal.precio,
             especialidad: 'Desarrollo Web'
           })
-          console.log('Pago.jsx - Datos reales establecidos')
+          console.log('PagoFuncional.jsx - Datos reales establecidos')
         } catch (error) {
           console.error('Error al parsear datos de reserva:', error)
         }
@@ -75,7 +75,7 @@ const Pago = () => {
     // Listener para detectar cambios en localStorage
     const handleStorageChange = (e) => {
       if (e.key === 'reservaPendiente' && e.newValue) {
-        console.log('Pago.jsx - Detectado cambio en localStorage, recargando datos')
+        console.log('PagoFuncional.jsx - Detectado cambio en localStorage, recargando datos')
         cargarDatosReales()
       }
     }
@@ -95,7 +95,7 @@ const Pago = () => {
     setError('')
 
     try {
-      console.log('Pago.jsx - Iniciando proceso de pago')
+      console.log('PagoFuncional.jsx - Iniciando proceso de pago')
       
       // Simular proceso de pago
       await new Promise(resolve => setTimeout(resolve, 2000))
@@ -114,14 +114,14 @@ const Pago = () => {
       localStorage.setItem('reserva_pendiente', JSON.stringify(reservaData))
       
       setPagoExitoso(true)
-      console.log('Pago.jsx - Pago simulado exitoso')
+      console.log('PagoFuncional.jsx - Pago simulado exitoso')
       
       setTimeout(() => {
         navigate('/pago/success?payment_id=TEST_123&status=approved&external_reference=test_ref')
       }, 3000)
 
     } catch (err) {
-      console.error('Pago.jsx - Error en pago:', err)
+      console.error('PagoFuncional.jsx - Error en pago:', err)
       setError(err.message)
     } finally {
       setProcesando(false)
@@ -129,13 +129,13 @@ const Pago = () => {
   }
 
   // SIEMPRE mostrar algo, nunca página en blanco
-  console.log('🎯 Pago.jsx - Renderizando, reserva:', reserva, 'profesor:', profesor)
+  console.log('🎯 PagoFuncional.jsx - Renderizando, reserva:', reserva, 'profesor:', profesor)
   
   // Usar datos de prueba si no hay datos reales
   const reservaActual = reserva || reservaPrueba
   const profesorActual = profesor || profesorPrueba
   
-  console.log('🎯 Pago.jsx - Usando datos:', reservaActual, profesorActual)
+  console.log('🎯 PagoFuncional.jsx - Usando datos:', reservaActual, profesorActual)
 
   if (pagoExitoso) {
     return (
@@ -346,4 +346,4 @@ const Pago = () => {
   )
 }
 
-export default Pago
+export default PagoFuncional

@@ -93,22 +93,6 @@ const Dashboard = () => {
     alert('Notificaciones de prueba creadas. Revisa la campanita! 🎉')
   }
 
-  // Función para agregar clase de prueba
-  const agregarClasePrueba = () => {
-    const nuevaClase = {
-      id: Date.now(),
-      titulo: 'Clase de Prueba',
-      profesor: 'Prof. Test',
-      fecha: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Mañana
-      duracion: 60,
-      precio: 50000,
-      estado: 'confirmada',
-      modalidad: 'virtual'
-    }
-    
-    setClases(prevClases => [...prevClases, nuevaClase])
-    alert('Clase de prueba agregada! 🎉')
-  }
   const [clases, setClases] = useState([])
   const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -544,14 +528,6 @@ const Dashboard = () => {
                    >
                      {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
                    </button>
-                   <div className="pt-2">
-                     <button 
-                       onClick={agregarClasePrueba}
-                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                     >
-                       🧪 Agregar Clase de Prueba
-                     </button>
-                   </div>
                  </div>
                </div>
              )}
