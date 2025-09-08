@@ -6,12 +6,12 @@ import { sentryVitePlugin } from "@sentry/vite-plugin"
 export default defineConfig({
   plugins: [
     react(),
-    // Solo usar Sentry plugin en build de producción
-    process.env.NODE_ENV === 'production' && sentryVitePlugin({
-      org: "easyclase",
-      project: "javascript-react",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    })
+    // Sentry plugin deshabilitado temporalmente
+    // process.env.NODE_ENV === 'production' && sentryVitePlugin({
+    //   org: "easyclase",
+    //   project: "javascript-react",
+    //   authToken: process.env.SENTRY_AUTH_TOKEN,
+    // })
   ].filter(Boolean),
   server: {
     port: 3001,
@@ -26,15 +26,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['@headlessui/react', 'lucide-react']
-        }
+        manualChunks: undefined
       }
     },
     chunkSizeWarningLimit: 1000,
-    copyPublicDir: true
+    copyPublicDir: true,
+    minify: false
   },
   publicDir: 'public',
   define: {

@@ -21,14 +21,6 @@ import BuscarServicios from './pages/BuscarServicios'
 import CrearServicio from './pages/CrearServicio'
 import OnboardingPage from './pages/OnboardingPage'
 import Pago from './pages/Pago'
-import PagoTest from './pages/PagoTest'
-import PagoUltraSimple from './pages/PagoUltraSimple'
-import PagoMinimal from './pages/PagoMinimal'
-import PagoDirecto from './pages/PagoDirecto'
-import PagoSuccess from './pages/PagoSuccess'
-import PagoFailure from './pages/PagoFailure'
-import PagoPending from './pages/PagoPending'
-import MercadoPagoSimulado from './pages/MercadoPagoSimulado'
 import ComoFunciona from './pages/ComoFunciona'
 import Terminos from './pages/Legal/Terminos'
 import Privacidad from './pages/Legal/Privacidad'
@@ -71,11 +63,7 @@ function App() {
               <Route path="/profesor/:id" element={<PerfilProfesor />} />
               <Route path="/ser-profesor" element={<SerProfesor />} />
               <Route path="/reservar/:id" element={<ReservarClase />} />
-              <Route path="/pago" element={<PagoUltraSimple />} />
-              <Route path="/pago/mercadopago-simulado" element={<MercadoPagoSimulado />} />
-              <Route path="/pago/success" element={<PagoSuccess />} />
-              <Route path="/pago/failure" element={<PagoFailure />} />
-              <Route path="/pago/pending" element={<PagoPending />} />
+              <Route path="/pago" element={<Home />} />
               <Route path="/como-funciona" element={<ComoFunciona />} />
               <Route path="/terminos" element={<Terminos />} />
               <Route path="/privacidad" element={<Privacidad />} />
