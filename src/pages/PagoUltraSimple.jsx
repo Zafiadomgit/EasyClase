@@ -1,12 +1,13 @@
 import React from 'react'
 
 const PagoUltraSimple = () => {
-  console.log('🚀 PagoUltraSimple.jsx - COMPONENTE INICIADO')
+  console.log('🚀 PagoUltraSimple cargado')
   
   return (
-    <div>
-      <h1>PÁGINA DE PAGO FUNCIONANDO</h1>
-      <p>Si ves esto, el componente se está cargando correctamente.</p>
+    <div style={{ padding: '20px', backgroundColor: '#f0f0f0' }}>
+      <h1 style={{ color: 'green' }}>PÁGINA DE PAGO FUNCIONANDO</h1>
+      <p>Componente cargado correctamente</p>
+      <p>Fecha: {new Date().toLocaleString()}</p>
     </div>
   )
 }

@@ -457,4 +457,34 @@ npm run build  # Construye y copia .htaccess automáticamente
 npm run dev    # Para desarrollo y debugging
 ```
 
+## 🎯 **PRÓXIMO PASO ESPECÍFICO - CONTINUAR MAÑANA**
+
+### **PASO 1: SUBIR ARCHIVO CORRECTO**
+1. **Acceder a Dreamhost** → Panel de control o FTP
+2. **Navegar a** → `easyclaseapp.com/assets/`
+3. **Subir archivo** → `dist/assets/pago-nuevo-1757270000.js`
+4. **Reemplazar** → El archivo existente en Dreamhost
+
+### **PASO 2: VERIFICAR CONTENIDO**
+1. **Abrir Developer Tools** → F12
+2. **Ir a pestaña Sources** → Buscar `pago-nuevo-1757270000.js`
+3. **Verificar contenido** → Debe contener `PagoUltraSimple.jsx - COMPONENTE INICIADO`
+4. **Si NO contiene ese texto** → El archivo no se subió correctamente
+
+### **PASO 3: PROBAR PÁGINA**
+1. **Limpiar caché** → Ctrl+Shift+R o ventana incógnita
+2. **Ir a** → `https://easyclaseapp.com/pago`
+3. **Verificar consola** → Debe aparecer `🚀 PagoUltraSimple.jsx - COMPONENTE INICIADO`
+4. **Verificar página** → Debe mostrar "PÁGINA DE PAGO FUNCIONANDO"
+
+### **PASO 4: SI FUNCIONA**
+1. **Crear versión completa** → Basada en PagoUltraSimple que funciona
+2. **Implementar funcionalidad** → Proceso de pago real
+3. **Probar flujo completo** → Desde reserva hasta pago exitoso
+
+### **PASO 5: SI NO FUNCIONA**
+1. **Verificar archivo en Dreamhost** → Contenido y fecha de modificación
+2. **Contactar soporte Dreamhost** → Si hay problemas de subida
+3. **Probar método alternativo** → FTP directo o panel de control
+
 **¡CONTINÚA DESDE AQUÍ! 🚀**
