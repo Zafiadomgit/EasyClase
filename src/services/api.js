@@ -64,7 +64,7 @@ const apiRequest = async (url, options = {}) => {
 export const authService = {
   // Registrar usuario
   register: async (userData) => {
-    const response = await apiRequest('/auth/register', {
+    const response = await apiRequest('/auth/register-test', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -80,7 +80,7 @@ export const authService = {
 
   // Iniciar sesión
   login: async (credentials) => {
-    const response = await apiRequest('/auth/login', {
+    const response = await apiRequest('/auth/login-test', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });

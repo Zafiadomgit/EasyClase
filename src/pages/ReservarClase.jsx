@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 const ReservarClase = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const servicioId = searchParams.get('servicio')
+  
   const [clase, setClase] = useState(null)
+  const [servicio, setServicio] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [fechaSeleccionada, setFechaSeleccionada] = useState('')
   const [horaSeleccionada, setHoraSeleccionada] = useState('')
   const [tipoAgenda, setTipoAgenda] = useState('') // 'individual' o 'grupal'
+  const [cantidadHoras, setCantidadHoras] = useState(1) // Cantidad de horas que quiere comprar
   const [reservando, setReservando] = useState(false)
 
   // Generar opciones de hora solo en punto y :30
@@ -37,15 +42,21 @@ const ReservarClase = () => {
   // Estado del horario seleccionado
   const [estadoHorario, setEstadoHorario] = useState(null) // null, 'disponible', 'individual', 'grupal'
   const [alumnosInscritos, setAlumnosInscritos] = useState(0)
+  const [disponibilidadMultiple, setDisponibilidadMultiple] = useState(null) // Para verificar múltiples horas
+  const [maxHorasDisponibles, setMaxHorasDisponibles] = useState(4)
 
   useEffect(() => {
     cargarInformacionClase()
-  }, [id])
+    if (servicioId) {
+      cargarInformacionServicio()
+    }
+  }, [id, servicioId])
 
   // Verificar estado del horario cuando se selecciona
   useEffect(() => {
     if (fechaSeleccionada && horaSeleccionada) {
       verificarEstadoHorario()
+      verificarDisponibilidadMultiple()
     }
   }, [fechaSeleccionada, horaSeleccionada])
 
@@ -68,6 +79,23 @@ const ReservarClase = () => {
     }
   }
 
+  const cargarInformacionServicio = async () => {
+    try {
+      const response = await fetch(`/api/servicios/detalle.php?id=${servicioId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setServicio(data.data.servicio)
+        // Si el servicio permite ambos tipos, no establecer uno por defecto
+        if (data.data.servicio.tipo && data.data.servicio.tipo !== 'ambos') {
+          setTipoAgenda(data.data.servicio.tipo)
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar servicio:', error)
+    }
+  }
+
   const verificarEstadoHorario = async () => {
     try {
       const response = await fetch(`/api/clases/verificar-horario.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&hora=${horaSeleccionada}`)
@@ -84,6 +112,30 @@ const ReservarClase = () => {
       console.error('Error al verificar horario:', error)
       setEstadoHorario('disponible')
       setAlumnosInscritos(0)
+    }
+  }
+
+  const verificarDisponibilidadMultiple = async () => {
+    try {
+      const response = await fetch(`/api/clases/verificar-disponibilidad-multiple.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&horaInicio=${horaSeleccionada}&cantidadHoras=4`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setDisponibilidadMultiple(data.data)
+        setMaxHorasDisponibles(data.data.maxHorasDisponibles)
+        
+        // Si la cantidad de horas seleccionada es mayor a la disponible, ajustarla
+        if (cantidadHoras > data.data.maxHorasDisponibles) {
+          setCantidadHoras(data.data.maxHorasDisponibles)
+        }
+      } else {
+        setDisponibilidadMultiple(null)
+        setMaxHorasDisponibles(4)
+      }
+    } catch (error) {
+      console.error('Error verificando disponibilidad múltiple:', error)
+      setDisponibilidadMultiple(null)
+      setMaxHorasDisponibles(4)
     }
   }
 
@@ -128,19 +180,62 @@ const ReservarClase = () => {
       
       if (data.success) {
         // Redirigir al sistema de pagos en lugar de reservar directamente
+        let precioPorHora = 0
+        if (servicio) {
+          // Usar precios del servicio según el tipo seleccionado
+          if (tipoAgenda === 'individual') {
+            precioPorHora = servicio.precioIndividual || servicio.precio || 0
+          } else if (tipoAgenda === 'grupal') {
+            precioPorHora = servicio.precioGrupal || servicio.precio || 0
+          }
+        } else {
+          // Fallback para clases sin servicio específico
+          precioPorHora = tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
+        }
+        
+        const duracionHoras = cantidadHoras // Usar la cantidad de horas seleccionada por el estudiante
+        const precioTotal = precioPorHora * duracionHoras
+        
         const reservaData = {
           profesorId: id,
+          servicioId: servicioId,
           fecha: fechaSeleccionada,
           hora: horaSeleccionada,
           tipoAgenda: tipoAgenda,
-          precio: tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 0) * 0.7),
-          profesorNombre: clase?.profesor?.nombre
+          duracionHoras: duracionHoras,
+          precioPorHora: precioPorHora,
+          precio: precioTotal,
+          profesorNombre: clase?.profesor?.nombre,
+          servicioTitulo: servicio?.titulo || 'Clase General',
+          servicioCategoria: servicio?.categoria || 'General'
         }
         
         // Guardar datos de reserva en localStorage para el pago
         console.log('Guardando reserva en localStorage:', reservaData)
         localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
         console.log('Reserva guardada, verificando:', localStorage.getItem('reservaPendiente'))
+        
+        // También guardar en localStorage del estudiante para "Mis Clases"
+        const claseEstudiante = {
+          id: `clase_estudiante_${Date.now()}`,
+          titulo: servicio?.titulo || 'Clase General',
+          profesor: {
+            nombre: clase?.profesor?.nombre,
+            email: clase?.profesor?.email || 'profesor@easyclase.com'
+          },
+          fecha: fechaSeleccionada,
+          hora: horaSeleccionada,
+          duracion: duracionHoras,
+          tipo: tipoAgenda,
+          precio: precioTotal,
+          estado: 'pendiente_aprobacion',
+          fechaReserva: new Date().toISOString(),
+          linkLlamada: null // Se asignará cuando el profesor acepte
+        }
+        
+        const clasesExistentes = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
+        clasesExistentes.push(claseEstudiante)
+        localStorage.setItem('misClasesEstudiante', JSON.stringify(clasesExistentes))
         
         // Redirigir a la página de pago
         navigate('/pago')
@@ -335,6 +430,77 @@ const ReservarClase = () => {
               </div>
             )}
 
+            {/* Selector de cantidad de horas */}
+            {tipoAgenda && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cantidad de Horas
+                </label>
+                
+                {/* Mostrar información de disponibilidad */}
+                {disponibilidadMultiple && (
+                  <div className="mb-4 p-3 rounded-lg border bg-blue-50 border-blue-200">
+                    <div className="text-sm text-blue-800">
+                      <strong>Disponibilidad:</strong> Puedes reservar hasta {maxHorasDisponibles} hora{maxHorasDisponibles > 1 ? 's' : ''} consecutiva{maxHorasDisponibles > 1 ? 's' : ''}
+                    </div>
+                    {disponibilidadMultiple.horariosDisponibles && (
+                      <div className="mt-2 text-xs text-blue-700">
+                        {disponibilidadMultiple.horariosDisponibles.map((horario, index) => (
+                          <span key={index} className={`mr-2 ${horario.disponible ? 'text-green-600' : 'text-red-600'}`}>
+                            {horario.hora} {horario.disponible ? '✅' : '❌'}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[1, 2, 3, 4].map(horas => {
+                    const disponible = horas <= maxHorasDisponibles
+                    return (
+                      <button
+                        key={horas}
+                        type="button"
+                        onClick={() => disponible && setCantidadHoras(horas)}
+                        disabled={!disponible}
+                        className={`p-3 border rounded-lg text-center transition-colors ${
+                          !disponible
+                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : cantidadHoras === horas
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="font-medium">
+                          {horas} hora{horas > 1 ? 's' : ''}
+                          {!disponible && ' ❌'}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {disponible ? (
+                            servicio ? (
+                              tipoAgenda === 'individual' 
+                                ? `$${((servicio.precioIndividual || servicio.precio || 0) * horas).toLocaleString()}`
+                                : `$${((servicio.precioGrupal || servicio.precio || 0) * horas).toLocaleString()}`
+                            ) : (
+                              tipoAgenda === 'individual'
+                                ? `$${((clase?.profesor?.precioHora || 0) * horas).toLocaleString()}`
+                                : `$${(Math.round((clase?.profesor?.precioHora || 0) * 0.7) * horas).toLocaleString()}`
+                            )
+                          ) : (
+                            'No disponible'
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  💡 Solo se muestran las horas consecutivas disponibles
+                </p>
+              </div>
+            )}
+
             <div className="flex space-x-4 pt-4">
               <button
                 onClick={() => navigate('/buscar')}
@@ -344,12 +510,26 @@ const ReservarClase = () => {
               </button>
               <button
                 onClick={reservar}
-                disabled={reservando || !fechaSeleccionada || !horaSeleccionada || !tipoAgenda || estadoHorario === 'individual'}
+                disabled={reservando || !fechaSeleccionada || !horaSeleccionada || !tipoAgenda || !cantidadHoras || estadoHorario === 'individual' || cantidadHoras > maxHorasDisponibles}
                 className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {reservando ? 'Reservando...' : (
-                  tipoAgenda ? 
-                    `Reservar Clase ${tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} - $${tipoAgenda === 'individual' ? clase?.profesor?.precioHora?.toLocaleString() || '0' : Math.round((clase?.profesor?.precioHora || 0) * 0.7).toLocaleString()}` :
+                  tipoAgenda && cantidadHoras ? 
+                    (() => {
+                      let precioTotal = 0
+                      if (servicio) {
+                        const precioPorHora = tipoAgenda === 'individual' 
+                          ? (servicio.precioIndividual || servicio.precio || 0)
+                          : (servicio.precioGrupal || servicio.precio || 0)
+                        precioTotal = precioPorHora * cantidadHoras
+                      } else {
+                        const precioPorHora = tipoAgenda === 'individual' 
+                          ? (clase?.profesor?.precioHora || 0)
+                          : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
+                        precioTotal = precioPorHora * cantidadHoras
+                      }
+                      return `Reservar ${cantidadHoras} hora${cantidadHoras > 1 ? 's' : ''} ${tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} - $${precioTotal.toLocaleString()}`
+                    })() :
                     'Reservar Clase'
                 )}
               </button>

@@ -26,18 +26,6 @@ const LearningModeStep = ({ formData, updateFormData, onNext, onPrev }) => {
         'Aprendizaje colaborativo',
         'Máximo 5 estudiantes por grupo'
       ]
-    },
-    {
-      id: 'pregrabada',
-      title: 'Clases Pregrabadas',
-      description: 'Videos disponibles 24/7 para aprender a tu ritmo',
-      icon: Video,
-      features: [
-        'Acceso ilimitado 24/7',
-        'Aprende a tu propio ritmo',
-        'Puedes pausar y repetir',
-        'Contenido de alta calidad'
-      ]
     }
   ]
 
@@ -62,7 +50,7 @@ const LearningModeStep = ({ formData, updateFormData, onNext, onPrev }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
         {learningModes.map((mode) => {
           const Icon = mode.icon
           const isSelected = formData.modalidad === mode.id
@@ -120,7 +108,7 @@ const LearningModeStep = ({ formData, updateFormData, onNext, onPrev }) => {
           Puedes cambiar tu preferencia en cualquier momento desde tu perfil. 
           También puedes combinar diferentes modos de aprendizaje según tus necesidades.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             <span>Clases individuales: Mayor personalización</span>
@@ -128,10 +116,6 @@ const LearningModeStep = ({ formData, updateFormData, onNext, onPrev }) => {
           <div className="flex items-center">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
             <span>Clases grupales: Mejor precio</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
-            <span>Pregrabadas: Máxima flexibilidad</span>
           </div>
         </div>
       </div>

@@ -23,6 +23,7 @@ const AdminRoute = ({ children }) => {
 
   // Verificar si el usuario es admin
   const isAdmin = user.tipoUsuario === 'admin' || 
+                  user.tipoUsuario === 'superadmin' ||
                   ['admin', 'superadmin'].includes(user.rol)
 
   if (!isAdmin) {
@@ -76,7 +77,7 @@ const AdminRoute = ({ children }) => {
       <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-1 text-sm font-medium z-50">
         <div className="flex items-center justify-center space-x-2">
           <Shield className="w-4 h-4" />
-          <span>PANEL DE ADMINISTRACIÓN - {user.rol?.toUpperCase()}</span>
+          <span>PANEL DE ADMINISTRACIÓN - {(user.rol || user.tipoUsuario || 'admin').toUpperCase()}</span>
         </div>
       </div>
       <div className="pt-8">

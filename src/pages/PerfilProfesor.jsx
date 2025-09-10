@@ -5,6 +5,7 @@ const PerfilProfesor = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [profesor, setProfesor] = useState(null)
+  const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -20,6 +21,8 @@ const PerfilProfesor = () => {
       
       if (data.success) {
         setProfesor(data.data.profesor)
+        // Cargar servicios del profesor
+        await cargarServiciosProfesor()
       } else {
         setError('Error al cargar el perfil del profesor')
       }
@@ -31,8 +34,21 @@ const PerfilProfesor = () => {
     }
   }
 
-  const reservarClase = () => {
-    navigate(`/reservar/${id}`)
+  const cargarServiciosProfesor = async () => {
+    try {
+      const response = await fetch(`/api/servicios/profesor.php?profesorId=${id}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setServicios(data.data.servicios || [])
+      }
+    } catch (error) {
+      console.error('Error al cargar servicios:', error)
+    }
+  }
+
+  const reservarServicio = (servicioId) => {
+    navigate(`/reservar/${id}?servicio=${servicioId}`)
   }
 
   if (loading) {
@@ -104,16 +120,90 @@ const PerfilProfesor = () => {
                 <div className="text-2xl font-bold text-green-600">
                   ${profesor.precioHora.toLocaleString()}/hora
                 </div>
-              <button
-                  onClick={reservarClase}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
-              >
-                Reservar Clase
-              </button>
               </div>
           </div>
         </div>
       </div>
+
+        {/* Servicios del Profesor */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">📚 Servicios Disponibles</h2>
+          {servicios.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {servicios.map((servicio) => (
+                <div key={servicio.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 text-lg">{servicio.titulo}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{servicio.categoria}</p>
+                      <p className="text-gray-700 text-sm mb-3 line-clamp-2">{servicio.descripcion}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-4 text-sm">
+                      <span className="flex items-center text-gray-600">
+                        <span className="mr-1">⏱️</span>
+                        Por hora
+                      </span>
+                      <span className="flex items-center text-gray-600">
+                        <span className="mr-1">👥</span>
+                        {servicio.tipo === 'individual' ? 'Individual' : 
+                         servicio.tipo === 'grupal' ? `Grupal (max ${servicio.maxEstudiantes})` : 
+                         'Individual y Grupal'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Precios según el tipo */}
+                  {servicio.tipo === 'individual' && (
+                    <div className="mb-3">
+                      <div className="text-lg font-bold text-green-600">
+                        ${servicio.precioIndividual?.toLocaleString() || servicio.precio?.toLocaleString()} por hora
+                      </div>
+                    </div>
+                  )}
+
+                  {servicio.tipo === 'grupal' && (
+                    <div className="mb-3">
+                      <div className="text-lg font-bold text-green-600">
+                        ${servicio.precioGrupal?.toLocaleString() || servicio.precio?.toLocaleString()} por hora
+                      </div>
+                    </div>
+                  )}
+
+                  {servicio.tipo === 'ambos' && (
+                    <div className="mb-3 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Individual:</span>
+                        <span className="font-bold text-green-600">
+                          ${servicio.precioIndividual?.toLocaleString() || 'No definido'} por hora
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Grupal:</span>
+                        <span className="font-bold text-green-600">
+                          ${servicio.precioGrupal?.toLocaleString() || 'No definido'} por hora
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={() => reservarServicio(servicio.id)}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                  >
+                    Reservar este Servicio
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Este profesor aún no ha creado servicios disponibles.</p>
+            </div>
+          )}
+        </div>
 
         {/* Disponibilidad */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">

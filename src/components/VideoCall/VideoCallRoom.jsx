@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { 
   Video, 
   VideoOff, 
@@ -18,13 +19,20 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import useVideoCall from '../../hooks/useVideoCall'
 import AnnotationCanvas from './AnnotationCanvas'
+import VideoCallAuthService from '../../services/videoCallAuth'
 
-const VideoCallRoom = ({ claseId, onLeave }) => {
+const VideoCallRoom = () => {
+  const { id: claseId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { clase, duracion, fechaInicio, fechaFin } = location.state || {}
   const { user } = useAuth()
   const [showChat, setShowChat] = useState(false)
   const [chatMessage, setChatMessage] = useState('')
   const [showAnnotations, setShowAnnotations] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [accessValidated, setAccessValidated] = useState(false)
+  const [accessError, setAccessError] = useState(null)
 
   const {
     localStream,
@@ -46,16 +54,44 @@ const VideoCallRoom = ({ claseId, onLeave }) => {
     requestScreenShare,
     stopScreenShare,
     sendChatMessage
-  } = useVideoCall(claseId, user?.id, user?.tipoUsuario)
+  } = useVideoCall(claseId, user?.id, user?.tipoUsuario, duracion)
 
+  // Validar acceso al montar el componente
   useEffect(() => {
-    // Auto-iniciar la llamada cuando se monta el componente
-    startCall()
-    
-    return () => {
-      endCall()
+    if (!user || !claseId) {
+      setAccessError('Usuario no autenticado o ID de clase inválido')
+      return
     }
-  }, [])
+    
+    // Verificar si el usuario puede acceder a esta videollamada
+    const accessCheck = VideoCallAuthService.canAccessVideoCall(claseId, user.id, user.tipoUsuario)
+    
+    if (!accessCheck.canAccess) {
+      setAccessError('No tienes permisos para acceder a esta videollamada')
+      return
+    }
+    
+    // Verificar si es el momento correcto para unirse
+    const timeCheck = VideoCallAuthService.canJoinNow(accessCheck.clase)
+    
+    if (!timeCheck.canJoin) {
+      setAccessError(timeCheck.reason)
+      return
+    }
+    
+    setAccessValidated(true)
+  }, [user, claseId])
+  
+  useEffect(() => {
+    if (accessValidated) {
+      // Auto-iniciar la llamada cuando se valida el acceso
+      startCall()
+      
+      return () => {
+        endCall()
+      }
+    }
+  }, [accessValidated])
 
   const handleSendMessage = () => {
     if (chatMessage.trim()) {
@@ -83,6 +119,40 @@ const VideoCallRoom = ({ claseId, onLeave }) => {
 
   const canUseAnnotations = user?.premium || user?.tipoUsuario === 'admin'
 
+  // Mostrar error de acceso si no se puede acceder
+  if (accessError) {
+    return (
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 text-center">
+          <div className="text-red-500 mb-4">
+            <PhoneOff className="w-16 h-16 mx-auto" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Acceso Denegado</h3>
+          <p className="text-gray-600 mb-6">{accessError}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+          >
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar loading mientras se valida el acceso
+  if (!accessValidated) {
+    return (
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Validando Acceso</h3>
+          <p className="text-gray-600">Verificando permisos para la videollamada...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
@@ -93,7 +163,7 @@ const VideoCallRoom = ({ claseId, onLeave }) => {
           <h3 className="text-xl font-bold text-gray-900 mb-2">Error en la Videollamada</h3>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={onLeave}
+            onClick={() => navigate('/dashboard')}
             className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
           >
             Volver al Dashboard
@@ -144,7 +214,7 @@ const VideoCallRoom = ({ claseId, onLeave }) => {
           </button>
           
           <button
-            onClick={onLeave}
+            onClick={() => navigate('/dashboard')}
             className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-gray-700"
             title="Salir"
           >
@@ -346,7 +416,7 @@ const VideoCallRoom = ({ claseId, onLeave }) => {
           <button
             onClick={() => {
               endCall()
-              onLeave()
+              navigate('/dashboard')
             }}
             className="p-3 rounded-full bg-red-600 text-white hover:bg-red-700"
             title="Terminar llamada"

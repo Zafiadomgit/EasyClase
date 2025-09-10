@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Star, Shield, Clock, DollarSign, Users, BookOpen, Check, ArrowRight } from 'lucide-react'
 
 const SerProfesor = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -50,8 +51,8 @@ const SerProfesor = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Aquí implementarías el registro del profesor
-    
+    // Redirigir al onboarding de profesor
+    navigate('/profesor/onboarding')
   }
 
   const handleChange = (e) => {

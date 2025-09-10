@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown, Code, Calculator, Globe, FileText, Palette, TrendingUp, Clock, DollarSign } from 'lucide-react'
+import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown, Code, Calculator, Globe, FileText, Palette, TrendingUp, Clock, DollarSign, Shield } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import ThemeToggle from '../UI/ThemeToggle'
@@ -16,12 +16,33 @@ const Header = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const categoriesRef = useRef(null)
   const notificationsRef = useRef(null)
+  const userMenuRef = useRef(null)
   const navigate = useNavigate()
   const { isAuthenticated, user, logout, loading } = useAuth()
   const { addPersistentNotification } = useNotifications()
   
   // Evitar renderizar elementos de usuario mientras se verifica autenticación
   const shouldShowUserElements = !loading && isAuthenticated && user;
+  
+  // Cerrar menús cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false)
+      }
+      if (categoriesRef.current && !categoriesRef.current.contains(event.target)) {
+        setIsCategoriesOpen(false)
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   
   // Función para mostrar notificaciones del sistema
   const showSystemNotification = (type, title, message) => {
@@ -281,7 +302,7 @@ const Header = () => {
 
                 
                 {/* Menú de Usuario */}
-                <div className="relative">
+                <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={toggleUserMenu}
                     className="flex items-center space-x-2 text-secondary-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -320,6 +341,23 @@ const Header = () => {
                     >
                       Mi Perfil
                     </Link>
+                    
+                    {/* Super Admin Panel - Solo para admin@easyclase.com */}
+                    {user?.email === 'admin@easyclase.com' && (
+                      <Link
+                        to="/admin/super"
+                        className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Super Admin Panel
+                          <span className="ml-auto px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                            SUPER
+                          </span>
+                        </div>
+                      </Link>
+                    )}
                     {user?.tipoUsuario === 'profesor' && (
                       <Link
                         to="/mis-clases"
@@ -327,6 +365,16 @@ const Header = () => {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Mis Clases
+                      </Link>
+                    )}
+                    
+                    {user?.tipoUsuario === 'estudiante' && (
+                      <Link
+                        to="/mis-servicios-comprados"
+                        className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Mis Servicios Comprados
                       </Link>
                     )}
                     

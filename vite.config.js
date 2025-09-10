@@ -15,10 +15,10 @@ export default defineConfig({
     // })
   ].filter(Boolean),
   server: {
-    port: 3001,
+    port: 3000,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3000',
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
         changeOrigin: true,
         secure: false
       }
@@ -34,8 +34,12 @@ export default defineConfig({
     copyPublicDir: true,
     minify: false
   },
-  publicDir: 'public',
+  optimizeDeps: {
+    include: ['speakeasy', 'qrcode']
+  },
   define: {
+    global: 'globalThis',
     'process.env': process.env
-  }
+  },
+  publicDir: 'public'
 })

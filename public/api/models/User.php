@@ -14,6 +14,11 @@ class User {
         $this->conn = $database->getConnection();
     }
 
+    // Método público para acceder a la conexión
+    public function getConnection() {
+        return $this->conn;
+    }
+
     // Verificar credenciales de login
     public function authenticate($email, $password) {
         try {
@@ -130,6 +135,89 @@ class User {
         } catch(PDOException $e) {
             error_log("Error actualizando usuario: " . $e->getMessage());
             return false;
+        }
+    }
+
+    // Obtener todos los usuarios (para admin)
+    public function getAllUsers() {
+        try {
+            $query = "SELECT id, nombre, email, tipo_usuario, calificacion_promedio, 
+                             fecha_registro, estado, telefono, direccion, bio, avatar_url
+                      FROM " . $this->table_name . " 
+                      ORDER BY fecha_registro DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            return $stmt->fetchAll();
+        } catch(PDOException $e) {
+            error_log("Error obteniendo usuarios: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Eliminar usuario
+    public function delete($id) {
+        try {
+            // Soft delete - cambiar estado a 'eliminado'
+            $query = "UPDATE " . $this->table_name . " 
+                      SET estado = 'eliminado' 
+                      WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $id);
+            
+            return $stmt->execute();
+        } catch(PDOException $e) {
+            error_log("Error eliminando usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Obtener total de usuarios
+    public function getTotalUsers() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE estado = 'activo'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            $result = $stmt->fetch();
+            return $result['total'];
+        } catch(PDOException $e) {
+            error_log("Error obteniendo total usuarios: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Obtener profesores activos
+    public function getActiveProfesors() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " 
+                      WHERE tipo_usuario = 'profesor' AND estado = 'activo'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            $result = $stmt->fetch();
+            return $result['total'];
+        } catch(PDOException $e) {
+            error_log("Error obteniendo profesores activos: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Obtener estudiantes activos
+    public function getActiveStudents() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " 
+                      WHERE tipo_usuario = 'estudiante' AND estado = 'activo'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            $result = $stmt->fetch();
+            return $result['total'];
+        } catch(PDOException $e) {
+            error_log("Error obteniendo estudiantes activos: " . $e->getMessage());
+            return 0;
         }
     }
 }

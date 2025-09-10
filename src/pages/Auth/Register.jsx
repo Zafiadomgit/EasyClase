@@ -1,139 +1,147 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { BookOpen, Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
+import { validateEmail } from '../../utils/emailValidation'
 import { useAuth } from '../../contexts/AuthContext'
-import TermsModal from '../../components/Modal/TermsModal'
-import PrivacyModal from '../../components/Modal/PrivacyModal'
-
-// Lista de códigos de países principales para Latinoamérica y otros
-const CODIGOS_PAISES = [
-  { codigo: '+57', pais: 'Colombia', bandera: '🇨🇴' },
-  { codigo: '+58', pais: 'Venezuela', bandera: '🇻🇪' },
-  { codigo: '+54', pais: 'Argentina', bandera: '🇦🇷' },
-  { codigo: '+52', pais: 'México', bandera: '🇲🇽' },
-  { codigo: '+51', pais: 'Perú', bandera: '🇵🇪' },
-  { codigo: '+56', pais: 'Chile', bandera: '🇨🇱' },
-  { codigo: '+593', pais: 'Ecuador', bandera: '🇪🇨' },
-  { codigo: '+591', pais: 'Bolivia', bandera: '🇧🇴' },
-  { codigo: '+595', pais: 'Paraguay', bandera: '🇵🇾' },
-  { codigo: '+598', pais: 'Uruguay', bandera: '🇺🇾' },
-  { codigo: '+55', pais: 'Brasil', bandera: '🇧🇷' },
-  { codigo: '+507', pais: 'Panamá', bandera: '🇵🇦' },
-  { codigo: '+506', pais: 'Costa Rica', bandera: '🇨🇷' },
-  { codigo: '+503', pais: 'El Salvador', bandera: '🇸🇻' },
-  { codigo: '+502', pais: 'Guatemala', bandera: '🇬🇹' },
-  { codigo: '+504', pais: 'Honduras', bandera: '🇭🇳' },
-  { codigo: '+505', pais: 'Nicaragua', bandera: '🇳🇮' },
-  { codigo: '+1', pais: 'Estados Unidos', bandera: '🇺🇸' },
-  { codigo: '+1', pais: 'Canadá', bandera: '🇨🇦' },
-  { codigo: '+34', pais: 'España', bandera: '🇪🇸' },
-  { codigo: '+33', pais: 'Francia', bandera: '🇫🇷' },
-  { codigo: '+49', pais: 'Alemania', bandera: '🇩🇪' },
-  { codigo: '+44', pais: 'Reino Unido', bandera: '🇬🇧' },
-  { codigo: '+39', pais: 'Italia', bandera: '🇮🇹' }
-]
 
 const Register = () => {
+  const navigate = useNavigate()
+  const { register } = useAuth()
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
-    codigoPais: '+57', // Colombia por defecto
     telefono: '',
     password: '',
     confirmPassword: '',
-    tipoUsuario: 'estudiante', // estudiante o profesor
-    aceptaTerminos: false,
-    aceptaPrivacidad: false
+    tipoUsuario: 'estudiante'
   })
+  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showTermsModal, setShowTermsModal] = useState(false)
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { register, isAuthenticated } = useAuth()
-
-  // Redirigir si ya está autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/dashboard'
-      navigate(from, { replace: true })
-    }
-  }, [isAuthenticated, navigate, location])
+  const [success, setSuccess] = useState('')
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     })
+    // Limpiar errores cuando el usuario empiece a escribir
+    if (error) setError('')
   }
 
-  const handleModalAccept = (type) => {
-    if (type === 'terms') {
-      setFormData({
-        ...formData,
-        aceptaTerminos: true
-      })
-    } else if (type === 'privacy') {
-      setFormData({
-        ...formData,
-        aceptaPrivacidad: true
-      })
+  const validateForm = () => {
+    // Validar nombre
+    if (!formData.nombre.trim()) {
+      setError('El nombre es requerido')
+      return false
     }
-  }
-
-  const openTermsModal = (e) => {
-    e.preventDefault()
-    setShowTermsModal(true)
-  }
-
-  const openPrivacyModal = (e) => {
-    e.preventDefault()
-    setShowPrivacyModal(true)
+    
+    if (formData.nombre.trim().length < 2) {
+      setError('El nombre debe tener al menos 2 caracteres')
+      return false
+    }
+    
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.nombre.trim())) {
+      setError('El nombre solo puede contener letras y espacios')
+      return false
+    }
+    
+    // Validar email
+    const emailValidation = validateEmail(formData.email)
+    if (!emailValidation.isValid) {
+      setError(emailValidation.message)
+      return false
+    }
+    
+    // Validar teléfono
+    if (!formData.telefono.trim()) {
+      setError('El teléfono es requerido')
+      return false
+    }
+    
+    const phoneRegex = /^[0-9+\-\s()]{10,15}$/
+    if (!phoneRegex.test(formData.telefono.trim())) {
+      setError('El teléfono debe tener entre 10 y 15 dígitos')
+      return false
+    }
+    
+    // Validar contraseña
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres')
+      return false
+    }
+    
+    if (!/(?=.*[a-z])/.test(formData.password)) {
+      setError('La contraseña debe contener al menos una letra minúscula')
+      return false
+    }
+    
+    if (!/(?=.*[A-Z])/.test(formData.password)) {
+      setError('La contraseña debe contener al menos una letra mayúscula')
+      return false
+    }
+    
+    if (!/(?=.*\d)/.test(formData.password)) {
+      setError('La contraseña debe contener al menos un número')
+      return false
+    }
+    
+    if (!/(?=.*[@$!%*?&])/.test(formData.password)) {
+      setError('La contraseña debe contener al menos un carácter especial (@$!%*?&)')
+      return false
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      return false
+    }
+    
+    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    
+    if (!validateForm()) {
+      return
+    }
+    
     setIsLoading(true)
-    
-    // Validación básica
-    if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden')
-      setIsLoading(false)
-      return
-    }
-    
-    if (!formData.aceptaTerminos) {
-      setError('Debes aceptar los términos y condiciones')
-      setIsLoading(false)
-      return
-    }
-    
-    if (!formData.aceptaPrivacidad) {
-      setError('Debes aceptar la política de privacidad')
-      setIsLoading(false)
-      return
-    }
+    setError('')
+    setSuccess('')
     
     try {
-      // Preparar datos para el registro (sin confirmPassword y flags de aceptación)
-      const { confirmPassword, aceptaTerminos, aceptaPrivacidad, ...registerData } = formData
+      // Usar el AuthContext para registrar
+      await register({
+        nombre: formData.nombre,
+        email: formData.email,
+        telefono: formData.telefono,
+        password: formData.password,
+        tipoUsuario: formData.tipoUsuario
+      })
       
-      await register(registerData)
+      setSuccess('¡Cuenta creada exitosamente! Redirigiendo al onboarding...')
       
-      // Redirigir según el tipo de usuario
-      if (formData.tipoUsuario === 'estudiante') {
-        navigate('/onboarding', { replace: true })
-      } else {
-        // Profesores van directo al dashboard
-        navigate('/dashboard', { replace: true })
-      }
+      // Limpiar formulario
+      setFormData({
+        nombre: '',
+        email: '',
+        telefono: '',
+        password: '',
+        confirmPassword: '',
+        tipoUsuario: 'estudiante'
+      })
+      
+      // Redirigir al onboarding después de 2 segundos
+      setTimeout(() => {
+        navigate('/onboarding')
+      }, 2000)
+      
     } catch (error) {
+      console.error('Error:', error)
       setError(error.message || 'Error al crear la cuenta')
     } finally {
       setIsLoading(false)
@@ -141,7 +149,7 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -149,39 +157,48 @@ const Register = () => {
             <img 
               src="/Logo_reducido-removebg-preview.png" 
               alt="EasyClase" 
-              className="h-24 w-auto"
+              className="h-20 w-auto"
             />
           </Link>
-          <h2 className="text-3xl font-bold text-secondary-900 font-display">
+          <h2 className="text-3xl font-bold text-gray-900">
             Crear Cuenta
           </h2>
-          <p className="mt-2 text-secondary-600">
+          <p className="mt-2 text-gray-600">
             ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Inicia sesión aquí
             </Link>
           </p>
         </div>
 
         {/* Formulario */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Mensajes de error y éxito */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+              <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0" />
               <span className="text-red-700 text-sm">{error}</span>
             </div>
           )}
+          
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
+              <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
+              <span className="text-green-700 text-sm">{success}</span>
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Tipo de usuario */}
             <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 ¿Qué quieres hacer en EasyClase?
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className={`cursor-pointer p-3 border-2 rounded-lg text-center transition-colors ${
+                <label className={`cursor-pointer p-4 border-2 rounded-lg text-center transition-colors ${
                   formData.tipoUsuario === 'estudiante' 
-                    ? 'border-primary-600 bg-primary-50 text-primary-700' 
-                    : 'border-secondary-300 hover:border-secondary-400'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}>
                   <input
                     type="radio"
@@ -191,13 +208,14 @@ const Register = () => {
                     onChange={handleChange}
                     className="sr-only"
                   />
-                  <div className="text-sm font-medium">Tomar Clases</div>
-                  <div className="text-xs text-secondary-600">Estudiante</div>
+                  <div className="text-sm font-medium">Estudiante</div>
+                  <div className="text-xs text-gray-500">Aprender habilidades</div>
                 </label>
-                <label className={`cursor-pointer p-3 border-2 rounded-lg text-center transition-colors ${
+                
+                <label className={`cursor-pointer p-4 border-2 rounded-lg text-center transition-colors ${
                   formData.tipoUsuario === 'profesor' 
-                    ? 'border-primary-600 bg-primary-50 text-primary-700' 
-                    : 'border-secondary-300 hover:border-secondary-400'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}>
                   <input
                     type="radio"
@@ -207,27 +225,25 @@ const Register = () => {
                     onChange={handleChange}
                     className="sr-only"
                   />
-                  <div className="text-sm font-medium">Enseñar</div>
-                  <div className="text-xs text-secondary-600">Profesor</div>
+                  <div className="text-sm font-medium">Profesor</div>
+                  <div className="text-xs text-gray-500">Enseñar habilidades</div>
                 </label>
               </div>
             </div>
 
             {/* Nombre */}
             <div>
-              <label htmlFor="nombre" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
                 Nombre Completo
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-secondary-400" />
-                </div>
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   id="nombre"
                   name="nombre"
                   type="text"
                   required
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Tu nombre completo"
                   value={formData.nombre}
                   onChange={handleChange}
@@ -237,19 +253,17 @@ const Register = () => {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Correo Electrónico
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-secondary-400" />
-                </div>
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   id="email"
                   name="email"
                   type="email"
                   required
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -259,210 +273,100 @@ const Register = () => {
 
             {/* Teléfono */}
             <div>
-              <label htmlFor="telefono" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
                 Teléfono
               </label>
-              <div className="flex space-x-2">
-                {/* Selector de código de país */}
-                <div className="relative">
-                  <select
-                    name="codigoPais"
-                    value={formData.codigoPais}
-                    onChange={handleChange}
-                    className="input-field pr-8 w-32 text-sm font-medium"
-                    required
-                  >
-                    {CODIGOS_PAISES.map((pais) => (
-                      <option key={`${pais.codigo}-${pais.pais}`} value={pais.codigo}>
-                        {pais.bandera} {pais.codigo}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Campo de teléfono */}
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-secondary-400" />
-                  </div>
-                  <input
-                    id="telefono"
-                    name="telefono"
-                    type="tel"
-                    required
-                    className="input-field pl-10"
-                    placeholder="300 123 4567"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                  />
-                </div>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  id="telefono"
+                  name="telefono"
+                  type="tel"
+                  required
+                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="300 123 4567"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                />
               </div>
-              <p className="text-xs text-secondary-500 mt-1">
-                Selecciona tu país y escribe tu número sin el código
-              </p>
             </div>
 
-            {/* Password */}
+            {/* Contraseña */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-secondary-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="input-field pl-10 pr-10"
-                  placeholder="Mínimo 8 caracteres"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo"
                   value={formData.password}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-secondary-400 hover:text-secondary-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-secondary-400 hover:text-secondary-600" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Confirmar Password */}
+            {/* Confirmar Contraseña */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                 Confirmar Contraseña
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-secondary-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
-                  className="input-field pl-10 pr-10"
-                  placeholder="Confirma tu contraseña"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Repite tu contraseña"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-secondary-400 hover:text-secondary-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-secondary-400 hover:text-secondary-600" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Términos y condiciones */}
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="aceptaTerminos"
-                    name="aceptaTerminos"
-                    type="checkbox"
-                    required
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
-                    checked={formData.aceptaTerminos}
-                    onChange={handleChange}
-                    disabled
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label className="text-secondary-700">
-                    Acepto los{' '}
-                    <button
-                      type="button"
-                      onClick={openTermsModal}
-                      className="text-primary-600 hover:text-primary-700 font-medium underline"
-                    >
-                      términos y condiciones
-                    </button>
-                    {formData.aceptaTerminos && (
-                      <span className="ml-2 text-green-600 font-medium">✓</span>
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="aceptaPrivacidad"
-                    name="aceptaPrivacidad"
-                    type="checkbox"
-                    required
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
-                    checked={formData.aceptaPrivacidad}
-                    onChange={handleChange}
-                    disabled
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label className="text-secondary-700">
-                    Acepto la{' '}
-                    <button
-                      type="button"
-                      onClick={openPrivacyModal}
-                      className="text-primary-600 hover:text-primary-700 font-medium underline"
-                    >
-                      política de privacidad
-                    </button>
-                    {formData.aceptaPrivacidad && (
-                      <span className="ml-2 text-green-600 font-medium">✓</span>
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              {(!formData.aceptaTerminos || !formData.aceptaPrivacidad) && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-yellow-800 text-sm">
-                    <AlertCircle className="w-4 h-4 inline mr-1" />
-                    Debes leer y aceptar ambos documentos para continuar
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Botón submit */}
+            {/* Botón de envío */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary py-3 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
           </form>
         </div>
 
-        {/* Modales */}
-        <TermsModal
-          isOpen={showTermsModal}
-          onClose={() => setShowTermsModal(false)}
-          onAccept={handleModalAccept}
-        />
-        
-        <PrivacyModal
-          isOpen={showPrivacyModal}
-          onClose={() => setShowPrivacyModal(false)}
-          onAccept={handleModalAccept}
-        />
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-600">
+          Al crear una cuenta, aceptas nuestros{' '}
+          <Link to="/terminos" className="text-blue-600 hover:text-blue-700">
+            Términos de Servicio
+          </Link>{' '}
+          y{' '}
+          <Link to="/privacidad" className="text-blue-600 hover:text-blue-700">
+            Política de Privacidad
+          </Link>
+        </div>
       </div>
     </div>
   )

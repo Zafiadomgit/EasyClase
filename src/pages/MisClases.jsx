@@ -1,19 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { claseService } from '../services/api'
 import { Calendar, Clock, MapPin, User, Star, CheckCircle, XCircle, Clock3 } from 'lucide-react'
+import MisClasesProfesor from './Professor/MisClases'
 
 const MisClases = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [clases, setClases] = useState([])
   const [filtro, setFiltro] = useState('todas') // todas, proximas, completadas, canceladas
 
   useEffect(() => {
     if (user) {
+      // Si es profesor, mostrar el componente específico para profesores
+      if (user.tipoUsuario === 'profesor') {
+        return
+      }
       cargarMisClases()
     }
   }, [user])
+
+  // Si es profesor, mostrar el componente específico
+  if (user && user.tipoUsuario === 'profesor') {
+    return <MisClasesProfesor />
+  }
 
   const cargarMisClases = async () => {
     try {

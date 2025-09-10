@@ -20,6 +20,7 @@ const AdminLayout = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home, exact: true },
+    { name: 'Super Admin', href: '/admin/super', icon: Shield, adminOnly: true },
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Clases', href: '/admin/classes', icon: BookOpen },
     { name: 'Pagos', href: '/admin/payments', icon: DollarSign },
@@ -70,7 +71,7 @@ const AdminLayout = () => {
                 {user?.nombre || 'Admin'}
               </p>
               <p className="text-xs text-secondary-600 capitalize">
-                {user?.rol || 'admin'}
+                {user?.rol || user?.tipoUsuario || 'admin'}
               </p>
             </div>
           </div>
@@ -80,6 +81,11 @@ const AdminLayout = () => {
         <nav className="flex-1 p-4">
           <ul className="space-y-1">
             {navigation.map((item) => {
+              // Solo mostrar Super Admin a usuarios con tipo 'admin'
+              if (item.adminOnly && user?.tipoUsuario !== 'admin') {
+                return null
+              }
+              
               const active = isActive(item.href, item.exact)
               return (
                 <li key={item.name}>
@@ -97,6 +103,11 @@ const AdminLayout = () => {
                       }`}
                     />
                     {item.name}
+                    {item.adminOnly && (
+                      <span className="ml-auto px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                        SUPER
+                      </span>
+                    )}
                     {item.name === 'Disputas' && (
                       <span className="ml-auto bg-red-100 text-red-800 text-xs rounded-full px-2 py-1">
                         3

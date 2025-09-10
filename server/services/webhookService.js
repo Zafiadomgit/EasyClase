@@ -3,6 +3,8 @@ import { verificarPago } from './mercadoPagoService.js';
 import Clase from '../models/Clase.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
+import CompraServicio from '../models/CompraServicio.js';
+import Servicio from '../models/Servicio.js';
 import { crearEscrow } from './escrowService.js';
 import notificationScheduler from './notificationSchedulerService.js';
 
@@ -36,7 +38,12 @@ const procesarPagoAprobado = async (paymentData) => {
   try {
     const { external_reference, id: paymentId, transaction_amount, payer, payment_method } = paymentData;
     
-    console.log(`🔄 Procesando pago aprobado: ${paymentId} para clase: ${external_reference}`);
+    console.log(`🔄 Procesando pago aprobado: ${paymentId} para referencia: ${external_reference}`);
+
+    // Verificar si es una compra de servicio
+    if (external_reference.startsWith('servicio_')) {
+      return await procesarPagoServicio(paymentData);
+    }
 
     // Buscar la clase
     const clase = await Clase.findById(external_reference);
@@ -365,5 +372,117 @@ export const reenviarWebhookFallido = async (paymentId) => {
   } catch (error) {
     console.error('❌ Error reenviando webhook:', error);
     throw error;
+  }
+};
+
+// Procesar pago de servicio
+const procesarPagoServicio = async (paymentData) => {
+  try {
+    const { external_reference, id: paymentId, transaction_amount, payer, payment_method } = paymentData;
+    
+    console.log(`🔄 Procesando pago de servicio: ${paymentId} para compra: ${external_reference}`);
+
+    // Extraer ID de compra del external_reference (formato: servicio_123)
+    const compraId = external_reference.replace('servicio_', '');
+    
+    // Buscar la compra
+    const compra = await CompraServicio.findByPk(compraId);
+    if (!compra) {
+      console.error(`❌ Compra no encontrada: ${compraId}`);
+      return { success: false, error: 'Compra no encontrada' };
+    }
+
+    // Verificar que el pago no haya sido procesado antes
+    if (compra.estado === 'pagado') {
+      console.log(`⚠️ Pago ya procesado para compra: ${compraId}`);
+      return { success: true, message: 'Pago ya procesado' };
+    }
+
+    // Obtener el servicio
+    const servicio = await Servicio.findByPk(compra.servicio);
+    if (!servicio) {
+      console.error(`❌ Servicio no encontrado: ${compra.servicio}`);
+      return { success: false, error: 'Servicio no encontrado' };
+    }
+
+    // Calcular comisión (20%)
+    const comision = transaction_amount * 0.20;
+    const montoNeto = transaction_amount - comision;
+
+    // Crear registro de transacción
+    const transaction = new Transaction({
+      transactionId: `TXN_${Date.now()}_${paymentId}`,
+      type: 'pago_servicio',
+      status: 'approved',
+      amount: transaction_amount,
+      amountNet: montoNeto,
+      commission: comision,
+      currency: 'COP',
+      servicioId: compra.servicio,
+      estudianteId: compra.estudiante,
+      profesorId: servicio.proveedor,
+      mercadoPagoId: paymentId,
+      externalReference: external_reference,
+      payer: {
+        email: payer?.email,
+        name: payer?.name,
+        identification: payer?.identification
+      },
+      paymentMethod: {
+        type: payment_method?.type,
+        paymentType: payment_method?.payment_type_id,
+        installments: payment_method?.installments
+      },
+      metadata: new Map([
+        ['servicio_titulo', servicio.titulo],
+        ['servicio_categoria', servicio.categoria],
+        ['servicio_tipo', servicio.tipo]
+      ]),
+      processedAt: new Date()
+    });
+
+    await transaction.save();
+
+    // Actualizar estado de la compra
+    compra.estado = 'pagado';
+    compra.pagoId = paymentId;
+    compra.fechaPago = new Date();
+    compra.fechaAcceso = new Date();
+    compra.transactionId = transaction._id;
+    
+    await compra.save();
+
+    // Actualizar balance del profesor
+    await actualizarBalanceProfesor(servicio.proveedor, montoNeto);
+
+    // Enviar correo de confirmación al estudiante
+    try {
+      const estudiante = await User.findByPk(compra.estudiante);
+      if (estudiante) {
+        await notificationScheduler.sendImmediateNotification('service_purchase_success', {
+          user: estudiante,
+          serviceInfo: {
+            title: servicio.titulo,
+            amount: transaction_amount
+          }
+        });
+        console.log(`📧 Correo de confirmación de compra enviado a ${estudiante.email}`);
+      }
+    } catch (emailError) {
+      console.error('Error enviando correo de confirmación de compra:', emailError);
+    }
+
+    console.log(`✅ Servicio comprado exitosamente: ${compraId}`);
+    
+    return { 
+      success: true, 
+      message: 'Pago de servicio procesado correctamente',
+      compraId: compraId,
+      transactionId: transaction._id
+    };
+
+  } catch (error) {
+    console.error('Error procesando pago de servicio:', error);
+    return { success: false, error: error.message };
   }
 };

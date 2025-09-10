@@ -18,7 +18,8 @@ import {
   Video,
   Briefcase,
   Plus,
-  Bug
+  Bug,
+  X
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
@@ -27,6 +28,9 @@ import claseServiceLocal from '../../services/claseService'
 import notificationService from '../../services/notificationService'
 import { formatPrecio } from '../../utils/currencyUtils'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
+import ReservasPendientes from '../Professor/ReservasPendientes'
+import MisServicios from '../Professor/MisServicios'
+import MisClases from '../Professor/MisClases'
 
 // Componente de prueba para Sentry
 const ErrorButton = () => {
@@ -104,6 +108,8 @@ const Dashboard = () => {
   const [loadingRetiro, setLoadingRetiro] = useState(false)
   const [showRetiroModal, setShowRetiroModal] = useState(false)
   const [montoRetiro, setMontoRetiro] = useState(0)
+  const [showReservasPendientes, setShowReservasPendientes] = useState(false)
+  const [activeSection, setActiveSection] = useState('dashboard') // 'dashboard', 'servicios', 'clases'
 
   useEffect(() => {
     cargarDatos()
@@ -533,78 +539,38 @@ const Dashboard = () => {
              )}
           </div>
 
-          {/* Mis Servicios */}
+          {/* Navegación por pestañas */}
           <div className="card">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-secondary-900 flex items-center">
-                <Briefcase className="w-5 h-5 mr-2" />
-                Mis Servicios
-              </h2>
-              <button 
-                onClick={() => navigate('/servicios/crear')}
-                className="btn-primary text-sm flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Nuevo Servicio
-              </button>
+            <div className="border-b border-secondary-200 mb-6">
+              <nav className="flex space-x-8">
+                <button
+                  onClick={() => setActiveSection('servicios')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeSection === 'servicios'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4 mr-2 inline" />
+                  Mis Servicios
+                </button>
+                <button
+                  onClick={() => setActiveSection('clases')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeSection === 'clases'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                  }`}
+                >
+                  <Video className="w-4 h-4 mr-2 inline" />
+                  Mis Clases
+                </button>
+              </nav>
             </div>
-            
-            {serviciosActivos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {serviciosActivos.slice(0, 4).map((servicio, index) => (
-                  <div key={index} className="border border-secondary-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-secondary-900 text-sm">{servicio.titulo}</h3>
-                        <p className="text-secondary-600 text-xs">{servicio.categoria}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-primary-600">{formatPrecio(servicio.precio)}</p>
-                        <p className="text-xs text-secondary-500">{servicio.totalVentas || 0} ventas</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        servicio.estado === 'activo' ? 'bg-green-100 text-green-800' : 
-                        servicio.estado === 'pausado' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {servicio.estado}
-                      </span>
-                      <button 
-                        onClick={() => navigate(`/servicios/${servicio._id}`)}
-                        className="btn-primary text-xs px-3 py-1"
-                      >
-                        Ver Detalles
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-secondary-500">
-                <Briefcase className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
-                <p className="mb-2">No tienes servicios creados aún</p>
-                <p className="text-sm mb-4">Empieza a ofrecer servicios como desarrollo web, tesis, consultoría y más</p>
-                <button 
-                  onClick={() => navigate('/servicios/crear')}
-                  className="btn-primary"
-                >
-                  Crear Mi Primer Servicio
-                </button>
-              </div>
-            )}
-            
-            {serviciosActivos.length > 4 && (
-              <div className="text-center mt-4">
-                <button 
-                  onClick={() => navigate('/servicios/mis-servicios')}
-                  className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                >
-                  Ver todos mis servicios ({serviciosActivos.length})
-                </button>
-              </div>
-            )}
+
+            {/* Contenido de las pestañas */}
+            {activeSection === 'servicios' && <MisServicios />}
+            {activeSection === 'clases' && <MisClases />}
           </div>
 
           {/* Solicitudes pendientes (solo para profesores) */}
@@ -677,15 +643,8 @@ const Dashboard = () => {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/ser-profesor"
-                    className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-                  >
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    Crear Perfil Profesor
-                  </Link>
                   <button
-                    onClick={() => {/* Aceptar reservaciones */}}
+                    onClick={() => setShowReservasPendientes(true)}
                     className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
                   >
                     <Calendar className="w-4 h-4 mr-2" />
@@ -846,6 +805,27 @@ const Dashboard = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Reservas Pendientes */}
+      {showReservasPendientes && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Reservas Pendientes</h2>
+              <button
+                onClick={() => setShowReservasPendientes(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <ReservasPendientes />
             </div>
           </div>
         </div>

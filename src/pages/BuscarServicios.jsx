@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, Briefcase, CheckCircle, Eye } from 'lucide-react'
 import { servicioService } from '../services/api'
+import { compraService } from '../services/compraService'
+import ServicioCard from '../components/ServicioCard'
+import { useAuth } from '../contexts/AuthContext'
 
 const BuscarServicios = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [servicios, setServicios] = useState([])
   const [serviciosFiltrados, setServiciosFiltrados] = useState([])
   const [loading, setLoading] = useState(true)
@@ -174,6 +179,19 @@ const BuscarServicios = () => {
       const newParams = new URLSearchParams(searchParams)
       newParams.set('q', searchQuery.trim())
       setSearchParams(newParams)
+    }
+  }
+
+  const handleComprar = async (servicioId) => {
+    try {
+      const response = await compraService.crearCompra(servicioId)
+      
+      if (response.success) {
+        // Redirigir a MercadoPago
+        window.location.href = response.data.pago.init_point
+      }
+    } catch (error) {
+      alert(error.message || 'Error procesando la compra')
     }
   }
 
@@ -389,103 +407,13 @@ const BuscarServicios = () => {
           {/* Grid de servicios */}
           {serviciosFiltrados.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {getServiciosPaginaActual().map((servicio) => {
-                const esPremium = servicio.premium || servicio.proveedor?.premium || false
-                
-                return (
-                  <Link
-                    key={servicio._id}
-                    to={`/servicios/${servicio._id}`}
-                    className={`block bg-white rounded-xl shadow-sm border transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
-                      esPremium ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-white' : 'border-secondary-200'
-                    }`}
-                  >
-                    <div className="p-6">
-                      {/* Header con proveedor */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-primary-600 font-semibold">
-                              {servicio.proveedor?.nombre?.charAt(0)?.toUpperCase() || 'A'}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-secondary-900">{servicio.proveedor?.nombre}</p>
-                            <div className="flex items-center text-sm text-secondary-600">
-                              <Star className="w-4 h-4 text-yellow-400 mr-1 fill-current" />
-                              {servicio.proveedor?.calificacionPromedio?.toFixed(1) || '0.0'}
-                              <span className="mx-1">•</span>
-                              {servicio.proveedor?.totalReviews || 0} reviews
-                            </div>
-                          </div>
-                        </div>
-                        {esPremium && (
-                          <div className="flex items-center bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-medium">
-                            <Crown className="w-3 h-3 mr-1" />
-                            Premium
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Título y categoría */}
-                      <h3 className="text-lg font-semibold text-secondary-900 mb-2 line-clamp-2">
-                        {servicio.titulo}
-                      </h3>
-                      <p className="text-sm text-primary-600 mb-3">{servicio.categoria}</p>
-
-                      {/* Descripción */}
-                      <p className="text-secondary-600 text-sm mb-4 line-clamp-3">
-                        {servicio.descripcion}
-                      </p>
-
-                      {/* Detalles */}
-                      <div className="flex items-center justify-between text-sm text-secondary-600 mb-4">
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {servicio.tiempoPrevisto?.valor} {servicio.tiempoPrevisto?.unidad}
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {servicio.modalidad}
-                        </div>
-                        {servicio.totalVentas > 0 && (
-                          <div className="flex items-center">
-                            <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
-                            {servicio.totalVentas} ventas
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Precio y comisión */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-2xl font-bold text-secondary-900">
-                            {formatPrecio(servicio.precio)}
-                          </p>
-                          {esPremium && (
-                            <p className="text-xs text-green-600">
-                              Solo 15% comisión (vs 20% estándar)
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          {servicio.calificacionPromedio > 0 && (
-                            <div className="flex items-center mb-1">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm font-medium ml-1">
-                                {servicio.calificacionPromedio.toFixed(1)}
-                              </span>
-                            </div>
-                          )}
-                          <p className="text-xs text-secondary-500">
-                            {servicio.totalReviews || 0} reviews
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
+              {getServiciosPaginaActual().map((servicio) => (
+                <ServicioCard
+                  key={servicio._id}
+                  servicio={servicio}
+                  onComprar={handleComprar}
+                />
+              ))}
             </div>
           ) : (
             <div className="text-center py-12">

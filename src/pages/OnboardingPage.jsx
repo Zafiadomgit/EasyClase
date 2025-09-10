@@ -15,8 +15,8 @@ const OnboardingPage = () => {
   }
 
   const handleOnboardingSkip = () => {
-
-    navigate('/dashboard', { replace: true })
+    // También redirigir a buscar clases cuando se salta el onboarding
+    navigate('/buscar', { replace: true })
   }
 
   return (

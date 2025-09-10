@@ -1,11 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import routes from './routes/index.js';
 
 const app = express();
 
 // Middleware básico
 app.use(cors());
 app.use(express.json());
+
+// Rutas de la API
+app.use('/api', routes);
 
 // Ruta de estado
 app.get('/api/status', (req, res) => {

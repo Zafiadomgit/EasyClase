@@ -1,13 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const Pago = () => {
   const [step, setStep] = useState(1)
+  const [reservaData, setReservaData] = useState(null)
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
     telefono: '',
     monto: 0
   })
+
+  // Cargar datos de la reserva desde localStorage
+  useEffect(() => {
+    const reserva = localStorage.getItem('reservaPendiente')
+    if (reserva) {
+      try {
+        const data = JSON.parse(reserva)
+        setReservaData(data)
+        
+        // Calcular el precio total basado en duración y precio por hora
+        const duracionHoras = data.duracionHoras || 1 // Por defecto 1 hora
+        const precioPorHora = data.precioPorHora || data.precio || 0
+        const precioTotal = precioPorHora * duracionHoras
+        
+        // Pre-llenar el monto con el precio total calculado
+        setFormData(prev => ({
+          ...prev,
+          monto: precioTotal
+        }))
+        console.log('Datos de reserva cargados:', data)
+        console.log(`Cálculo: ${duracionHoras} horas × $${precioPorHora} = $${precioTotal}`)
+      } catch (error) {
+        console.error('Error al parsear datos de reserva:', error)
+      }
+    } else {
+      console.log('No se encontraron datos de reserva en localStorage')
+    }
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -26,6 +55,32 @@ const Pago = () => {
     setStep(3)
   }
 
+  // Si no hay datos de reserva, mostrar mensaje
+  if (!reservaData) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                ⚠️ No hay reserva pendiente
+              </h1>
+              <p className="text-gray-600 mb-6">
+                No se encontraron datos de reserva. Por favor, regresa a la página de reserva para continuar.
+              </p>
+              <button
+                onClick={() => window.history.back()}
+                className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Volver a la Reserva
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (step === 1) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -39,6 +94,28 @@ const Pago = () => {
                 Completa la información para continuar
               </p>
             </div>
+
+            {/* Información de la reserva */}
+            {reservaData && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                  📚 Detalles de la Clase
+                </h3>
+                <div className="space-y-2 text-blue-700">
+                  <p><strong>Servicio:</strong> {reservaData.servicioTitulo || 'Clase General'}</p>
+                  <p><strong>Categoría:</strong> {reservaData.servicioCategoria || 'General'}</p>
+                  <p><strong>Profesor:</strong> {reservaData.profesorNombre}</p>
+                  <p><strong>Fecha:</strong> {reservaData.fecha}</p>
+                  <p><strong>Hora:</strong> {reservaData.hora}</p>
+                  <p><strong>Tipo:</strong> {reservaData.tipoAgenda === 'individual' ? 'Clase Individual' : 'Clase Grupal'}</p>
+                  <p><strong>Duración:</strong> {reservaData.duracionHoras || 1} hora(s)</p>
+                  <p><strong>Precio por hora:</strong> ${(reservaData.precioPorHora || reservaData.precio || 0).toLocaleString()}</p>
+                  <div className="border-t border-blue-300 pt-2 mt-2">
+                    <p className="font-bold text-lg"><strong>Total a pagar:</strong> ${formData.monto?.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -87,15 +164,21 @@ const Pago = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Monto a pagar
                 </label>
-                <input
-                  type="number"
-                  name="monto"
-                  value={formData.monto}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  min="1"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={`$${formData.monto?.toLocaleString() || '0'}`}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-semibold"
+                    readOnly
+                    disabled
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-gray-500 text-sm">💰</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Este monto es fijo y no se puede modificar
+                </p>
               </div>
 
               <button
@@ -133,9 +216,31 @@ const Pago = () => {
                 <p><strong>Nombre:</strong> {formData.nombre}</p>
                 <p><strong>Email:</strong> {formData.email}</p>
                 <p><strong>Teléfono:</strong> {formData.telefono}</p>
-                <p><strong>Monto:</strong> ${formData.monto}</p>
+                <p><strong>Monto:</strong> ${formData.monto?.toLocaleString()}</p>
               </div>
             </div>
+
+            {/* Detalles de la clase en el resumen */}
+            {reservaData && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-blue-800 mb-4">
+                  📚 Resumen de la Clase
+                </h3>
+                <div className="space-y-2 text-blue-700">
+                  <p><strong>Servicio:</strong> {reservaData.servicioTitulo || 'Clase General'}</p>
+                  <p><strong>Categoría:</strong> {reservaData.servicioCategoria || 'General'}</p>
+                  <p><strong>Profesor:</strong> {reservaData.profesorNombre}</p>
+                  <p><strong>Fecha:</strong> {reservaData.fecha}</p>
+                  <p><strong>Hora:</strong> {reservaData.hora}</p>
+                  <p><strong>Tipo:</strong> {reservaData.tipoAgenda === 'individual' ? 'Clase Individual' : 'Clase Grupal'}</p>
+                  <p><strong>Duración:</strong> {reservaData.duracionHoras || 1} hora(s)</p>
+                  <p><strong>Precio por hora:</strong> ${(reservaData.precioPorHora || reservaData.precio || 0).toLocaleString()}</p>
+                  <div className="border-t border-blue-300 pt-2 mt-2">
+                    <p className="font-bold text-lg"><strong>Total a pagar:</strong> ${formData.monto?.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex space-x-4">
               <button

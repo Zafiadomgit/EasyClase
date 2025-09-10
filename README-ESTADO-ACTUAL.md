@@ -143,7 +143,7 @@
 **ARCHIVOS LISTOS PARA SUBIR:**
 - `dist/index.html` (actualizado para usar pago-nuevo-1757270000.js)
 - `dist/assets/pago-nuevo-1757270000.js` (contiene PagoUltraSimple.jsx)
-- `dist/assets/index-ea1c4ccb.css` (estilos actualizados)
+- `image.pngdist/assets/index-ea1c4ccb.css` (estilos actualizados)
 - `dist/.htaccess` (headers de seguridad A+)
 
 **PRUEBA CRÍTICA COMPLETADA:**

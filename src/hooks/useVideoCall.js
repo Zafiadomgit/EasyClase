@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 // import Peer from 'simple-peer'
 import io from 'socket.io-client'
 
-const useVideoCall = (roomId, userId, userType) => {
+const useVideoCall = (roomId, userId, userType, classDuration = 1) => {
   const [localStream, setLocalStream] = useState(null)
   const [remoteStream, setRemoteStream] = useState(null)
   const [socket, setSocket] = useState(null)
@@ -115,7 +115,7 @@ const useVideoCall = (roomId, userId, userType) => {
   }, [])
 
   // Funciones de control simplificadas
-  const startCall = useCallback(async (classDuration = 1) => {
+  const startCall = useCallback(async () => {
     // Validar que estemos en el horario permitido (10 min antes hasta la duración real de la clase)
     const now = new Date()
     const classTime = new Date() // Aquí deberías obtener el tiempo real de la clase
