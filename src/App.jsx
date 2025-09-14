@@ -7,7 +7,7 @@ import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
-import BuscarClases from './pages/BuscarClases'
+import BuscarClases from './pages/BuscarClasesNuevo'
 import PerfilProfesor from './pages/PerfilProfesor'
 import Perfil from './pages/Perfil'
 import MisClases from './pages/MisClases'
@@ -20,6 +20,10 @@ import BuscarServicios from './pages/BuscarServicios'
 import CrearServicio from './pages/CrearServicio'
 import CrearClase from './pages/CrearClase'
 import MisServiciosComprados from './pages/Estudiante/MisServiciosComprados'
+import MisReservas from './pages/Estudiante/MisReservas'
+import PagoExitoso from './pages/PagoExitoso'
+import PagoFallido from './pages/PagoFallido'
+import PagoPendiente from './pages/PagoPendiente'
 import OnboardingProfesor from './pages/Professor/OnboardingProfesor'
 import OnboardingPage from './pages/OnboardingPage'
 import Pago from './pages/Pago'
@@ -67,6 +71,10 @@ function App() {
             <Route path="/servicios/crear" element={<CrearServicio />} />
             <Route path="/clases/crear" element={<CrearClase />} />
             <Route path="/mis-servicios-comprados" element={<MisServiciosComprados />} />
+            <Route path="/mis-reservas" element={<MisReservas />} />
+            <Route path="/pago-exitoso" element={<PagoExitoso />} />
+            <Route path="/pago-fallido" element={<PagoFallido />} />
+            <Route path="/pago-pendiente" element={<PagoPendiente />} />
             <Route path="/profesor/onboarding" element={<OnboardingProfesor />} />
               <Route path="/profesor/:id" element={<PerfilProfesor />} />
               <Route path="/ser-profesor" element={<SerProfesor />} />

@@ -369,13 +369,22 @@ const Header = () => {
                     )}
                     
                     {user?.tipoUsuario === 'estudiante' && (
-                      <Link
-                        to="/mis-servicios-comprados"
-                        className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        Mis Servicios Comprados
-                      </Link>
+                      <>
+                        <Link
+                          to="/mis-servicios-comprados"
+                          className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Mis Servicios Comprados
+                        </Link>
+                        <Link
+                          to="/mis-reservas"
+                          className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Mis Reservas
+                        </Link>
+                      </>
                     )}
                     
                     {/* Opción Premium para Profesores */}

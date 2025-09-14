@@ -16,6 +16,8 @@
     "test-mysql": "node test-mysql.js",
     "test-migration": "node test-migration.js",
     "verify-mysql": "node scripts/verifyMySQLSetup.js",
+    "verify-env": "node verificar-env.js",
+    "diagnostico": "node diagnostico-completo.js",
     "test-real-connection": "node test-connection-real.js",
     "check-deps": "node install-dependencies.js",
     "test": "echo \"Error: no test specified\" && exit 1"

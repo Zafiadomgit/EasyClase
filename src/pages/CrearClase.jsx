@@ -81,7 +81,7 @@ const CrearClase = () => {
       }
 
       // Crear la plantilla de clase
-      const response = await fetch('/api/clases/plantillas-db.php', {
+      const response = await fetch('/api/plantillas.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,21 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
+
+// Cargar variables de entorno
+// En producción, usar .env, en desarrollo usar env.production
+const envPath = process.env.NODE_ENV === 'production' ? './.env' : './env.production';
+console.log(`🔧 Cargando variables de entorno desde: ${envPath}`);
+console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
+dotenv.config({ path: envPath });
+
+// Verificar que las variables críticas estén cargadas
+console.log(`🔧 MP_ACCESS_TOKEN configurado: ${!!process.env.MP_ACCESS_TOKEN}`);
+console.log(`🔧 MP_PUBLIC_KEY configurado: ${!!process.env.MP_PUBLIC_KEY}`);
+if (process.env.MP_ACCESS_TOKEN) {
+  console.log(`🔧 Tipo de token: ${process.env.MP_ACCESS_TOKEN.startsWith('APP_USR-') ? 'PRODUCCIÓN' : 'TEST'}`);
+}
 
 const app = express();
 

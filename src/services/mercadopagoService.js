@@ -4,8 +4,8 @@
 class MercadoPagoService {
   constructor() {
     // Configurar MercadoPago con credenciales reales
-    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'TEST-0aa911c4-cb56-4148-b441-bec40d8f0405'
-    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN || 'TEST-5890608562147325-082512-ab2c8c1761c7ffcca8d35bf967f57d58-345306681'
+    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-3e36c45d-0048-4aaf-88ea-7df857eb3ea5'
+    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN || 'APP_USR-5890608562147325-082512-c5909ffb078ebcb8d07406452753cbed-345306681'
     this.baseURL = import.meta.env.VITE_API_URL || '/api'
     
     console.log('MercadoPago Service inicializado (modo simulación)')

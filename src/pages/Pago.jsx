@@ -19,8 +19,8 @@ const Pago = () => {
         setReservaData(data)
         
         // Calcular el precio total basado en duración y precio por hora
-        const duracionHoras = data.duracionHoras || 1 // Por defecto 1 hora
-        const precioPorHora = data.precioPorHora || data.precio || 0
+        const duracionHoras = data.duracion || 1 // Usar duracion del objeto
+        const precioPorHora = data.precio || 0
         const precioTotal = precioPorHora * duracionHoras
         
         // Pre-llenar el monto con el precio total calculado
@@ -51,8 +51,35 @@ const Pago = () => {
     setStep(2)
   }
 
-  const handlePayment = () => {
-    setStep(3)
+  const handlePayment = async () => {
+    try {
+      // Crear preferencia de MercadoPago
+      const response = await fetch('/api/crear-preferencia-mercadopago.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
+        },
+        body: JSON.stringify({
+          titulo: reservaData.titulo,
+          precio: formData.monto,
+          descripcion: `Reserva de clase: ${reservaData.titulo}`,
+          reservaData: reservaData
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.init_point) {
+        // Redirigir a MercadoPago
+        window.location.href = data.init_point
+      } else {
+        alert('Error al crear el pago: ' + (data.message || 'Error desconocido'))
+      }
+    } catch (error) {
+      console.error('Error en el proceso de pago:', error)
+      alert('Error al procesar el pago')
+    }
   }
 
   // Si no hay datos de reserva, mostrar mensaje
@@ -295,13 +322,10 @@ const Pago = () => {
               </div>
 
               <button
-                onClick={() => {
-                  setStep(1)
-                  setFormData({ nombre: '', email: '', telefono: '', monto: 0 })
-                }}
+                onClick={() => window.location.href = '/mis-reservas'}
                 className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
-                Realizar Otro Pago
+                Ver Mis Reservas
               </button>
             </div>
           </div>

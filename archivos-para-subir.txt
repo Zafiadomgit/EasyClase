@@ -1,0 +1,28 @@
+ARCHIVOS QUE NECESITAS SUBIR AL SERVIDOR:
+
+1. ARCHIVOS NUEVOS (crear en el servidor):
+   - server/routes/mercadopago.js
+   
+2. ARCHIVOS MODIFICADOS (reemplazar en el servidor):
+   - server/routes/index.js
+   - src/pages/Pago.jsx
+   
+3. ARCHIVOS QUE YA ESTÁN CORRECTOS (no necesitan cambios):
+   - server/services/mercadoPagoService.js
+   - server/env.production (ya tiene el token correcto)
+   - env.production (ya tiene el token correcto)
+
+INSTRUCCIONES:
+1. Sube el archivo server/routes/mercadopago.js a la carpeta server/routes/ en tu servidor
+2. Reemplaza server/routes/index.js en tu servidor
+3. Reemplaza src/pages/Pago.jsx en tu servidor
+4. Haz un build del frontend si es necesario
+5. Reinicia el servidor Node.js si es necesario
+
+CAMBIOS REALIZADOS:
+- ✅ Token de MercadoPago actualizado a producción en archivos PHP
+- ✅ Creado endpoint Node.js /api/mercadopago/crear-preferencia
+- ✅ Frontend actualizado para usar el nuevo endpoint Node.js
+- ✅ Configuración de rutas actualizada
+
+El frontend ahora llamará a /api/mercadopago/crear-preferencia en lugar de /api/crear-preferencia-mercadopago.php

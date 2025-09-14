@@ -1,7 +1,53 @@
 import fetch from 'node-fetch';
 
+// Función para validar el token de MercadoPago
+const validarTokenMercadoPago = async (token) => {
+  try {
+    const response = await fetch('https://api.mercadopago.com/users/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const userData = await response.json();
+      return {
+        valido: true,
+        tipo: token.startsWith('TEST-') ? 'test' : 'produccion',
+        usuario: userData.nickname || 'Usuario'
+      };
+    } else {
+      return {
+        valido: false,
+        error: `Token inválido: ${response.status} ${response.statusText}`
+      };
+    }
+  } catch (error) {
+    return {
+      valido: false,
+      error: `Error validando token: ${error.message}`
+    };
+  }
+};
+
 export const crearPagoMercadoPago = async ({ titulo, precio, claseId, estudianteEmail }) => {
   try {
+    // Verificar que el token esté disponible
+    if (!process.env.MP_ACCESS_TOKEN) {
+      throw new Error('Token de MercadoPago no configurado');
+    }
+    
+    // Validar el token antes de usarlo
+    console.log('Validando token de MercadoPago...');
+    const validacion = await validarTokenMercadoPago(process.env.MP_ACCESS_TOKEN);
+    
+    if (!validacion.valido) {
+      console.error('Token de MercadoPago inválido:', validacion.error);
+      throw new Error(`Token de MercadoPago inválido: ${validacion.error}`);
+    }
+    
+    console.log(`Token válido - Tipo: ${validacion.tipo}, Usuario: ${validacion.usuario}`);
+    
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
@@ -41,7 +87,13 @@ export const crearPagoMercadoPago = async ({ titulo, precio, claseId, estudiante
     });
 
     if (!response.ok) {
-      throw new Error(`Error de MercadoPago: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error de MercadoPago:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      throw new Error(`Error MercadoPago (${response.status}): ${errorData.message || response.statusText}`);
     }
 
     const data = await response.json();
@@ -49,7 +101,7 @@ export const crearPagoMercadoPago = async ({ titulo, precio, claseId, estudiante
 
   } catch (error) {
     console.error('Error creando pago en MercadoPago:', error);
-    throw new Error('Error al procesar el pago');
+    throw error; // Re-lanzar el error original para mantener el mensaje específico
   }
 };
 
