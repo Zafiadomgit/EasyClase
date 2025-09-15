@@ -63,41 +63,45 @@ const SerProfesor = () => {
   }
 
   return (
-    <div className="ser-profesor-page">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-primary-100 py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/5 to-transparent"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <section className="py-24 overflow-hidden">
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8">
+            <div className="inline-flex items-center px-6 py-3 rounded-full bg-purple-500/20 text-purple-200 text-sm font-bold mb-8 border border-purple-400/50">
               <BookOpen className="w-4 h-4 mr-2" />
               Únete a nuestro equipo de profesores
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-secondary-900 mb-6 font-display leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
               Comparte tu conocimiento,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800 block">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 block">
                 gana dinero
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-secondary-600 mb-10 max-w-4xl mx-auto leading-relaxed">
-              Enseña habilidades prácticas como <span className="font-semibold text-primary-600">Excel, programación o inglés</span> y genera ingresos con horarios flexibles
+            <p className="text-xl md:text-2xl text-purple-200 mb-10 max-w-4xl mx-auto leading-relaxed">
+              Enseña habilidades prácticas como <span className="font-semibold text-purple-300">Excel, programación o inglés</span> y genera ingresos con horarios flexibles
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <a
                 href="#registro"
-                className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white text-lg px-10 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto flex items-center justify-center space-x-3"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-lg px-10 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto flex items-center justify-center space-x-3"
               >
                 <span>Empezar Ahora</span>
                 <ArrowRight className="w-6 h-6" />
               </a>
               <Link
                 to="/buscar"
-                className="border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white text-lg px-10 py-4 rounded-2xl font-bold transition-all duration-300 w-full sm:w-auto"
+                className="bg-white/10 border border-white/20 text-white hover:bg-white/20 text-lg px-10 py-4 rounded-2xl font-bold transition-all duration-300 w-full sm:w-auto backdrop-blur-sm"
               >
                 Ver Profesores
               </Link>
@@ -315,6 +319,7 @@ const SerProfesor = () => {
           </div>
         </div>
       </section>
+      </div>
     </div>
   )
 }

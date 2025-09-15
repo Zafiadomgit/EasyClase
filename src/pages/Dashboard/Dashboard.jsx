@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
+import NotificationTriggers from '../../components/NotificationTriggers'
 import { 
   Calendar, 
   Clock, 
@@ -323,7 +324,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Mensaje de éxito */}
       {mensajeExito && (
         <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl flex items-center">
@@ -342,10 +350,10 @@ const Dashboard = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-secondary-900 font-display">
+            <h1 className="text-4xl font-bold text-white font-display">
               ¡Hola, {user?.nombre?.split(' ')[0]}! 👋
             </h1>
-            <p className="text-secondary-600 mt-2">
+            <p className="text-purple-200 mt-2 text-lg">
               {isEstudiante() 
                 ? 'Gestiona tus clases y revisa tu progreso de aprendizaje'
                 : 'Gestiona tus clases y revisa tus estadísticas de enseñanza'
@@ -750,7 +758,7 @@ const Dashboard = () => {
       {/* Modal de Confirmación de Retiro */}
       {showRetiroModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
             <div className="text-center">
               <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-secondary-900 mb-4">
@@ -813,7 +821,7 @@ const Dashboard = () => {
       {/* Modal de Reservas Pendientes */}
       {showReservasPendientes && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900">Reservas Pendientes</h2>
               <button
@@ -830,6 +838,11 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
+      
+      {/* Componente de prueba para notificaciones (solo en desarrollo) */}
+      <NotificationTriggers />
     </div>
   )
 }

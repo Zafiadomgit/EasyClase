@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, ChevronLeft, ChevronRight, Users, Award, Shield, Zap, TrendingUp, CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import { profesorService } from '../services/api'
 import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
@@ -394,251 +394,400 @@ const BuscarClases = () => {
   const profesoresPaginaActual = getProfesoresPaginaActual()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header de búsqueda */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10">
+        {/* Hero Section Premium */}
+        <section className="py-20 overflow-hidden">
+          {/* Elementos decorativos de fondo */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header elegante */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full mb-6 shadow-2xl">
+                <Search className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
                 {categoriaParam ? `Profesores de ${categoriaParam}` : 'Buscar Profesores'}
               </h1>
-              <p className="text-gray-600 mt-1">
-                {profesoresFiltrados.length} profesores encontrados
-                {categoriaParam && ` en ${categoriaParam}`}
-                {queryParam && ` para "${queryParam}"`}
+              <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed mb-8">
+                {categoriaParam 
+                  ? `Encuentra los mejores profesores especializados en ${categoriaParam}`
+                  : 'Conecta con profesores expertos y aprende habilidades prácticas'
+                }
               </p>
+              
+              {/* Estadísticas rápidas */}
+              <div className="flex flex-wrap justify-center gap-8 mb-8">
+                <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                  <Users className="w-5 h-5 text-purple-300 mr-2" />
+                  <span className="text-purple-200 font-medium">{profesoresFiltrados.length} Profesores</span>
+                </div>
+                <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                  <Star className="w-5 h-5 text-yellow-400 mr-2" />
+                  <span className="text-purple-200 font-medium">4.8+ Calificación</span>
+                </div>
+                <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                  <Shield className="w-5 h-5 text-green-400 mr-2" />
+                  <span className="text-purple-200 font-medium">100% Seguro</span>
+                </div>
+              </div>
             </div>
 
-            {/* Barra de búsqueda */}
-            <div className="flex-1 max-w-md">
+            {/* Barra de búsqueda mejorada */}
+            <div className="max-w-2xl mx-auto mb-8">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-300 w-6 h-6" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Buscar profesores..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Buscar profesores, especialidades..."
+                  className="w-full pl-12 pr-20 py-5 bg-white/10 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-lg text-white placeholder-purple-300 backdrop-blur-sm shadow-xl"
                 />
                 <button
                   onClick={handleSearch}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary-600 text-white p-1 rounded-md hover:bg-primary-700"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <Search className="w-4 h-4" />
+                  <Search className="w-5 h-5" />
                 </button>
+              </div>
+              
+              {/* Filtros rápidos */}
+              <div className="flex flex-wrap justify-center gap-3 mt-4">
+                {['Programación', 'Excel', 'Inglés', 'Matemáticas'].map((categoria) => (
+                  <button
+                    key={categoria}
+                    onClick={() => {
+                      const newParams = new URLSearchParams(searchParams)
+                      newParams.set('categoria', categoria)
+                      setSearchParams(newParams)
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      categoriaParam === categoria
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'bg-white/10 text-purple-200 hover:bg-white/20 border border-white/20'
+                    }`}
+                  >
+                    {categoria}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Información de resultados */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-sm text-gray-600">
-            Mostrando {((currentPage - 1) * profesoresPerPage) + 1} - {Math.min(currentPage * profesoresPerPage, profesoresFiltrados.length)} de {profesoresFiltrados.length} profesores
+        {/* Contenido principal */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Información de resultados mejorada */}
+          <div className="mb-12">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-purple-500/20 px-4 py-2 rounded-full border border-purple-400/50">
+                    <TrendingUp className="w-5 h-5 text-purple-300 mr-2" />
+                    <span className="text-purple-200 font-medium">
+                      {profesoresFiltrados.length} profesores encontrados
+                    </span>
+                  </div>
+                  {categoriaParam && (
+                    <div className="flex items-center bg-blue-500/20 px-4 py-2 rounded-full border border-blue-400/50">
+                      <Award className="w-5 h-5 text-blue-300 mr-2" />
+                      <span className="text-blue-200 font-medium">Especialistas en {categoriaParam}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Filtros de ordenamiento mejorados */}
+                <div className="flex items-center gap-3">
+                  <span className="text-purple-200 font-medium">Ordenar por:</span>
+                  <select
+                    value={ordenarParam || 'rating'}
+                    onChange={(e) => {
+                      const newParams = new URLSearchParams(searchParams)
+                      newParams.set('ordenar', e.target.value)
+                      setSearchParams(newParams)
+                      setCurrentPage(1)
+                    }}
+                    className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white backdrop-blur-sm shadow-lg"
+                  >
+                    <option value="rating" className="bg-slate-800 text-white">⭐ Mejor calificación</option>
+                    <option value="premium" className="bg-slate-800 text-white">👑 Premium primero</option>
+                    <option value="precio-asc" className="bg-slate-800 text-white">💰 Precio menor</option>
+                    <option value="precio-desc" className="bg-slate-800 text-white">💎 Precio mayor</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Información detallada */}
+              <div className="mt-4 text-sm text-purple-300">
+                Mostrando {((currentPage - 1) * profesoresPerPage) + 1} - {Math.min(currentPage * profesoresPerPage, profesoresFiltrados.length)} de {profesoresFiltrados.length} profesores
+                {queryParam && ` para "${queryParam}"`}
+              </div>
+            </div>
           </div>
-          
-          {/* Filtros de ordenamiento */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Ordenar por:</span>
-            <select
-              value={ordenarParam || 'rating'}
-              onChange={(e) => {
-                const newParams = new URLSearchParams(searchParams)
-                newParams.set('ordenar', e.target.value)
-                setSearchParams(newParams)
-                setCurrentPage(1)
-              }}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="rating">Mejor calificación</option>
-              <option value="premium">Premium primero</option>
-              <option value="precio-asc">Precio menor</option>
-              <option value="precio-desc">Precio mayor</option>
-            </select>
-          </div>
-        </div>
 
-        {/* Lista de profesores */}
-        <div className="space-y-6">
-          {profesoresPaginaActual.map((profesor) => (
-            <div key={profesor._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-300">
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row md:items-start gap-4">
-                  {/* Información del profesor */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
+          {/* Lista de profesores mejorada */}
+          <div className="grid gap-8">
+            {profesoresPaginaActual.map((profesor, index) => (
+              <div key={profesor._id} className="group bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 overflow-hidden">
+                {/* Header de la tarjeta con gradiente */}
+                <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-6 border-b border-white/10">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      {/* Avatar placeholder */}
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                        {profesor.nombre.charAt(0)}
+                      </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-semibold text-gray-900">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-2xl font-bold text-white">
                             {profesor.nombre}
                           </h3>
                           {profesor.premium && (
-                            <span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                            <span className="inline-flex items-center bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-200 px-3 py-1 rounded-full text-xs font-bold border border-amber-400/50 shadow-lg">
                               <Crown className="w-3 h-3 mr-1" />
                               Premium
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {profesor.especialidades.map((especialidad, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
-                            >
-                              {especialidad}
-                            </span>
-                          ))}
+                        <div className="flex items-center gap-4 text-sm text-purple-200">
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                            <span className="font-semibold">{profesor.calificacionPromedio?.toFixed(1) || '0.0'}</span>
+                            <span className="ml-1">({profesor.totalReviews || 0} reseñas)</span>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                            <span className="text-green-300 font-medium">Disponible</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Precio destacado */}
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-white mb-1">
+                        {formatPrecio(profesor.precioPorHora || 0)}
+                      </div>
+                      <div className="text-sm text-purple-200">por hora</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contenido principal */}
+                <div className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                    {/* Información del profesor */}
+                    <div className="flex-1">
+                      {/* Especialidades */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {profesor.especialidades.map((especialidad, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-200 border border-purple-400/50 hover:from-purple-500/30 hover:to-blue-500/30 transition-all duration-300"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            {especialidad}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Modalidad y ubicación */}
+                      <div className="flex flex-wrap items-center gap-6 mb-4 text-sm">
+                        <div className="flex items-center text-purple-200">
+                          <Clock className="w-4 h-4 mr-2 text-purple-300" />
+                          <span className="font-medium">{profesor.modalidad || 'Online'}</span>
+                        </div>
+                        <div className="flex items-center text-purple-200">
+                          <MapPin className="w-4 h-4 mr-2 text-purple-300" />
+                          <span className="font-medium">{profesor.ubicacion || 'No especificada'}</span>
+                        </div>
+                      </div>
+
+                      {/* Descripción */}
+                      <p className="text-purple-200 text-sm leading-relaxed mb-6">
+                        {profesor.descripcion || 'Sin descripción disponible'}
+                      </p>
+
+                      {/* Beneficios destacados */}
+                      <div className="flex flex-wrap gap-4 text-xs text-purple-300">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-3 h-3 mr-1 text-green-400" />
+                          <span>Clases personalizadas</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-3 h-3 mr-1 text-green-400" />
+                          <span>Material incluido</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-3 h-3 mr-1 text-green-400" />
+                          <span>Soporte 24/7</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Calificación */}
-                    <div className="flex items-center mb-3">
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="ml-1 text-sm font-medium text-gray-900">
-                          {profesor.calificacionPromedio?.toFixed(1) || '0.0'}
-                        </span>
+                    {/* Acciones */}
+                    <div className="flex-shrink-0 lg:w-48">
+                      <div className="space-y-3">
+                        <Link
+                          to={`/reservar/${profesor._id}`}
+                          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center flex items-center justify-center group"
+                        >
+                          <span>Reservar Clase</span>
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                        <Link
+                          to={`/profesor/${profesor._id}`}
+                          className="w-full bg-white/10 border border-white/20 text-white hover:bg-white/20 font-semibold py-3 px-6 rounded-xl transition-all duration-300 text-center backdrop-blur-sm flex items-center justify-center"
+                        >
+                          <span>Ver Perfil Completo</span>
+                        </Link>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        ({profesor.totalReviews || 0} reseñas)
-                      </span>
-                    </div>
-
-                    {/* Modalidad y ubicación */}
-                    <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {profesor.modalidad || 'Online'}
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {profesor.ubicacion || 'No especificada'}
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 text-sm mb-3">
-                      {profesor.descripcion || 'Sin descripción disponible'}
-                    </p>
-
-                    <div className="flex items-center text-sm">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                      <span className="text-green-600 font-medium">
-                        Disponible
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Precio y acciones */}
-                  <div className="flex-shrink-0 text-right mt-4 md:mt-0 md:ml-6">
-                    <div className="text-2xl font-bold text-gray-900 mb-2">
-                      {formatPrecio(profesor.precioPorHora || 0)}
-                      <span className="text-sm font-normal text-gray-600">/hora</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Link
-                        to={`/reservar/${profesor._id}`}
-                        className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-2 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
-                      >
-                        Reservar Clase
-                      </Link>
-                      <Link
-                        to={`/profesor/${profesor._id}`}
-                        className="border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-semibold py-2 px-6 rounded-xl transition-all duration-300 text-center"
-                      >
-                        Ver Perfil
-                      </Link>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* Mensaje si no hay resultados */}
+          {/* Mensaje si no hay resultados mejorado */}
           {profesoresFiltrados.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No encontramos profesores
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {categoriaParam || queryParam 
-                  ? `No hay profesores disponibles para tu búsqueda${categoriaParam ? ` en "${categoriaParam}"` : ''}${queryParam ? ` con "${queryParam}"` : ''}.`
-                  : 'No hay profesores disponibles en este momento.'
-                }
-              </p>
-              <div className="space-y-3">
-                <Link
-                  to="/buscar"
-                  className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
-                >
-                  Ver todos los profesores
-                </Link>
-                <div>
+            <div className="text-center py-20">
+              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-12 max-w-2xl mx-auto">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/20">
+                  <Search className="w-12 h-12 text-purple-300" />
+                </div>
+                <h3 className="text-3xl font-bold text-white mb-4">
+                  No encontramos profesores
+                </h3>
+                <p className="text-purple-200 mb-8 text-lg leading-relaxed">
+                  {categoriaParam || queryParam 
+                    ? `No hay profesores disponibles para tu búsqueda${categoriaParam ? ` en "${categoriaParam}"` : ''}${queryParam ? ` con "${queryParam}"` : ''}.`
+                    : 'No hay profesores disponibles en este momento.'
+                  }
+                </p>
+                <div className="space-y-4">
                   <Link
-                    to="/ser-profesor"
-                    className="text-primary-600 hover:text-primary-700 font-medium"
+                    to="/buscar"
+                    className="inline-block bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
-                    ¿Eres experto en este tema? Únete como profesor →
+                    Ver todos los profesores
                   </Link>
+                  <div className="pt-4">
+                    <Link
+                      to="/ser-profesor"
+                      className="text-purple-300 hover:text-purple-200 font-medium text-lg transition-colors duration-300 flex items-center justify-center gap-2"
+                    >
+                      ¿Eres experto en este tema? Únete como profesor
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Paginación */}
+        {/* Paginación mejorada */}
         {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center">
-            <nav className="flex items-center space-x-2">
-              {/* Botón anterior */}
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Anterior
-              </button>
-
-              {/* Números de página */}
-              {getPageNumbers().map((page, index) => (
+          <div className="mt-16 flex items-center justify-center">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4">
+              <nav className="flex items-center space-x-2">
+                {/* Botón anterior */}
                 <button
-                  key={index}
-                  onClick={() => typeof page === 'number' && handlePageChange(page)}
-                  disabled={page === '...'}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg border ${
-                    page === currentPage
-                      ? 'bg-primary-600 text-white border-primary-600'
-                      : page === '...'
-                      ? 'text-gray-400 border-gray-200 cursor-default'
-                      : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50 hover:text-gray-700'
-                  }`}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex items-center px-4 py-3 text-sm font-medium text-purple-200 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
                 >
-                  {page}
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Anterior
                 </button>
-              ))}
 
-              {/* Botón siguiente */}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Siguiente
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </nav>
+                {/* Números de página */}
+                {getPageNumbers().map((page, index) => (
+                  <button
+                    key={index}
+                    onClick={() => typeof page === 'number' && handlePageChange(page)}
+                    disabled={page === '...'}
+                    className={`px-4 py-3 text-sm font-medium rounded-xl border transition-all duration-300 ${
+                      page === currentPage
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white border-purple-500 shadow-lg'
+                        : page === '...'
+                        ? 'text-purple-300 border-white/20 cursor-default'
+                        : 'text-purple-200 bg-white/10 border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {/* Botón siguiente */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center px-4 py-3 text-sm font-medium text-purple-200 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+              </nav>
+            </div>
           </div>
         )}
+
+        {/* Sección de confianza adicional */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-white mb-4">
+                ¿Por qué elegir EasyClase?
+              </h2>
+              <p className="text-xl text-purple-200 max-w-3xl mx-auto">
+                Miles de estudiantes confían en nosotros para aprender habilidades prácticas
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8 text-center hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">100% Seguro</h3>
+                <p className="text-purple-200 leading-relaxed">
+                  Todas las transacciones están protegidas y los profesores están verificados
+                </p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8 text-center hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">Aprende Rápido</h3>
+                <p className="text-purple-200 leading-relaxed">
+                  Clases personalizadas que se adaptan a tu ritmo y objetivos de aprendizaje
+                </p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8 text-center hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">Comunidad Activa</h3>
+                <p className="text-purple-200 leading-relaxed">
+                  Únete a una comunidad de estudiantes y profesores apasionados por aprender
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )

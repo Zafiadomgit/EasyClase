@@ -134,47 +134,54 @@ const MisClases = () => {
   const clasesFiltradas = filtrarClases()
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4 font-display">
-          Mis Clases
-        </h1>
-        <p className="text-lg text-secondary-600">
-          Gestiona y revisa el historial de todas tus clases
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
       </div>
+      
+      <div className="relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
+              Mis Clases
+            </h1>
+            <p className="text-xl text-purple-200 max-w-2xl leading-relaxed">
+              Gestiona y revisa el historial de todas tus clases
+            </p>
+          </div>
 
-      {/* Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 mb-8">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-sm font-medium text-secondary-700">Filtrar por:</span>
-          {['todas', 'proximas', 'completadas', 'canceladas'].map((opcion) => (
-            <button
-              key={opcion}
-              onClick={() => setFiltro(opcion)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filtro === opcion
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
-              }`}
-            >
-              {opcion === 'todas' && 'Todas'}
-              {opcion === 'proximas' && 'Próximas'}
-              {opcion === 'completadas' && 'Completadas'}
-              {opcion === 'canceladas' && 'Canceladas'}
-            </button>
-          ))}
+          {/* Filtros */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 mb-8 shadow-2xl">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-sm font-bold text-white">Filtrar por:</span>
+              {['todas', 'proximas', 'completadas', 'canceladas'].map((opcion) => (
+                <button
+                  key={opcion}
+                  onClick={() => setFiltro(opcion)}
+                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    filtro === opcion
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                      : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                  }`}
+                >
+                  {opcion === 'todas' && 'Todas'}
+                  {opcion === 'proximas' && 'Próximas'}
+                  {opcion === 'completadas' && 'Completadas'}
+                  {opcion === 'canceladas' && 'Canceladas'}
+                </button>
+              ))}
         </div>
       </div>
 
-      {/* Lista de Clases */}
-      {clasesFiltradas.length > 0 ? (
-        <div className="space-y-6">
-          {clasesFiltradas.map((clase) => (
-            <div
-              key={clase._id}
-              className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow"
+          {/* Lista de Clases */}
+          {clasesFiltradas.length > 0 ? (
+            <div className="space-y-8">
+              {clasesFiltradas.map((clase) => (
+                <div
+                  key={clase._id}
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 hover:shadow-xl hover:scale-105 transition-all duration-300"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between">
                 {/* Información Principal */}
@@ -303,6 +310,8 @@ const MisClases = () => {
           )}
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

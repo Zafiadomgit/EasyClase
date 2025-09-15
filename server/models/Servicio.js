@@ -49,7 +49,7 @@ const Servicio = sequelize.define('Servicio', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
     validate: {
-      min: 10000
+      min: 10
     }
   },
   tiempoPrevisto_valor: {

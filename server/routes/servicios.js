@@ -44,8 +44,8 @@ const servicioValidation = [
     .withMessage('Categoría no válida'),
   body('precio')
     .isNumeric()
-    .isFloat({ min: 10000 })
-    .withMessage('El precio debe ser mínimo $10,000 COP'),
+    .isFloat({ min: 10 })
+    .withMessage('El precio debe ser mínimo $10 COP'),
   body('tiempoPrevisto.valor')
     .isNumeric()
     .isInt({ min: 1 })

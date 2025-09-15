@@ -218,7 +218,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
   // Crear el modal usando un portal para renderizarlo fuera del DOM del header
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={handleBackdropClick}
       style={{ 
         zIndex: 999999, 
@@ -230,7 +230,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
       }}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-2xl w-full overflow-y-auto shadow-2xl"
+        className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl w-full overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{ 
           maxWidth: '1000px',
@@ -239,31 +239,31 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-secondary-200 dark:border-gray-600 px-4 py-3 rounded-t-2xl">
+        <div className="sticky top-0 bg-white/10 backdrop-blur-xl border-b border-white/20 px-6 py-4 rounded-t-3xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-secondary-900 font-display">
+              <h2 className="text-2xl font-bold text-white">
                 Todas las Categorías
               </h2>
-              <p className="text-secondary-600 text-sm mt-1">
+              <p className="text-purple-200 text-sm mt-1">
                 Encuentra el profesor perfecto para lo que necesitas aprender
               </p>
             </div>
             <button
               onClick={handleCloseClick}
-              className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
+              className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-300"
             >
-              <X className="w-6 h-6 text-secondary-400" />
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 bg-white dark:bg-gray-800 min-h-[400px]" style={{ backgroundColor: '#ffffff' }}>
+        <div className="p-6 min-h-[400px]">
           {/* Categorías más buscadas */}
-          <div className="mb-4">
-            <h3 className="text-base font-semibold text-secondary-900 mb-2 flex items-center">
-              <Star className="w-4 h-4 text-yellow-500 mr-2" />
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Star className="w-5 h-5 text-yellow-400 mr-2" />
               Más Buscadas
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -274,28 +274,28 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   key={index}
                   to={`/buscar?categoria=${encodeURIComponent(categoria.nombre)}`}
                   onClick={() => handleCategoryClick(categoria)}
-                  className={`group relative bg-white border-2 ${isHighlighted ? 'border-primary-300 bg-primary-50' : 'border-secondary-100 hover:border-primary-200'} rounded-xl p-3 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-primary-200' : ''}`}
+                  className={`group relative bg-white/10 backdrop-blur-sm border ${isHighlighted ? 'border-purple-500 bg-purple-500/20' : 'border-white/20 hover:border-purple-400/50'} rounded-2xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-purple-400/50' : ''}`}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className={`p-2 bg-gradient-to-r ${categoria.color} rounded-lg text-white`}>
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-3 bg-gradient-to-r ${categoria.color} rounded-xl text-white shadow-lg`}>
                       {categoria.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h4 className="font-bold text-white group-hover:text-purple-200 transition-colors">
                           {categoria.nombre}
                         </h4>
                         {categoria.popular && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-200">
                             <Star className="w-3 h-3 mr-1" />
                             Popular
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-secondary-600 mb-2 line-clamp-2">
+                      <p className="text-sm text-purple-200 mb-3 line-clamp-2">
                         {categoria.descripcion}
                       </p>
-                      <div className="flex items-center text-xs text-secondary-500">
+                      <div className="flex items-center text-xs text-purple-300">
                         <Users className="w-3 h-3 mr-1" />
                         {categoria.profesores} profesores
                       </div>
@@ -303,7 +303,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   </div>
                   
                   {/* Hover effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary-600/0 to-primary-600/0 group-hover:from-primary-600/5 group-hover:to-primary-600/10 rounded-xl transition-all duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 to-purple-600/0 group-hover:from-purple-600/10 group-hover:to-purple-600/20 rounded-2xl transition-all duration-300"></div>
                 </Link>
                 )
               }) : (
@@ -316,10 +316,10 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
 
           {/* Otras categorías */}
           <div>
-            <h3 className="text-base font-semibold text-secondary-900 mb-2">
+            <h3 className="text-lg font-semibold text-white mb-4">
               Otras Categorías
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {otrasCategories.length > 0 ? otrasCategories.map((categoria, index) => {
                 const isHighlighted = highlightCategory && categoria.nombre.toLowerCase() === highlightCategory.toLowerCase()
                 return (
@@ -327,17 +327,17 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                   key={index}
                   to={`/buscar?categoria=${encodeURIComponent(categoria.nombre)}`}
                   onClick={() => handleCategoryClick(categoria)}
-                  className={`group relative bg-white border ${isHighlighted ? 'border-primary-300 bg-primary-50' : 'border-secondary-200 hover:border-primary-200'} rounded-lg p-3 transition-all duration-300 hover:shadow-md ${isHighlighted ? 'ring-2 ring-primary-200' : ''}`}
+                  className={`group relative bg-white/5 backdrop-blur-sm border ${isHighlighted ? 'border-purple-500 bg-purple-500/20' : 'border-white/20 hover:border-purple-400/50'} rounded-xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-purple-400/50' : ''}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`p-1.5 bg-gradient-to-r ${categoria.color} rounded-md text-white`}>
+                    <div className={`p-2 bg-gradient-to-r ${categoria.color} rounded-lg text-white shadow-md`}>
                       {categoria.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-secondary-900 group-hover:text-primary-600 transition-colors text-sm">
+                      <h4 className="font-semibold text-white group-hover:text-purple-200 transition-colors">
                         {categoria.nombre}
                       </h4>
-                      <div className="flex items-center text-xs text-secondary-500 mt-1">
+                      <div className="flex items-center text-xs text-purple-300 mt-1">
                         <Users className="w-3 h-3 mr-1" />
                         {categoria.profesores} profesores
                       </div>
@@ -346,7 +346,7 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
                 </Link>
                 )
               }) : (
-                <div className="col-span-full p-4 bg-red-100 text-red-700 rounded-lg">
+                <div className="col-span-full p-4 bg-red-500/20 text-red-200 rounded-xl border border-red-400/30">
                   No hay otras categorías
                 </div>
               )}
@@ -355,13 +355,13 @@ const CategoriesModal = ({ isOpen, onClose, highlightCategory = null }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-secondary-200 px-4 py-3 bg-secondary-50 rounded-b-2xl">
-          <p className="text-sm text-secondary-600 text-center">
+        <div className="border-t border-white/20 px-6 py-4 bg-white/5 backdrop-blur-xl rounded-b-3xl">
+          <p className="text-sm text-purple-200 text-center">
             ¿No encuentras lo que buscas? {' '}
             <Link 
               to="/buscar" 
               onClick={handleCloseClick}
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="text-purple-300 hover:text-purple-100 font-medium transition-colors"
             >
               Busca profesores por palabras clave
             </Link>

@@ -258,31 +258,36 @@ const Home = () => {
   ]
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-primary-100 py-24 overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/5 to-transparent"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <section className="py-24 overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8 fade-in" style={{animationDelay: '0.2s'}}>
-              <span className="w-2 h-2 bg-primary-500 rounded-full mr-2 animate-pulse"></span>
+            <div className="inline-flex items-center px-6 py-3 rounded-full bg-purple-500/20 text-purple-200 text-sm font-bold mb-8 fade-in border border-purple-400/50" style={{animationDelay: '0.2s'}}>
+              <span className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></span>
               Conectando estudiantes con profesores expertos
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-secondary-900 mb-6 font-display leading-tight slide-up" style={{animationDelay: '0.4s'}}>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-tight slide-up" style={{animationDelay: '0.4s'}}>
               Aprende habilidades útiles,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800 block scale-in" style={{animationDelay: '0.6s'}}>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 block scale-in" style={{animationDelay: '0.6s'}}>
                 paga por hora
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-secondary-600 mb-10 max-w-4xl mx-auto leading-relaxed fade-in" style={{animationDelay: '0.8s'}}>
-              Conectamos personas que quieren aprender habilidades prácticas como Excel o programación 
-              con <span className="font-semibold text-primary-600">profesores verificados</span>, de forma rápida, segura y flexible.
+            <p className="text-xl md:text-2xl text-purple-200 mb-10 max-w-4xl mx-auto leading-relaxed fade-in" style={{animationDelay: '0.8s'}}>
+              La plataforma líder para aprender cualquier habilidad con 
+              <span className="font-semibold text-purple-300"> expertos certificados</span>. 
+              Desde tecnología hasta idiomas, encuentra tu mentor ideal y transforma tu futuro profesional.
             </p>
             
             {/* Barra de búsqueda prominente */}
@@ -293,13 +298,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 slide-up" style={{animationDelay: '1.2s'}}>
               <Link
                 to="/buscar"
-                className="btn-gradient text-lg px-8 py-3 rounded-2xl font-semibold w-full sm:w-auto micro-bounce"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-lg px-8 py-3 rounded-2xl font-semibold w-full sm:w-auto transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Ver Todos los Profesores
               </Link>
               <Link
                 to="/ser-profesor"
-                className="border-2 border-secondary-400 text-secondary-700 hover:bg-secondary-400 hover:text-white text-lg px-8 py-3 rounded-2xl font-semibold transition-all duration-300 w-full sm:w-auto hover-lift micro-bounce"
+                className="bg-white/10 border border-white/20 text-white hover:bg-white/20 text-lg px-8 py-3 rounded-2xl font-semibold transition-all duration-300 w-full sm:w-auto backdrop-blur-sm hover:scale-105"
               >
                 Ser Profesor
               </Link>
@@ -308,16 +313,16 @@ const Home = () => {
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-8 text-center">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-primary-600">500+</span>
-                <span className="text-secondary-600 text-sm">Profesores Activos</span>
+                <span className="text-3xl font-bold text-blue-400">500+</span>
+                <span className="text-purple-200 text-sm font-medium">Profesores Activos</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-primary-600">2,000+</span>
-                <span className="text-secondary-600 text-sm">Estudiantes</span>
+                <span className="text-3xl font-bold text-blue-400">2,000+</span>
+                <span className="text-purple-200 text-sm font-medium">Estudiantes</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-primary-600">15,000+</span>
-                <span className="text-secondary-600 text-sm">Clases Completadas</span>
+                <span className="text-3xl font-bold text-blue-400">15,000+</span>
+                <span className="text-purple-200 text-sm font-medium">Clases Completadas</span>
               </div>
             </div>
           </div>
@@ -839,11 +844,11 @@ const Home = () => {
       </section>
 
       {/* CTA Final */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 py-24 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-24 overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-primary-800/90"></div>
-        <div className="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-blue-600/90"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
         
         <div className="relative max-w-5xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 text-white text-sm font-medium mb-8">
@@ -853,25 +858,25 @@ const Home = () => {
           
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 font-display leading-tight">
             ¿Listo para empezar a
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-primary-200">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-blue-200">
               aprender?
             </span>
           </h2>
           
-          <p className="text-xl md:text-2xl text-primary-100 mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto leading-relaxed">
             Únete a miles de estudiantes que ya están transformando sus carreras con EasyClase
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link
               to="/registro"
-              className="bg-white text-primary-600 hover:bg-primary-50 font-bold py-4 px-10 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto text-lg"
+              className="bg-white text-purple-600 hover:bg-purple-50 font-bold py-4 px-10 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl w-full sm:w-auto text-lg"
             >
-                             Registrarse y Obtener Beneficios
+              Registrarse y Obtener Beneficios
             </Link>
             <Link
               to="/buscar"
-              className="border-2 border-white text-white hover:bg-white hover:text-primary-600 font-bold py-4 px-10 rounded-2xl transition-all duration-300 w-full sm:w-auto text-lg"
+              className="border-2 border-white text-white hover:bg-white hover:text-purple-600 font-bold py-4 px-10 rounded-2xl transition-all duration-300 w-full sm:w-auto text-lg"
             >
               Explorar Clases
             </Link>
@@ -900,6 +905,7 @@ const Home = () => {
         isOpen={showCategoriesModal} 
         onClose={() => setShowCategoriesModal(false)} 
       />
+      </div>
     </div>
   )
 }

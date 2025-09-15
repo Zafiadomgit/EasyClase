@@ -51,11 +51,11 @@ if ($method === 'POST') {
         exit();
     }
     
-    if (empty($input['precio']) || $input['precio'] < 5000) {
+    if (empty($input['precio']) || $input['precio'] < 10) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'El precio debe ser mínimo $5,000 COP'
+            'message' => 'El precio debe ser mínimo $10 COP'
         ]);
         exit();
     }

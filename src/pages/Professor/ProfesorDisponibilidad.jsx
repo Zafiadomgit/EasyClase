@@ -152,11 +152,17 @@ const ProfesorDisponibilidad = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Configurar Disponibilidad</h1>
-        <p className="text-gray-600">Define tus horarios disponibles para clases</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
       </div>
+      
+      <div className="relative z-10 p-6">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-4">Configurar Disponibilidad</h1>
+          <p className="text-purple-200 text-lg">Define tus horarios disponibles para clases</p>
+        </div>
 
       {/* Mensaje de estado */}
       {mensaje && (
@@ -329,6 +335,7 @@ const ProfesorDisponibilidad = () => {
           <li>• Los estudiantes solo verán los horarios marcados como "Disponible"</li>
           <li>• Actualiza tu disponibilidad regularmente según tus compromisos</li>
         </ul>
+        </div>
       </div>
     </div>
   )

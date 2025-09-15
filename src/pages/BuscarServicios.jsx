@@ -229,223 +229,241 @@ const BuscarServicios = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4 font-display">
-          Buscar Servicios
-        </h1>
-        <p className="text-lg text-secondary-600 mb-6">
-          Encuentra servicios profesionales de desarrollo, tesis, consultoría y más
-        </p>
-
-        {/* Barra de búsqueda */}
-        <div className="max-w-2xl mx-auto">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-secondary-400" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header elegante */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-6 shadow-2xl">
+              <Search className="w-10 h-10 text-white" />
             </div>
-            <input
-              type="text"
-              placeholder="Buscar servicios, desarrolladores, consultores..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="block w-full pl-10 pr-12 py-3 border border-secondary-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
-            />
-            <button
-              onClick={handleSearch}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
-            >
-              <div className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
-                Buscar
+            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
+              Buscar Servicios
+            </h1>
+            <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
+              Encuentra servicios profesionales de desarrollo, tesis, consultoría y más
+            </p>
+          </div>
+
+          {/* Barra de búsqueda */}
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-6 w-6 text-purple-300" />
               </div>
-            </button>
+              <input
+                type="text"
+                placeholder="Buscar servicios, desarrolladores, consultores..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="block w-full pl-12 pr-16 py-4 bg-white/10 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-lg text-white placeholder-purple-300 backdrop-blur-sm"
+              />
+              <button
+                onClick={handleSearch}
+                className="absolute inset-y-0 right-0 flex items-center pr-2"
+              >
+                <div className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-300 font-semibold">
+                  Buscar
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filtros */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 sticky top-8">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4 flex items-center">
-              <Filter className="w-5 h-5 mr-2" />
-              Filtros
-              {((filtros.categoria || filtros.precioMin || filtros.precioMax || filtros.premium) && (
-                <span className="ml-2 bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full">
-                  Activos
-                </span>
-              ))}
-            </h3>
-
-            {/* Categoría */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
-                Categoría
-              </label>
-              <select
-                value={filtros.categoria}
-                onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
-                className="w-full p-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Todas las categorías</option>
-                {categorias.map(categoria => (
-                  <option key={categoria} value={categoria}>{categoria}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Modalidad */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
-                Modalidad
-              </label>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span className="text-sm text-blue-700 font-medium">Todas las modalidades son Online</span>
-                </div>
-                                 <p className="text-xs text-blue-600 mt-1">
-                   Garantizamos tu seguridad y prevenimos fraudes
-                 </p>
-              </div>
-            </div>
-
-            {/* Rango de precios */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-secondary-700 mb-2">
-                Rango de Precios
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  placeholder="Mín"
-                  value={filtros.precioMin}
-                  onChange={(e) => setFiltros({ ...filtros, precioMin: e.target.value })}
-                  className="p-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <input
-                  type="number"
-                  placeholder="Máx"
-                  value={filtros.precioMax}
-                  onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })}
-                  className="p-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
-
-            {/* Solo Premium */}
-            <div className="mb-6">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filtros.premium}
-                  onChange={(e) => setFiltros({ ...filtros, premium: e.target.checked })}
-                  className="mr-2"
-                />
-                <Crown className="w-4 h-4 text-amber-500 mr-1" />
-                <span className="text-sm text-secondary-700">Solo Premium</span>
-              </label>
-            </div>
-
-            {/* Botones de Acción */}
-            <div className="space-y-3 pt-4 border-t border-secondary-200">
-              <button
-                onClick={() => aplicarFiltros()}
-                className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-              >
-                🔍 Aplicar Filtros
-              </button>
-              <button
-                onClick={() => {
-                  setFiltros({
-                    categoria: '',
-                    precioMin: '',
-                    precioMax: '',
-                    premium: false
-                  })
-                  setSearchQuery('')
-                  setSearchParams({})
-                  setCurrentPage(1) // Resetear a la primera página
-                }}
-                className="w-full border border-secondary-300 text-secondary-700 py-3 px-4 rounded-lg hover:bg-secondary-50 transition-all duration-200 font-medium hover:border-secondary-400"
-              >
-                🗑️ Limpiar Filtros
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Resultados */}
-        <div className="lg:col-span-3">
-          {/* Controles de ordenamiento */}
-          <div className="flex justify-between items-center mb-6">
-            <p className="text-secondary-600">
-              Mostrando {((currentPage - 1) * serviciosPerPage) + 1} - {Math.min(currentPage * serviciosPerPage, serviciosFiltrados.length)} de {serviciosFiltrados.length} servicios encontrados
-            </p>
-            <select
-              value={ordenamiento}
-              onChange={(e) => setOrdenamiento(e.target.value)}
-              className="p-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="recientes">Más recientes</option>
-              <option value="premium">Premium primero</option>
-              <option value="precio_asc">Menor precio</option>
-              <option value="precio_desc">Mayor precio</option>
-              <option value="calificacion">Mejor calificados</option>
-              <option value="populares">Más populares</option>
-            </select>
-          </div>
-
-          {/* Grid de servicios */}
-          {serviciosFiltrados.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {getServiciosPaginaActual().map((servicio) => (
-                <ServicioCard
-                  key={servicio._id}
-                  servicio={servicio}
-                  onComprar={handleComprar}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Briefcase className="w-16 h-16 text-secondary-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-secondary-900 mb-2">
-                No se encontraron servicios
-              </h3>
-              <p className="text-secondary-600 mb-4">
-                Intenta ajustar los filtros o búsqueda
-              </p>
-              <button
-                onClick={() => {
-                  setFiltros({
-                    categoria: '',
-                    precioMin: '',
-                    precioMax: '',
-                    premium: false
-                  })
-                  setSearchQuery('')
-                  setSearchParams({})
-                  setCurrentPage(1) // Resetear a la primera página
-                }}
-                className="btn-primary"
-              >
-                Limpiar Filtros
-              </button>
+          {error && (
+            <div className="mb-8 p-6 bg-red-500/20 border border-red-400/50 rounded-2xl backdrop-blur-sm">
+              <p className="text-red-200 font-medium">{error}</p>
             </div>
           )}
 
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Filtros */}
+            <div className="lg:col-span-1">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 sticky top-8 shadow-2xl">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <Filter className="w-4 h-4 text-white" />
+                  </div>
+                  Filtros
+                  {((filtros.categoria || filtros.precioMin || filtros.precioMax || filtros.premium) && (
+                    <span className="ml-3 bg-purple-500/20 text-purple-200 text-xs px-3 py-1 rounded-full border border-purple-400/50">
+                      Activos
+                    </span>
+                  ))}
+                </h3>
+
+                {/* Categoría */}
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-white mb-3">
+                    Categoría
+                  </label>
+                  <select
+                    value={filtros.categoria}
+                    onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white backdrop-blur-sm"
+                  >
+                    <option value="" className="bg-slate-800 text-white">Todas las categorías</option>
+                    {categorias.map(categoria => (
+                      <option key={categoria} value={categoria} className="bg-slate-800 text-white">{categoria}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Modalidad */}
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-white mb-3">
+                    Modalidad
+                  </label>
+                  <div className="bg-blue-500/20 border border-blue-400/50 rounded-xl p-4 backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                      <span className="text-sm text-blue-200 font-medium">Todas las modalidades son Online</span>
+                    </div>
+                    <p className="text-xs text-blue-200 mt-2">
+                      Garantizamos tu seguridad y prevenimos fraudes
+                    </p>
+                  </div>
+                </div>
+
+                {/* Rango de precios */}
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-white mb-3">
+                    Rango de Precios
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="number"
+                      placeholder="Mín"
+                      value={filtros.precioMin}
+                      onChange={(e) => setFiltros({ ...filtros, precioMin: e.target.value })}
+                      className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-purple-300 backdrop-blur-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Máx"
+                      value={filtros.precioMax}
+                      onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })}
+                      className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-purple-300 backdrop-blur-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Solo Premium */}
+                <div className="mb-6">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={filtros.premium}
+                      onChange={(e) => setFiltros({ ...filtros, premium: e.target.checked })}
+                      className="mr-3 w-5 h-5 text-purple-600"
+                    />
+                    <Crown className="w-5 h-5 text-amber-400 mr-2" />
+                    <span className="text-sm text-white font-medium">Solo Premium</span>
+                  </label>
+                </div>
+
+                {/* Botones de Acción */}
+                <div className="space-y-3 pt-4 border-t border-white/20">
+                  <button
+                    onClick={() => aplicarFiltros()}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    🔍 Aplicar Filtros
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFiltros({
+                        categoria: '',
+                        precioMin: '',
+                        precioMax: '',
+                        premium: false
+                      })
+                      setSearchQuery('')
+                      setSearchParams({})
+                      setCurrentPage(1) // Resetear a la primera página
+                    }}
+                    className="w-full bg-white/10 border border-white/20 text-white py-3 px-4 rounded-xl hover:bg-white/20 transition-all duration-300 font-semibold"
+                  >
+                    🗑️ Limpiar Filtros
+                  </button>
+                </div>
+          </div>
+        </div>
+
+            {/* Resultados */}
+            <div className="lg:col-span-3">
+              {/* Controles de ordenamiento */}
+              <div className="flex justify-between items-center mb-8">
+                <p className="text-purple-200 font-medium">
+                  Mostrando {((currentPage - 1) * serviciosPerPage) + 1} - {Math.min(currentPage * serviciosPerPage, serviciosFiltrados.length)} de {serviciosFiltrados.length} servicios encontrados
+                </p>
+                <select
+                  value={ordenamiento}
+                  onChange={(e) => setOrdenamiento(e.target.value)}
+                  className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white backdrop-blur-sm"
+                >
+                  <option value="recientes" className="bg-slate-800 text-white">Más recientes</option>
+                  <option value="premium" className="bg-slate-800 text-white">Premium primero</option>
+                  <option value="precio_asc" className="bg-slate-800 text-white">Menor precio</option>
+                  <option value="precio_desc" className="bg-slate-800 text-white">Mayor precio</option>
+                  <option value="calificacion" className="bg-slate-800 text-white">Mejor calificados</option>
+                  <option value="populares" className="bg-slate-800 text-white">Más populares</option>
+                </select>
+              </div>
+
+              {/* Grid de servicios */}
+              {serviciosFiltrados.length > 0 ? (
+                <div className="px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                    {getServiciosPaginaActual().map((servicio) => (
+                      <ServicioCard
+                        key={servicio._id}
+                        servicio={servicio}
+                        onComprar={handleComprar}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 rounded-full mb-6 backdrop-blur-sm">
+                    <Briefcase className="w-10 h-10 text-purple-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    No se encontraron servicios
+                  </h3>
+                  <p className="text-purple-200 mb-8 text-lg">
+                    Intenta ajustar los filtros o búsqueda
+                  </p>
+                  <button
+                    onClick={() => {
+                      setFiltros({
+                        categoria: '',
+                        precioMin: '',
+                        precioMax: '',
+                        premium: false
+                      })
+                      setSearchQuery('')
+                      setSearchParams({})
+                      setCurrentPage(1) // Resetear a la primera página
+                    }}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    Limpiar Filtros
+                  </button>
+                </div>
+              )}
+
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center">
+            <div className="mt-12 mb-24 flex items-center justify-center">
               <nav className="flex items-center space-x-2">
                 {/* Botón anterior */}
                 <button
@@ -493,6 +511,9 @@ const BuscarServicios = () => {
           )}
         </div>
       </div>
+      
+      {/* Espaciado adicional para separar del footer */}
+      <div className="h-16"></div>
     </div>
   )
 }

@@ -68,6 +68,8 @@ const ReservarClase = () => {
       
       if (data.success) {
         setClase(data.data.clase)
+        console.log('Datos de clase cargados:', data.data.clase)
+        console.log('Nombre del profesor:', data.data.clase.profesor.nombre)
       } else {
         setError('Error al cargar la información de la clase')
       }
@@ -184,14 +186,17 @@ const ReservarClase = () => {
         if (servicio) {
           // Usar precios del servicio según el tipo seleccionado
           if (tipoAgenda === 'individual') {
-            precioPorHora = servicio.precioIndividual || servicio.precio || 0
+            precioPorHora = servicio.precioIndividual || servicio.precio || 10
           } else if (tipoAgenda === 'grupal') {
-            precioPorHora = servicio.precioGrupal || servicio.precio || 0
+            precioPorHora = servicio.precioGrupal || servicio.precio || 10
           }
         } else {
           // Fallback para clases sin servicio específico
-          precioPorHora = tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
+          precioPorHora = tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 10) * 0.7)
         }
+        
+        // Asegurar precio mínimo de $10 COP para pruebas
+        precioPorHora = Math.max(precioPorHora, 10)
         
         const duracionHoras = cantidadHoras // Usar la cantidad de horas seleccionada por el estudiante
         const precioTotal = precioPorHora * duracionHoras
@@ -205,7 +210,7 @@ const ReservarClase = () => {
           duracionHoras: duracionHoras,
           precioPorHora: precioPorHora,
           precio: precioTotal,
-          profesorNombre: clase?.profesor?.nombre,
+          profesorNombre: clase?.profesor?.nombre || 'Profesor Especializado',
           servicioTitulo: servicio?.titulo || 'Clase General',
           servicioCategoria: servicio?.categoria || 'General'
         }
@@ -220,7 +225,7 @@ const ReservarClase = () => {
           id: `clase_estudiante_${Date.now()}`,
           titulo: servicio?.titulo || 'Clase General',
           profesor: {
-            nombre: clase?.profesor?.nombre,
+            nombre: clase?.profesor?.nombre || 'Profesor Especializado',
             email: clase?.profesor?.email || 'profesor@easyclase.com'
           },
           fecha: fechaSeleccionada,
@@ -278,261 +283,349 @@ const ReservarClase = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Reservar Clase</h1>
-          
-          {/* Información del profesor */}
-          <div className="border rounded-lg p-4 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">{clase.profesor.nombre}</h2>
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-              <span className="flex items-center">
-                ⭐ {clase.profesor.calificacionPromedio} ({clase.profesor.totalResenas} reseñas)
-              </span>
-              <span>${clase.profesor.precioHora.toLocaleString()}/hora</span>
-              {clase.profesor.esPremium && (
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  Premium
-                </span>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Header elegante */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-6 shadow-2xl">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {clase.profesor.especialidades.map((especialidad, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                >
-                  {especialidad}
-                </span>
-              ))}
-            </div>
+            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
+              Reservar Clase
+            </h1>
+            <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
+              Selecciona la fecha y hora para tu clase con {clase.profesor.nombre}
+            </p>
           </div>
 
-          {/* Formulario de reserva */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha
-              </label>
-              <input
-                type="date"
-                value={fechaSeleccionada}
-                onChange={(e) => setFechaSeleccionada(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hora
-              </label>
-              <select
-                value={horaSeleccionada}
-                onChange={(e) => setHoraSeleccionada(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Selecciona una hora</option>
-                {opcionesHora.map(opcion => (
-                  <option key={opcion.value} value={opcion.value}>
-                    {opcion.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Selector de tipo de agenda */}
-            {fechaSeleccionada && horaSeleccionada && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Clase
-                </label>
-                
-                {/* Estado del horario */}
-                {estadoHorario && (
-                  <div className="mb-4 p-3 rounded-lg border">
-                    {estadoHorario === 'disponible' && (
-                      <div className="text-green-600 font-medium">
-                        ✅ Horario disponible - Eres el primero en agendar
-                      </div>
-                    )}
-                    {estadoHorario === 'individual' && (
-                      <div className="text-red-600 font-medium">
-                        ❌ Horario ocupado - Ya fue reservado como individual
-                      </div>
-                    )}
-                    {estadoHorario === 'grupal' && (
-                      <div className="text-blue-600 font-medium">
-                        👥 Clase grupal - {alumnosInscritos}/5 alumnos inscritos
-                      </div>
-                    )}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Sidebar elegante - Información del profesor */}
+            <div className="xl:col-span-1">
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 sticky top-8 shadow-2xl">
+                <div className="flex items-center mb-8">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                   </div>
-                )}
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Información del Profesor</h3>
+                    <p className="text-purple-200">Detalles de tu instructor</p>
+                  </div>
+                </div>
 
-                {/* Opciones de tipo */}
-                <div className="space-y-3">
-                  {/* Individual */}
-                  <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                    tipoAgenda === 'individual' 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : estadoHorario === 'individual' 
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="tipoAgenda"
-                      value="individual"
-                      checked={tipoAgenda === 'individual'}
-                      onChange={(e) => setTipoAgenda(e.target.value)}
-                      disabled={estadoHorario === 'individual'}
-                      className="mr-3"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Clase Individual</div>
-                      <div className="text-sm text-gray-600">
-                        Clase privada de 1 hora - ${clase?.profesor?.precioHora?.toLocaleString() || '0'}/hora
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center py-3 border-b border-white/10">
+                    <span className="text-purple-200 font-medium">Nombre</span>
+                    <span className="text-white font-semibold">{clase.profesor.nombre}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-white/10">
+                    <span className="text-purple-200 font-medium">Calificación</span>
+                    <span className="text-white font-semibold">⭐ {clase.profesor.calificacionPromedio}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-white/10">
+                    <span className="text-purple-200 font-medium">Reseñas</span>
+                    <span className="text-white font-semibold">{clase.profesor.totalResenas}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-white/10">
+                    <span className="text-purple-200 font-medium">Precio/hora</span>
+                    <span className="text-white font-semibold">${clase.profesor.precioHora.toLocaleString()}</span>
+                  </div>
+                  
+                  {clase.profesor.esPremium && (
+                    <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-4 border border-yellow-400/30">
+                      <div className="flex items-center">
+                        <svg className="w-6 h-6 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        <span className="text-yellow-200 font-semibold">Profesor Premium</span>
                       </div>
                     </div>
-                  </label>
+                  )}
 
-                  {/* Grupal */}
-                  <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                    tipoAgenda === 'grupal' 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : estadoHorario === 'individual' 
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="tipoAgenda"
-                      value="grupal"
-                      checked={tipoAgenda === 'grupal'}
-                      onChange={(e) => setTipoAgenda(e.target.value)}
-                      disabled={estadoHorario === 'individual' || (estadoHorario === 'grupal' && alumnosInscritos >= 5)}
-                      className="mr-3"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Clase Grupal</div>
-                      <div className="text-sm text-gray-600">
-                        Clase compartida (máx 5 alumnos) - ${Math.round((clase?.profesor?.precioHora || 0) * 0.7).toLocaleString()}/hora
-                      </div>
-                      {estadoHorario === 'grupal' && (
-                        <div className="text-xs text-blue-600 mt-1">
-                          {alumnosInscritos} de 5 alumnos inscritos
-                        </div>
-                      )}
+                  <div className="mt-6">
+                    <h4 className="text-white font-semibold mb-3">Especialidades</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {clase.profesor.especialidades.map((especialidad, index) => (
+                        <span
+                          key={index}
+                          className="bg-purple-500/20 text-purple-200 text-xs font-medium px-3 py-1 rounded-full border border-purple-400/30"
+                        >
+                          {especialidad}
+                        </span>
+                      ))}
                     </div>
-                  </label>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Selector de cantidad de horas */}
-            {tipoAgenda && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cantidad de Horas
-                </label>
-                
-                {/* Mostrar información de disponibilidad */}
-                {disponibilidadMultiple && (
-                  <div className="mb-4 p-3 rounded-lg border bg-blue-50 border-blue-200">
-                    <div className="text-sm text-blue-800">
-                      <strong>Disponibilidad:</strong> Puedes reservar hasta {maxHorasDisponibles} hora{maxHorasDisponibles > 1 ? 's' : ''} consecutiva{maxHorasDisponibles > 1 ? 's' : ''}
-                    </div>
-                    {disponibilidadMultiple.horariosDisponibles && (
-                      <div className="mt-2 text-xs text-blue-700">
-                        {disponibilidadMultiple.horariosDisponibles.map((horario, index) => (
-                          <span key={index} className={`mr-2 ${horario.disponible ? 'text-green-600' : 'text-red-600'}`}>
-                            {horario.hora} {horario.disponible ? '✅' : '❌'}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[1, 2, 3, 4].map(horas => {
-                    const disponible = horas <= maxHorasDisponibles
-                    return (
-                      <button
-                        key={horas}
-                        type="button"
-                        onClick={() => disponible && setCantidadHoras(horas)}
-                        disabled={!disponible}
-                        className={`p-3 border rounded-lg text-center transition-colors ${
-                          !disponible
-                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : cantidadHoras === horas
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="font-medium">
-                          {horas} hora{horas > 1 ? 's' : ''}
-                          {!disponible && ' ❌'}
+            {/* Contenido principal - Formulario */}
+            <div className="xl:col-span-2">
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-10 shadow-2xl">
+
+                <form className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-lg font-semibold text-white mb-4">
+                        Fecha de la clase
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={fechaSeleccionada}
+                          onChange={(e) => setFechaSeleccionada(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-purple-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
+                          required
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                          <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
                         </div>
-                        <div className="text-xs text-gray-600">
-                          {disponible ? (
-                            servicio ? (
-                              tipoAgenda === 'individual' 
-                                ? `$${((servicio.precioIndividual || servicio.precio || 0) * horas).toLocaleString()}`
-                                : `$${((servicio.precioGrupal || servicio.precio || 0) * horas).toLocaleString()}`
-                            ) : (
-                              tipoAgenda === 'individual'
-                                ? `$${((clase?.profesor?.precioHora || 0) * horas).toLocaleString()}`
-                                : `$${(Math.round((clase?.profesor?.precioHora || 0) * 0.7) * horas).toLocaleString()}`
-                            )
-                          ) : (
-                            'No disponible'
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-lg font-semibold text-white mb-4">
+                        Hora de la clase
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={horaSeleccionada}
+                          onChange={(e) => setHoraSeleccionada(e.target.value)}
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-2xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm appearance-none"
+                          required
+                        >
+                          <option value="" className="text-gray-800">Selecciona una hora</option>
+                          {opcionesHora.map(opcion => (
+                            <option key={opcion.value} value={opcion.value} className="text-gray-800">
+                              {opcion.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                          <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Selector de tipo de agenda */}
+                  {fechaSeleccionada && horaSeleccionada && (
+                    <div className="space-y-6">
+                      <label className="block text-lg font-semibold text-white mb-4">
+                        Tipo de Clase
+                      </label>
+                      
+                      {/* Estado del horario */}
+                      {estadoHorario && (
+                        <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                          {estadoHorario === 'disponible' && (
+                            <div className="text-green-300 font-medium flex items-center">
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Horario disponible - Eres el primero en agendar
+                            </div>
+                          )}
+                          {estadoHorario === 'individual' && (
+                            <div className="text-red-300 font-medium flex items-center">
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Horario ocupado - Ya fue reservado como individual
+                            </div>
+                          )}
+                          {estadoHorario === 'grupal' && (
+                            <div className="text-blue-300 font-medium flex items-center">
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-5.523-4.477-10-10-10S-3 12.477-3 18v2m20 0H7" />
+                              </svg>
+                              Clase grupal - {alumnosInscritos}/5 alumnos inscritos
+                            </div>
                           )}
                         </div>
-                      </button>
-                    )
-                  })}
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  💡 Solo se muestran las horas consecutivas disponibles
-                </p>
-              </div>
-            )}
+                      )}
 
-            <div className="flex space-x-4 pt-4">
-              <button
-                onClick={() => navigate('/buscar')}
-                className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={reservar}
-                disabled={reservando || !fechaSeleccionada || !horaSeleccionada || !tipoAgenda || !cantidadHoras || estadoHorario === 'individual' || cantidadHoras > maxHorasDisponibles}
-                className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {reservando ? 'Reservando...' : (
-                  tipoAgenda && cantidadHoras ? 
-                    (() => {
-                      let precioTotal = 0
-                      if (servicio) {
-                        const precioPorHora = tipoAgenda === 'individual' 
-                          ? (servicio.precioIndividual || servicio.precio || 0)
-                          : (servicio.precioGrupal || servicio.precio || 0)
-                        precioTotal = precioPorHora * cantidadHoras
-                      } else {
-                        const precioPorHora = tipoAgenda === 'individual' 
-                          ? (clase?.profesor?.precioHora || 0)
-                          : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
-                        precioTotal = precioPorHora * cantidadHoras
-                      }
-                      return `Reservar ${cantidadHoras} hora${cantidadHoras > 1 ? 's' : ''} ${tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} - $${precioTotal.toLocaleString()}`
-                    })() :
-                    'Reservar Clase'
-                )}
-              </button>
+                      {/* Opciones de tipo */}
+                      <div className="space-y-4">
+                        {/* Individual */}
+                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${
+                          tipoAgenda === 'individual' 
+                            ? 'border-purple-500 bg-purple-500/20 shadow-lg' 
+                            : estadoHorario === 'individual' 
+                              ? 'border-white/20 bg-white/5 cursor-not-allowed opacity-50'
+                              : 'border-white/20 bg-white/5 hover:border-purple-400/50 hover:bg-purple-500/10'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="tipoAgenda"
+                            value="individual"
+                            checked={tipoAgenda === 'individual'}
+                            onChange={(e) => setTipoAgenda(e.target.value)}
+                            disabled={estadoHorario === 'individual'}
+                            className="mr-4 w-5 h-5 text-purple-600"
+                          />
+                          <div className="flex-1">
+                            <div className="font-bold text-white text-lg">Clase Individual</div>
+                            <div className="text-purple-200 mt-1">
+                              Clase privada de 1 hora - ${clase?.profesor?.precioHora?.toLocaleString() || '0'}/hora
+                            </div>
+                          </div>
+                        </label>
+
+                        {/* Grupal */}
+                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${
+                          tipoAgenda === 'grupal' 
+                            ? 'border-purple-500 bg-purple-500/20 shadow-lg' 
+                            : estadoHorario === 'individual' 
+                              ? 'border-white/20 bg-white/5 cursor-not-allowed opacity-50'
+                              : 'border-white/20 bg-white/5 hover:border-purple-400/50 hover:bg-purple-500/10'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="tipoAgenda"
+                            value="grupal"
+                            checked={tipoAgenda === 'grupal'}
+                            onChange={(e) => setTipoAgenda(e.target.value)}
+                            disabled={estadoHorario === 'individual' || (estadoHorario === 'grupal' && alumnosInscritos >= 5)}
+                            className="mr-4 w-5 h-5 text-purple-600"
+                          />
+                          <div className="flex-1">
+                            <div className="font-bold text-white text-lg">Clase Grupal</div>
+                            <div className="text-purple-200 mt-1">
+                              Clase compartida (máx 5 alumnos) - ${Math.round((clase?.profesor?.precioHora || 0) * 0.7).toLocaleString()}/hora
+                            </div>
+                            {estadoHorario === 'grupal' && (
+                              <div className="text-blue-300 text-sm mt-2">
+                                {alumnosInscritos} de 5 alumnos inscritos
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selector de cantidad de horas */}
+                  {tipoAgenda && (
+                    <div className="space-y-6">
+                      <label className="block text-lg font-semibold text-white mb-4">
+                        Cantidad de Horas
+                      </label>
+                      
+                      {/* Mostrar información de disponibilidad */}
+                      {disponibilidadMultiple && (
+                        <div className="bg-blue-500/20 rounded-2xl p-4 border border-blue-400/30">
+                          <div className="text-sm text-blue-200">
+                            <strong>Disponibilidad:</strong> Puedes reservar hasta {maxHorasDisponibles} hora{maxHorasDisponibles > 1 ? 's' : ''} consecutiva{maxHorasDisponibles > 1 ? 's' : ''}
+                          </div>
+                          {disponibilidadMultiple.horariosDisponibles && (
+                            <div className="mt-2 text-xs text-blue-300">
+                              {disponibilidadMultiple.horariosDisponibles.map((horario, index) => (
+                                <span key={index} className={`mr-2 ${horario.disponible ? 'text-green-300' : 'text-red-300'}`}>
+                                  {horario.hora} {horario.disponible ? '✅' : '❌'}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map(horas => {
+                          const disponible = horas <= maxHorasDisponibles
+                          return (
+                            <button
+                              key={horas}
+                              type="button"
+                              onClick={() => disponible && setCantidadHoras(horas)}
+                              disabled={!disponible}
+                              className={`p-4 border rounded-2xl text-center transition-all duration-300 ${
+                                !disponible
+                                  ? 'border-white/20 bg-white/5 text-gray-400 cursor-not-allowed opacity-50'
+                                  : cantidadHoras === horas
+                                    ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg'
+                                    : 'border-white/20 bg-white/5 text-white hover:border-purple-400/50 hover:bg-purple-500/10'
+                              }`}
+                            >
+                              <div className="font-bold text-lg">
+                                {horas} hora{horas > 1 ? 's' : ''}
+                                {!disponible && ' ❌'}
+                              </div>
+                              <div className="text-sm text-purple-200 mt-1">
+                                {disponible ? (
+                                  servicio ? (
+                                    tipoAgenda === 'individual' 
+                                      ? `$${((servicio.precioIndividual || servicio.precio || 0) * horas).toLocaleString()}`
+                                      : `$${((servicio.precioGrupal || servicio.precio || 0) * horas).toLocaleString()}`
+                                  ) : (
+                                    tipoAgenda === 'individual'
+                                      ? `$${((clase?.profesor?.precioHora || 0) * horas).toLocaleString()}`
+                                      : `$${(Math.round((clase?.profesor?.precioHora || 0) * 0.7) * horas).toLocaleString()}`
+                                  )
+                                ) : (
+                                  'No disponible'
+                                )}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <p className="text-sm text-purple-200 mt-2">
+                        💡 Solo se muestran las horas consecutivas disponibles
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Botones de acción */}
+                  <div className="flex space-x-6 pt-8">
+                    <button
+                      onClick={() => navigate('/buscar')}
+                      className="flex-1 bg-white/10 text-white px-8 py-4 rounded-2xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={reservar}
+                      disabled={reservando || !fechaSeleccionada || !horaSeleccionada || !tipoAgenda || !cantidadHoras || estadoHorario === 'individual' || cantidadHoras > maxHorasDisponibles}
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-2xl hover:from-purple-700 hover:to-blue-700 font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                    >
+                      {reservando ? 'Reservando...' : (
+                        tipoAgenda && cantidadHoras ? 
+                          (() => {
+                            let precioTotal = 0
+                            if (servicio) {
+                              const precioPorHora = tipoAgenda === 'individual' 
+                                ? (servicio.precioIndividual || servicio.precio || 0)
+                                : (servicio.precioGrupal || servicio.precio || 0)
+                              precioTotal = precioPorHora * cantidadHoras
+                            } else {
+                              const precioPorHora = tipoAgenda === 'individual' 
+                                ? (clase?.profesor?.precioHora || 0)
+                                : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
+                              precioTotal = precioPorHora * cantidadHoras
+                            }
+                            return `Reservar ${cantidadHoras} hora${cantidadHoras > 1 ? 's' : ''} ${tipoAgenda === 'individual' ? 'Individual' : 'Grupal'} - $${precioTotal.toLocaleString()}`
+                          })() :
+                          'Reservar Clase'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>

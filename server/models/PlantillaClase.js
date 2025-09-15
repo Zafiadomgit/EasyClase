@@ -46,7 +46,7 @@ const PlantillaClase = sequelize.define('PlantillaClase', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
     validate: {
-      min: 5000
+      min: 10
     }
   },
   duracion: {

@@ -180,7 +180,7 @@ const Header = () => {
 
 
   return (
-    <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg border-b border-secondary-100 dark:border-gray-700 sticky top-0 z-50">
+    <header className="bg-black/30 backdrop-blur-xl shadow-2xl border-b border-white/30 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
@@ -203,16 +203,16 @@ const Header = () => {
           </div>
 
           {/* Navegación Desktop */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-2">
             <Link
               to="/buscar"
-              className="text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+              className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
             >
               Buscar Clases
             </Link>
             <Link
               to="/servicios"
-              className="text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+              className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
             >
               Servicios
             </Link>
@@ -221,17 +221,17 @@ const Header = () => {
             <div className="relative" ref={categoriesRef}>
               <button
                 onClick={toggleCategories}
-                className="flex items-center space-x-1 text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+                className="flex items-center space-x-1 text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
               >
                 <span>Categorías</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
               </button>
               
               {isCategoriesOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-secondary-200 dark:border-gray-600 py-4 z-50">
-                  <div className="px-4 py-2 border-b border-secondary-100 dark:border-gray-600">
-                    <h3 className="text-sm font-semibold text-secondary-900 dark:text-gray-100">Todas las Categorías</h3>
-                    <p className="text-xs text-secondary-600 dark:text-gray-400">Encuentra tu profesor ideal</p>
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 py-4 z-50">
+                  <div className="px-4 py-2 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-800">Todas las Categorías</h3>
+                    <p className="text-xs text-gray-600">Encuentra tu profesor ideal</p>
                   </div>
                   
                   <div className="py-2">
@@ -239,37 +239,37 @@ const Header = () => {
                       <button
                         key={categoria.name}
                         onClick={() => handleCategoryClick(categoria.name)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary-50 dark:hover:bg-gray-700 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                          <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
                             {categoria.icon}
                           </div>
                           <div className="text-left">
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium text-secondary-900 dark:text-gray-100">{categoria.name}</span>
+                              <span className="text-sm font-medium text-gray-800">{categoria.name}</span>
                               {categoria.popular && (
-                                <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full flex items-center">
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center">
                                   <Star className="w-3 h-3 mr-1" />
                                   Popular
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-secondary-600 dark:text-gray-400">{categoria.profesores} profesores</span>
+                            <span className="text-xs text-gray-600">{categoria.profesores} profesores</span>
                           </div>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-secondary-400 rotate-[-90deg]" />
+                        <ChevronDown className="w-4 h-4 text-gray-500 rotate-[-90deg]" />
                       </button>
                     ))}
                   </div>
                   
-                  <div className="px-4 py-2 border-t border-secondary-100 dark:border-gray-600">
+                  <div className="px-4 py-2 border-t border-white/10">
                     <button
                       onClick={() => {
                         setIsCategoriesOpen(false)
                         setShowCategoriesModal(true)
                       }}
-                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      className="text-sm text-purple-300 hover:text-purple-200 font-medium"
                     >
                       Ver todas las categorías →
                     </button>
@@ -280,13 +280,13 @@ const Header = () => {
             
             <Link
               to="/como-funciona"
-              className="text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+              className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
             >
               ¿Cómo funciona?
             </Link>
             <Link
               to="/ser-profesor"
-              className="text-secondary-700 hover:text-primary-600 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+              className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
             >
               Ser Profesor
             </Link>
@@ -305,21 +305,22 @@ const Header = () => {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={toggleUserMenu}
-                    className="flex items-center space-x-2 text-secondary-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="flex items-center space-x-3 text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/10 border border-white/20"
+                    ref={userMenuRef}
                   >
-                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-primary-600 font-semibold text-xs">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-sm">
                         {user?.nombre?.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <span>{user?.nombre?.split(' ')[0]}</span>
+                    <span className="font-semibold">{user?.nombre?.split(' ')[0]}</span>
                   </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-secondary-200">
+                  <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border border-white/30">
                     <Link
                       to="/dashboard"
-                      className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       Mi Dashboard
@@ -328,7 +329,7 @@ const Header = () => {
                     {user?.tipoUsuario === 'profesor' && (
                       <Link
                         to="/profesor/disponibilidad"
-                        className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                        className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         📅 Configurar Disponibilidad
@@ -336,7 +337,7 @@ const Header = () => {
                     )}
                     <Link
                       to="/perfil"
-                      className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       Mi Perfil
@@ -361,7 +362,7 @@ const Header = () => {
                     {user?.tipoUsuario === 'profesor' && (
                       <Link
                         to="/mis-clases"
-                        className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                        className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Mis Clases
@@ -372,14 +373,14 @@ const Header = () => {
                       <>
                         <Link
                           to="/mis-servicios-comprados"
-                          className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Mis Servicios Comprados
                         </Link>
                         <Link
                           to="/mis-reservas"
-                          className="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50"
+                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Mis Reservas
@@ -416,14 +417,14 @@ const Header = () => {
                     <hr className="my-1" />
                     
                     {/* Theme Toggle en menú de usuario */}
-                    <div className="px-4 py-2 flex items-center justify-between hover:bg-secondary-50">
-                      <span className="text-sm text-secondary-700">Modo Oscuro</span>
+                    <div className="px-4 py-3 flex items-center justify-between hover:bg-purple-100 transition-colors rounded-xl mx-2">
+                      <span className="text-sm text-gray-800">Modo Oscuro</span>
                       <ThemeToggle />
                     </div>
                     
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center transition-colors rounded-xl mx-2"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Cerrar Sesión

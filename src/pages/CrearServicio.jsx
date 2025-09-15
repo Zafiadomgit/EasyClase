@@ -124,16 +124,22 @@ const CrearServicio = () => {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Crear Nuevo Servicio</h1>
-          <p className="text-secondary-600">Crea cursos pregrabados, asesorías y servicios con materiales incluidos</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+      </div>
+      
+      <div className="relative z-10 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">Crear Nuevo Servicio</h1>
+            <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">Crea cursos pregrabados, asesorías y servicios con materiales incluidos</p>
+          </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-10 shadow-2xl">
           
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 flex items-center">
@@ -152,13 +158,13 @@ const CrearServicio = () => {
             
             {/* Información básica */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-purple-300" />
                 Información del Servicio
               </h3>
               
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Título del servicio *
                 </label>
                 <input
@@ -167,13 +173,13 @@ const CrearServicio = () => {
                   value={servicioData.titulo}
                   onChange={handleChange}
                   placeholder="Ej: Curso completo de Excel Avanzado"
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Descripción *
                 </label>
                 <textarea
@@ -182,25 +188,25 @@ const CrearServicio = () => {
                   onChange={handleChange}
                   rows="4"
                   placeholder="Describe detalladamente qué aprenderán los estudiantes..."
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Categoría *
                 </label>
                 <select
                   name="categoria"
                   value={servicioData.categoria}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white backdrop-blur-sm"
                   required
                 >
-                  <option value="">Selecciona una categoría</option>
+                  <option value="" className="bg-slate-800 text-white">Selecciona una categoría</option>
                   {categorias.map(categoria => (
-                    <option key={categoria} value={categoria}>{categoria}</option>
+                    <option key={categoria} value={categoria} className="bg-slate-800 text-white">{categoria}</option>
                   ))}
                 </select>
               </div>
@@ -208,13 +214,13 @@ const CrearServicio = () => {
 
             {/* Tipo de servicio */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900 flex items-center">
-                <Users className="w-5 h-5 mr-2" />
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Users className="w-5 h-5 mr-2 text-purple-300" />
                 Tipo de Servicio
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <label className="flex items-center p-4 border border-secondary-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
                   <input
                     type="radio"
                     name="tipo"
@@ -229,7 +235,7 @@ const CrearServicio = () => {
                   </div>
                 </label>
                 
-                <label className="flex items-center p-4 border border-secondary-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
                   <input
                     type="radio"
                     name="tipo"
@@ -244,7 +250,7 @@ const CrearServicio = () => {
                   </div>
                 </label>
                 
-                <label className="flex items-center p-4 border border-secondary-300 rounded-xl cursor-pointer hover:border-primary-500 transition-colors">
+                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
                   <input
                     type="radio"
                     name="tipo"
@@ -263,13 +269,13 @@ const CrearServicio = () => {
 
             {/* Precio del servicio */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" />
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <DollarSign className="w-5 h-5 mr-2 text-purple-300" />
                 Precio del Servicio
               </h3>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4 mb-4 backdrop-blur-sm">
+                <p className="text-sm text-blue-200">
                   <strong>ℹ️ Información:</strong> Define el precio total del servicio. 
                   Los estudiantes comprarán el servicio completo con todos los materiales incluidos.
                 </p>
@@ -277,7 +283,7 @@ const CrearServicio = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                  <label className="block text-sm font-semibold text-purple-200 mb-2">
                     Precio del servicio *
                   </label>
                   <div className="relative">
@@ -287,7 +293,7 @@ const CrearServicio = () => {
                       name="precio"
                       value={servicioData.precio}
                       onChange={handleChange}
-                      placeholder="150000"
+                      placeholder="10"
                       className="w-full pl-8 pr-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                       required
                     />
@@ -300,7 +306,7 @@ const CrearServicio = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                  <label className="block text-sm font-semibold text-purple-200 mb-2">
                     Duración estimada (opcional)
                   </label>
                   <input
@@ -309,7 +315,7 @@ const CrearServicio = () => {
                     value={servicioData.duracion}
                     onChange={handleChange}
                     placeholder="Ej: 3 horas, 2 semanas, 1 mes"
-                    className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                   />
                 </div>
               </div>
@@ -317,20 +323,20 @@ const CrearServicio = () => {
 
             {/* Subida de archivos */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900 flex items-center">
-                <Upload className="w-5 h-5 mr-2" />
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Upload className="w-5 h-5 mr-2 text-purple-300" />
                 Archivos del Servicio
               </h3>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-green-800">
+              <div className="bg-green-500/20 border border-green-400/50 rounded-lg p-4 mb-4 backdrop-blur-sm">
+                <p className="text-sm text-green-200">
                   <strong>📁 Archivos:</strong> Sube videos, documentos, presentaciones y otros materiales. 
                   Máximo 100MB por archivo.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Subir archivos *
                 </label>
                 <div className="border-2 border-dashed border-secondary-300 rounded-xl p-6 text-center hover:border-primary-500 transition-colors">
@@ -384,7 +390,7 @@ const CrearServicio = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   URL de video (opcional)
                 </label>
                 <input
@@ -393,7 +399,7 @@ const CrearServicio = () => {
                   value={servicioData.urlVideo}
                   onChange={handleChange}
                   placeholder="https://youtube.com/watch?v=... o https://vimeo.com/..."
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                 />
                 <p className="text-xs text-secondary-500 mt-1">
                   Si prefieres usar un video de YouTube, Vimeo u otra plataforma
@@ -403,17 +409,17 @@ const CrearServicio = () => {
 
             {/* Modalidad - Solo Online */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900 flex items-center">
-                <Clock className="w-5 h-5 mr-2" />
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-purple-300" />
                 Modalidad
               </h3>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-500/20 border border-green-400/50 rounded-lg p-4 backdrop-blur-sm">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="font-medium text-green-800">Clases Online</span>
+                  <span className="font-medium text-green-200">Clases Online</span>
                 </div>
-                <p className="text-sm text-green-700 mt-1">
+                <p className="text-sm text-green-200 mt-1">
                   Todas las clases se realizan de forma online a través de videollamadas
                 </p>
               </div>
@@ -425,7 +431,7 @@ const CrearServicio = () => {
               <h3 className="text-lg font-semibold text-secondary-900">Información Adicional</h3>
               
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Requisitos previos (opcional)
                 </label>
                 <textarea
@@ -434,12 +440,12 @@ const CrearServicio = () => {
                   onChange={handleChange}
                   rows="3"
                   placeholder="¿Qué conocimientos previos necesitan los estudiantes?"
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Objetivos de aprendizaje (opcional)
                 </label>
                 <textarea
@@ -448,7 +454,7 @@ const CrearServicio = () => {
                   onChange={handleChange}
                   rows="3"
                   placeholder="¿Qué aprenderán los estudiantes al finalizar?"
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                 />
               </div>
             </div>
@@ -458,20 +464,21 @@ const CrearServicio = () => {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="flex-1 px-6 py-3 border border-secondary-300 text-secondary-700 rounded-xl hover:bg-secondary-50 transition-colors"
+                className="flex-1 px-6 py-3 border border-white/20 text-purple-200 rounded-xl hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creando servicio...' : 'Crear Servicio'}
               </button>
             </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   )

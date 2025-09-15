@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'especialidades' => array('Programación', 'React', 'Node.js'),
                     'calificacionPromedio' => 5.0,
                     'totalResenas' => 203,
-                    'precioHora' => 45000,
+                    'precioHora' => 10,
                     'esPremium' => true
                 ),
                 'disponibilidad' => array(

@@ -12,14 +12,6 @@ export const useSystemNotifications = () => {
   useEffect(() => {
     if (!user?.id) return
 
-    // Mostrar notificación de bienvenida solo una vez por sesión
-    if (!welcomeShownRef.current) {
-      setTimeout(() => {
-        showSystemNotification('welcome', user.id)
-        welcomeShownRef.current = true
-      }, 2000) // 2 segundos después del login
-    }
-
     // Escuchar eventos automáticos del sistema
     const handleSystemNotification = (event) => {
       const { type, userId, data } = event.detail

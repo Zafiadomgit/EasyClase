@@ -2,18 +2,14 @@ import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
-import { useUpcomingClassNotifications } from '../../hooks/useUpcomingClassNotifications'
-import { useSystemNotifications } from '../../hooks/useSystemNotifications'
+import { useRealNotifications } from '../../hooks/useRealNotifications'
 
 const Layout = () => {
-  // Hook para notificaciones de clases próximas
-  useUpcomingClassNotifications()
-  
-  // Hook para notificaciones del sistema
-  useSystemNotifications()
+  // Hook para notificaciones reales del sistema
+  useRealNotifications()
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
         <Outlet />

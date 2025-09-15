@@ -7,7 +7,7 @@ import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
-import BuscarClases from './pages/BuscarClasesNuevo'
+import BuscarClases from './pages/BuscarClases'
 import PerfilProfesor from './pages/PerfilProfesor'
 import Perfil from './pages/Perfil'
 import MisClases from './pages/MisClases'
@@ -55,7 +55,12 @@ function App() {
       <AuthProvider>
         <NotificationProvider>
           <Router>
-          <div className="min-h-screen transition-colors duration-300" style={{backgroundColor: 'rgb(var(--color-background))'}}>
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+            </div>
+            <div className="relative z-10">
           <Routes>
             {/* Rutas independientes (sin Layout) */}
             <Route path="/onboarding" element={<OnboardingPage />} />
@@ -181,7 +186,8 @@ function App() {
               <Route path="system" element={<AdminSistema />} />
             </Route>
           </Routes>
-                  </div>
+            </div>
+          </div>
         </Router>
         </NotificationProvider>
       </AuthProvider>

@@ -69,8 +69,8 @@ const crearPlantillaValidation = [
     .withMessage('Tipo debe ser individual o grupal'),
   body('precio')
     .isNumeric()
-    .isFloat({ min: 5000 })
-    .withMessage('El precio debe ser mínimo $5,000 COP'),
+    .isFloat({ min: 10 })
+    .withMessage('El precio debe ser mínimo $10 COP'),
   body('duracion')
     .isInt({ min: 1, max: 8 })
     .withMessage('La duración debe ser entre 1 y 8 horas'),
