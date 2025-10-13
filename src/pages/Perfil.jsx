@@ -111,7 +111,7 @@ const Perfil = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header del Perfil */}
-      <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-8 mb-8">
+      <div className="card p-8 mb-8">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center">
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mr-6">
@@ -211,7 +211,7 @@ const Perfil = () => {
       {/* Acciones Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Link to="/mis-clases" className="block">
-          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+          <div className="card-hover p-6 cursor-pointer">
             <div className="flex items-center mb-4">
               <Calendar className="w-8 h-8 text-primary-600 mr-3" />
               <h3 className="text-lg font-semibold text-secondary-900">Mis Clases</h3>
@@ -226,7 +226,7 @@ const Perfil = () => {
         </Link>
 
         <Link to="/seguridad" className="block">
-          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+          <div className="card-hover p-6 cursor-pointer">
             <div className="flex items-center mb-4">
               <Shield className="w-8 h-8 text-green-600 mr-3" />
               <h3 className="text-lg font-semibold text-secondary-900">Seguridad</h3>
@@ -241,7 +241,7 @@ const Perfil = () => {
         </Link>
 
         <Link to="/preferencias" className="block">
-          <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
+          <div className="card-hover p-6 cursor-pointer">
             <div className="flex items-center mb-4">
               <Settings className="w-8 h-8 text-secondary-600 mr-3" />
               <h3 className="text-lg font-semibold text-secondary-900">Preferencias</h3>
@@ -259,49 +259,49 @@ const Perfil = () => {
       {/* Modal de Edición */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Perfil</h3>
+          <div className="card p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-secondary-900 mb-4">Editar Perfil</h3>
             <form onSubmit={handleSaveProfile}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                  <label className="block text-sm font-medium text-secondary-700">Nombre</label>
                   <input
                     type="text"
                     name="nombre"
                     required
                     value={editData.nombre}
                     onChange={handleEditChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="input-field mt-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                  <label className="block text-sm font-medium text-secondary-700">Teléfono</label>
                   <input
                     type="text"
                     name="telefono"
                     value={editData.telefono}
                     onChange={handleEditChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="input-field mt-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Dirección</label>
+                  <label className="block text-sm font-medium text-secondary-700">Dirección</label>
                   <input
                     type="text"
                     name="direccion"
                     value={editData.direccion}
                     onChange={handleEditChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="input-field mt-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Biografía</label>
+                  <label className="block text-sm font-medium text-secondary-700">Biografía</label>
                   <textarea
                     name="bio"
                     rows={3}
                     value={editData.bio}
                     onChange={handleEditChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="input-field mt-1"
                   />
                 </div>
               </div>
@@ -309,14 +309,14 @@ const Perfil = () => {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="btn-primary disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>

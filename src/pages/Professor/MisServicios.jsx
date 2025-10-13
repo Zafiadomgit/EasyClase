@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Video, BookOpen, Users, DollarSign, Edit, Trash2, Eye } from 'lucide-react'
+import { servicioService } from '../../services/api'
 
 const MisServicios = () => {
   const [servicios, setServicios] = useState([])
@@ -13,14 +14,21 @@ const MisServicios = () => {
   const cargarServicios = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/servicios/usuario/mis-servicios.php')
-      const data = await response.json()
+      console.log('🔍 Cargando servicios del usuario...')
+      console.log('🔑 Token:', localStorage.getItem('token'))
       
-      if (data.success) {
-        setServicios(data.servicios || [])
+      const response = await servicioService.obtenerMisServicios()
+      
+      console.log('📡 Respuesta obtenerMisServicios:', response)
+      
+      if (response.success) {
+        setServicios(response.data?.servicios || [])
+        console.log('✅ Servicios cargados:', response.data?.servicios || [])
+      } else {
+        console.log('❌ Error en respuesta:', response.message)
       }
     } catch (error) {
-      console.error('Error cargando servicios:', error)
+      console.error('❌ Error cargando servicios:', error)
     } finally {
       setLoading(false)
     }
@@ -32,12 +40,9 @@ const MisServicios = () => {
     }
 
     try {
-      const response = await fetch(`/api/servicios/eliminar.php?id=${servicioId}`, {
-        method: 'DELETE'
-      })
-      const data = await response.json()
+      const response = await servicioService.eliminarServicio(servicioId)
       
-      if (data.success) {
+      if (response.success) {
         setServicios(servicios.filter(s => s.id !== servicioId))
         alert('Servicio eliminado exitosamente')
       } else {

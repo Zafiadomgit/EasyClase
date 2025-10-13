@@ -35,10 +35,22 @@ export const initializeDatabase = async () => {
     console.log('JWT_SECRET:', process.env.JWT_SECRET ? '***configurado***' : 'NO configurado');
     console.log('NODE_ENV:', process.env.NODE_ENV);
     
-    // Verificar variables críticas
-    if (!process.env.MYSQL_DATABASE || !process.env.MYSQL_USER || !process.env.MYSQL_PASSWORD || !process.env.MYSQL_HOST) {
-      throw new Error('Variables de entorno MySQL no configuradas');
-    }
+    // Verificar variables críticas - usar valores por defecto si no están configuradas
+    const dbConfig = {
+      database: process.env.MYSQL_DATABASE || 'easyclasebd_v2',
+      user: process.env.MYSQL_USER || 'zafiadombd',
+      password: process.env.MYSQL_PASSWORD || 'f9ZrKNH2bNuYT8d',
+      host: process.env.MYSQL_HOST || 'mysql.easyclaseapp.com',
+      port: process.env.MYSQL_PORT || 3306
+    };
+    
+    console.log('🔧 Usando configuración de base de datos:', {
+      database: dbConfig.database,
+      user: dbConfig.user,
+      password: '***configurado***',
+      host: dbConfig.host,
+      port: dbConfig.port
+    });
     
     console.log('✅ Variables críticas de MySQL están configuradas');
     

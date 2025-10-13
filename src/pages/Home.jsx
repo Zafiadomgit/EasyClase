@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
 import TestimonialsCarousel from '../components/Testimonials/TestimonialsCarousel'
+// import BlurText from '../components/BlurText' // Temporalmente deshabilitado para build
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import { 
   PayPerHourIcon, 
@@ -277,12 +278,14 @@ const Home = () => {
               Conectando estudiantes con profesores expertos
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-tight slide-up" style={{animationDelay: '0.4s'}}>
-              Aprende habilidades útiles,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 block scale-in" style={{animationDelay: '0.6s'}}>
+            <div className="mb-6 text-center">
+              <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight block text-center animate-blur-in" style={{animationDelay: '0.3s'}}>
+                Aprende habilidades útiles,
+              </h1>
+              <span className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 block animate-blur-in text-center" style={{animationDelay: '0.6s'}}>
                 paga por hora
               </span>
-            </h1>
+            </div>
             
             <p className="text-xl md:text-2xl text-purple-200 mb-10 max-w-4xl mx-auto leading-relaxed fade-in" style={{animationDelay: '0.8s'}}>
               La plataforma líder para aprender cualquier habilidad con 

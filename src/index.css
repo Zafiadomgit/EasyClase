@@ -369,3 +369,22 @@ section {
 .parallax-bg {
   transition: transform 0.1s ease-out;
 }
+
+/* Blur in animation */
+@keyframes blur-in {
+  0% {
+    filter: blur(8px);
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-blur-in {
+  animation: blur-in 1s ease-out forwards;
+  opacity: 0;
+}

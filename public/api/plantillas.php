@@ -27,6 +27,13 @@ try {
 // Obtener método HTTP
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Verificar si se está pidiendo servicios
+$isServicios = isset($_GET['tipo']) && $_GET['tipo'] === 'servicios';
+
+// Debug temporal
+error_log("DEBUG: tipo=" . ($_GET['tipo'] ?? 'no definido'));
+error_log("DEBUG: isServicios=" . ($isServicios ? 'true' : 'false'));
+
 // Determinar la acción basada en el método
 if ($method === 'POST') {
     // Crear nueva plantilla
@@ -41,14 +48,27 @@ if ($method === 'POST') {
         exit();
     }
     
-    // Validaciones básicas
-    if (empty($input['titulo']) || empty($input['descripcion']) || empty($input['materia']) || empty($input['categoria'])) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Faltan campos obligatorios'
-        ]);
-        exit();
+    // Validaciones básicas para servicios
+    if ($isServicios) {
+        // Para servicios, solo validar campos esenciales
+        if (empty($input['titulo']) || empty($input['descripcion']) || empty($input['categoria'])) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Faltan campos obligatorios: título, descripción y categoría son requeridos'
+            ]);
+            exit();
+        }
+    } else {
+        // Para plantillas de clases, validar todos los campos
+        if (empty($input['titulo']) || empty($input['descripcion']) || empty($input['materia']) || empty($input['categoria'])) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Faltan campos obligatorios'
+            ]);
+            exit();
+        }
     }
     
     if (empty($input['precio']) || $input['precio'] < 10) {
@@ -63,52 +83,101 @@ if ($method === 'POST') {
     if ($pdo) {
         // Guardar en base de datos
         try {
-            $stmt = $pdo->prepare("
-                INSERT INTO plantillas_clases 
-                (titulo, descripcion, materia, categoria, tipo, precio, duracion, max_estudiantes, modalidad, requisitos, objetivos, estado, profesor_id, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-            
-            $stmt->execute([
-                $input['titulo'],
-                $input['descripcion'],
-                $input['materia'],
-                $input['categoria'],
-                $input['tipo'] ?? 'individual',
-                floatval($input['precio']),
-                intval($input['duracion'] ?? 1),
-                $input['tipo'] === 'grupal' ? intval($input['maxEstudiantes'] ?? 1) : 1,
-                'online',
-                $input['requisitos'] ?? '',
-                $input['objetivos'] ?? '',
-                'activa',
-                1 // ID del profesor (en producción deberías obtenerlo del token)
-            ]);
-            
-            $plantillaId = $pdo->lastInsertId();
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'Clase creada exitosamente',
-                'data' => [
-                    'id' => $plantillaId,
-                    'titulo' => $input['titulo'],
-                    'descripcion' => $input['descripcion'],
-                    'materia' => $input['materia'],
-                    'categoria' => $input['categoria'],
-                    'tipo' => $input['tipo'] ?? 'individual',
-                    'precio' => floatval($input['precio']),
-                    'duracion' => intval($input['duracion'] ?? 1),
-                    'maxEstudiantes' => $input['tipo'] === 'grupal' ? intval($input['maxEstudiantes'] ?? 1) : 1,
-                    'modalidad' => 'online',
-                    'requisitos' => $input['requisitos'] ?? '',
-                    'objetivos' => $input['objetivos'] ?? '',
-                    'estado' => 'activa',
-                    'profesor' => 1,
-                    'createdAt' => date('c'),
-                    'updatedAt' => date('c')
-                ]
-            ]);
+            if ($isServicios) {
+                // Crear servicio en la tabla servicios
+                $stmt = $pdo->prepare("
+                    INSERT INTO servicios 
+                    (titulo, descripcion, categoria, precio, tiempoPrevisto_valor, tiempoPrevisto_unidad, modalidad, proveedor, requisitos, objetivos, estado, created_at, updated_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                
+                $stmt->execute([
+                    $input['titulo'],
+                    $input['descripcion'],
+                    $input['categoria'],
+                    floatval($input['precio']),
+                    intval($input['tiempoPrevisto']['valor'] ?? 1),
+                    $input['tiempoPrevisto']['unidad'] ?? 'horas',
+                    $input['modalidad'] ?? 'virtual',
+                    1, // ID del proveedor (en producción deberías obtenerlo del token)
+                    $input['requisitos'] ?? '',
+                    $input['objetivos'] ?? '',
+                    'activo'
+                ]);
+                
+                $servicioId = $pdo->lastInsertId();
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Servicio creado exitosamente',
+                    'data' => [
+                        'id' => $servicioId,
+                        'titulo' => $input['titulo'],
+                        'descripcion' => $input['descripcion'],
+                        'categoria' => $input['categoria'],
+                        'precio' => floatval($input['precio']),
+                        'tiempoPrevisto' => [
+                            'valor' => intval($input['tiempoPrevisto']['valor'] ?? 1),
+                            'unidad' => $input['tiempoPrevisto']['unidad'] ?? 'horas'
+                        ],
+                        'modalidad' => $input['modalidad'] ?? 'virtual',
+                        'requisitos' => $input['requisitos'] ?? '',
+                        'objetivos' => $input['objetivos'] ?? '',
+                        'estado' => 'activo',
+                        'proveedor' => 1,
+                        'createdAt' => date('c'),
+                        'updatedAt' => date('c')
+                    ]
+                ]);
+            } else {
+                // Crear plantilla de clase
+                $stmt = $pdo->prepare("
+                    INSERT INTO plantillas_clases 
+                    (titulo, descripcion, materia, categoria, tipo, precio, duracion, max_estudiantes, modalidad, requisitos, objetivos, estado, profesor_id, created_at, updated_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                
+                $stmt->execute([
+                    $input['titulo'],
+                    $input['descripcion'],
+                    $input['materia'],
+                    $input['categoria'],
+                    $input['tipo'] ?? 'individual',
+                    floatval($input['precio']),
+                    intval($input['duracion'] ?? 1),
+                    $input['tipo'] === 'grupal' ? intval($input['maxEstudiantes'] ?? 1) : 1,
+                    'online',
+                    $input['requisitos'] ?? '',
+                    $input['objetivos'] ?? '',
+                    'activa',
+                    1 // ID del profesor (en producción deberías obtenerlo del token)
+                ]);
+                
+                $plantillaId = $pdo->lastInsertId();
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Clase creada exitosamente',
+                    'data' => [
+                        'id' => $plantillaId,
+                        'titulo' => $input['titulo'],
+                        'descripcion' => $input['descripcion'],
+                        'materia' => $input['materia'],
+                        'categoria' => $input['categoria'],
+                        'tipo' => $input['tipo'] ?? 'individual',
+                        'precio' => floatval($input['precio']),
+                        'duracion' => intval($input['duracion'] ?? 1),
+                        'maxEstudiantes' => $input['tipo'] === 'grupal' ? intval($input['maxEstudiantes'] ?? 1) : 1,
+                        'modalidad' => 'online',
+                        'requisitos' => $input['requisitos'] ?? '',
+                        'objetivos' => $input['objetivos'] ?? '',
+                        'estado' => 'activa',
+                        'profesor' => 1,
+                        'createdAt' => date('c'),
+                        'updatedAt' => date('c')
+                    ]
+                ]);
+            }
             
         } catch (PDOException $e) {
             echo json_encode([
@@ -145,13 +214,136 @@ if ($method === 'POST') {
     }
     
 } elseif ($method === 'GET') {
-    // Obtener plantillas
+    // Obtener plantillas o servicios
     if ($pdo) {
         try {
-            // Obtener todas las plantillas activas
-            $stmt = $pdo->prepare("SELECT * FROM plantillas_clases WHERE estado = 'activa' ORDER BY created_at DESC");
-            $stmt->execute();
-            $plantillas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($isServicios) {
+                error_log("DEBUG: Entrando en la lógica de servicios");
+                // Verificar si la tabla servicios existe
+                $stmt = $pdo->prepare("SHOW TABLES LIKE 'servicios'");
+                $stmt->execute();
+                $tableExists = $stmt->fetch();
+
+                if (!$tableExists) {
+                    // Crear la tabla servicios si no existe
+                    $createTableSQL = "
+                    CREATE TABLE IF NOT EXISTS `servicios` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `titulo` varchar(255) NOT NULL,
+                      `descripcion` text NOT NULL,
+                      `categoria` varchar(100) NOT NULL,
+                      `subcategoria` varchar(100) DEFAULT NULL,
+                      `precio` decimal(10,2) NOT NULL,
+                      `tiempoPrevisto_valor` int(11) DEFAULT NULL,
+                      `tiempoPrevisto_unidad` enum('horas','días','semanas','meses') DEFAULT 'horas',
+                      `modalidad` enum('virtual','presencial','mixta') DEFAULT 'virtual',
+                      `proveedor` int(11) NOT NULL,
+                      `requisitos` text DEFAULT NULL,
+                      `entregables` text DEFAULT NULL,
+                      `tecnologias` text DEFAULT NULL,
+                      `nivelCliente` enum('principiante','intermedio','avanzado') DEFAULT 'intermedio',
+                      `revisionesIncluidas` int(11) DEFAULT 2,
+                      `premium` tinyint(1) DEFAULT 0,
+                      `etiquetas` text DEFAULT NULL,
+                      `faq` text DEFAULT NULL,
+                      `fechaLimite` datetime DEFAULT NULL,
+                      `estado` enum('activo','inactivo','pendiente','rechazado') DEFAULT 'activo',
+                      `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                      `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                      PRIMARY KEY (`id`),
+                      KEY `idx_proveedor` (`proveedor`),
+                      KEY `idx_categoria` (`categoria`),
+                      KEY `idx_estado` (`estado`),
+                      KEY `idx_precio` (`precio`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                    ";
+                    
+                    $pdo->exec($createTableSQL);
+                    
+                    // Insertar algunos servicios de prueba
+                    $insertServicesSQL = "
+                    INSERT IGNORE INTO `servicios` (
+                      `titulo`, `descripcion`, `categoria`, `precio`, `proveedor`, `estado`
+                    ) VALUES 
+                    (
+                      'Desarrollo Web con React',
+                      'Aprende a crear aplicaciones web modernas con React, incluyendo hooks, context y routing.',
+                      'Desarrollo Web',
+                      50000.00,
+                      1,
+                      'activo'
+                    ),
+                    (
+                      'Excel Avanzado',
+                      'Domina Excel con fórmulas complejas, macros y análisis de datos avanzado.',
+                      'Ofimática',
+                      30000.00,
+                      1,
+                      'activo'
+                    ),
+                    (
+                      'Diseño Gráfico con Photoshop',
+                      'Curso completo de diseño gráfico usando Adobe Photoshop desde cero.',
+                      'Diseño Gráfico',
+                      40000.00,
+                      1,
+                      'activo'
+                    ),
+                    (
+                      'Tesis Universitaria',
+                      'Ayuda profesional para la redacción y estructuración de tu tesis universitaria.',
+                      'Tesis y Trabajos Académicos',
+                      800000.00,
+                      1,
+                      'activo'
+                    ),
+                    (
+                      'Marketing Digital',
+                      'Estrategia completa de marketing digital para tu negocio o proyecto.',
+                      'Marketing Digital',
+                      600000.00,
+                      1,
+                      'activo'
+                    );
+                    ";
+                    
+                    $pdo->exec($insertServicesSQL);
+                }
+                
+                // Obtener todos los servicios activos
+                $stmt = $pdo->prepare("
+                    SELECT s.*, u.nombre as proveedor_nombre, u.email as proveedor_email
+                    FROM servicios s 
+                    LEFT JOIN users u ON s.proveedor = u.id 
+                    WHERE s.estado = 'activo'
+                    ORDER BY s.created_at DESC
+                ");
+                $stmt->execute();
+                $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Obtener categorías únicas
+                $stmt = $pdo->prepare("SELECT DISTINCT categoria FROM servicios WHERE estado = 'activo' ORDER BY categoria");
+                $stmt->execute();
+                $categorias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                // Formatear respuesta para servicios
+                $response = [
+                    'success' => true,
+                    'message' => 'Servicios obtenidos correctamente',
+                    'data' => [
+                        'servicios' => $servicios,
+                        'categorias' => $categorias
+                    ]
+                ];
+                
+                echo json_encode($response);
+                exit;
+            } else {
+                // Obtener todas las plantillas activas
+                $stmt = $pdo->prepare("SELECT * FROM plantillas_clases WHERE estado = 'activa' ORDER BY created_at DESC");
+                $stmt->execute();
+                $plantillas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
             
             // Formatear las plantillas para el frontend
             $plantillasFormateadas = array_map(function($plantilla) {

@@ -340,9 +340,16 @@ export const servicioService = {
     });
     
     const queryString = queryParams.toString();
-    const url = `/servicios${queryString ? `?${queryString}` : ''}`;
+    const url = `https://easyclaseapp.com/api/plantillas.php?tipo=servicios${queryString ? `&${queryString}` : ''}`;
     
-    return await apiRequest(url);
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en la petición');
+    }
+    
+    return data;
   },
 
   // Obtener mis servicios
@@ -368,10 +375,26 @@ export const servicioService = {
 
   // Crear un nuevo servicio
   crearServicio: async (servicioData) => {
-    return await apiRequest('/servicios', {
+    // Usar fetch directamente para evitar el .php automático
+    const token = localStorage.getItem('token');
+    const url = 'https://easyclaseapp.com/api/plantillas.php?tipo=servicios';
+    
+    const response = await fetch(url, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: JSON.stringify(servicioData),
     });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en la petición');
+    }
+    
+    return data;
   },
 
   // Actualizar un servicio

@@ -23,6 +23,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Servir archivos estáticos desde la carpeta public
+app.use(express.static('../public'));
+
 // Rutas de la API
 app.use('/api', routes);
 

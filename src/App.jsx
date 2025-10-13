@@ -1,7 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
-import { ThemeProvider } from './contexts/ThemeContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
@@ -51,8 +50,7 @@ import './App.css'
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
         <NotificationProvider>
           <Router>
           <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -191,7 +189,6 @@ function App() {
         </Router>
         </NotificationProvider>
       </AuthProvider>
-    </ThemeProvider>
   )
 }
 

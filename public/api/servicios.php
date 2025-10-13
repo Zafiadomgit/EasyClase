@@ -10,56 +10,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Respuesta temporal para que la página de servicios funcione
-$response = [
-    'success' => true,
-    'message' => 'Servicios obtenidos correctamente',
-    'data' => [
-        'servicios' => [
-            [
-                'id' => 1,
-                'titulo' => 'Desarrollo Web con React',
-                'descripcion' => 'Aprende a crear aplicaciones web modernas con React',
-                'precio' => 50000,
-                'categoria' => 'Programación',
-                'modalidad' => 'Online',
-                'profesor' => 'Carlos Mendoza',
-                'calificacion' => 4.8,
-                'totalVentas' => 15
-            ],
-            [
-                'id' => 2,
-                'titulo' => 'Excel Avanzado',
-                'descripcion' => 'Domina Excel con fórmulas, macros y análisis de datos',
-                'precio' => 30000,
-                'categoria' => 'Ofimática',
-                'modalidad' => 'Online',
-                'profesor' => 'María García',
-                'calificacion' => 4.9,
-                'totalVentas' => 23
-            ],
-            [
-                'id' => 3,
-                'titulo' => 'Inglés Conversacional',
-                'descripcion' => 'Mejora tu inglés hablado con conversaciones prácticas',
-                'precio' => 40000,
-                'categoria' => 'Idiomas',
-                'modalidad' => 'Online',
-                'profesor' => 'Ana Rodríguez',
-                'calificacion' => 4.7,
-                'totalVentas' => 18
-            ]
-        ],
-        'categorias' => [
-            'Programación',
-            'Ofimática',
-            'Idiomas',
-            'Diseño',
-            'Marketing',
-            'Negocios'
-        ]
-    ]
-];
+require_once 'config/database.php';
 
-echo json_encode($response);
+try {
+    // Conectar a la base de datos usando la clase Database
+    $database = new Database();
+    $pdo = $database->getConnection();
+    
+    if (!$pdo) {
+        throw new Exception('No se pudo conectar a la base de datos');
+    }
+    
+    // Obtener todos los servicios activos
+    $stmt = $pdo->prepare("
+        SELECT s.*, u.nombre as proveedor_nombre, u.email as proveedor_email
+        FROM servicios s 
+        LEFT JOIN users u ON s.proveedor = u.id 
+        WHERE s.estado = 'activo'
+        ORDER BY s.created_at DESC
+    ");
+    
+    $stmt->execute();
+    $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Obtener categorías únicas
+    $stmt = $pdo->prepare("SELECT DISTINCT categoria FROM servicios WHERE estado = 'activo' ORDER BY categoria");
+    $stmt->execute();
+    $categorias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    // Formatear respuesta
+    $response = [
+        'success' => true,
+        'message' => 'Servicios obtenidos correctamente',
+        'data' => [
+            'servicios' => $servicios,
+            'categorias' => $categorias
+        ]
+    ];
+    
+    echo json_encode($response);
+    
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error de base de datos: ' . $e->getMessage()
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error interno: ' . $e->getMessage()
+    ]);
+}
 ?>

@@ -285,7 +285,7 @@ const BuscarServicios = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Filtros */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 px-6 lg:px-4">
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 sticky top-8 shadow-2xl">
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center">
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -398,7 +398,7 @@ const BuscarServicios = () => {
         </div>
 
             {/* Resultados */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 px-6 lg:px-4">
               {/* Controles de ordenamiento */}
               <div className="flex justify-between items-center mb-8">
                 <p className="text-purple-200 font-medium">
@@ -407,7 +407,7 @@ const BuscarServicios = () => {
                 <select
                   value={ordenamiento}
                   onChange={(e) => setOrdenamiento(e.target.value)}
-                  className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white backdrop-blur-sm"
+                  className="p-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white backdrop-blur-sm mr-4"
                 >
                   <option value="recientes" className="bg-slate-800 text-white">Más recientes</option>
                   <option value="premium" className="bg-slate-800 text-white">Premium primero</option>

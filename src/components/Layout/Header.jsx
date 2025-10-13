@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Search, User, BookOpen, LogOut, Bell, ChevronDown, Star, Crown, Code, Calculator, Globe, FileText, Palette, TrendingUp, Clock, DollarSign, Shield } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
-import ThemeToggle from '../UI/ThemeToggle'
 import CategoriesModal from '../Modal/CategoriesModal'
 import NotificationBell from '../NotificationBell'
 // import { useNotifications, getNotificationIcon, getNotificationColor } from '../../hooks/useNotifications'
@@ -269,7 +268,7 @@ const Header = () => {
                         setIsCategoriesOpen(false)
                         setShowCategoriesModal(true)
                       }}
-                      className="text-sm text-purple-300 hover:text-purple-200 font-medium"
+                      className="text-sm text-purple-800 hover:text-purple-900 font-semibold bg-purple-100 hover:bg-purple-200 px-4 py-3 rounded-lg transition-all duration-200 shadow-sm"
                     >
                       Ver todas las categorías →
                     </button>
@@ -416,11 +415,6 @@ const Header = () => {
                     )}
                     <hr className="my-1" />
                     
-                    {/* Theme Toggle en menú de usuario */}
-                    <div className="px-4 py-3 flex items-center justify-between hover:bg-purple-100 transition-colors rounded-xl mx-2">
-                      <span className="text-sm text-gray-800">Modo Oscuro</span>
-                      <ThemeToggle />
-                    </div>
                     
                     <button
                       onClick={handleLogout}
@@ -437,7 +431,7 @@ const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-secondary-700 hover:text-primary-600 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-primary-50"
+                  className="text-white hover:text-purple-100 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/30 shadow-lg border border-white/20"
                 >
                   Iniciar Sesión
                 </Link>
@@ -448,8 +442,6 @@ const Header = () => {
                   Registrarse
                 </Link>
                 
-                {/* Theme Toggle para usuarios no logueados */}
-                <ThemeToggle className="ml-4" />
               </>
             )}
           </div>
@@ -498,13 +490,6 @@ const Header = () => {
                 Ser Profesor
               </Link>
               
-              {/* Theme Toggle Mobile */}
-              <div className="px-3 py-2 mt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-secondary-600">Modo Oscuro</span>
-                  <ThemeToggle />
-                </div>
-              </div>
               
               <div className="border-t border-secondary-200 pt-3 mt-3">
                 {shouldShowUserElements ? (
@@ -560,7 +545,7 @@ const Header = () => {
                   <>
                     <Link
                       to="/login"
-                      className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-purple-100 hover:bg-white/20"
                       onClick={toggleMenu}
                     >
                       Iniciar Sesión

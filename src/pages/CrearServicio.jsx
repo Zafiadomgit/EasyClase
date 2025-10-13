@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Upload, Video, Users, DollarSign, Calendar, Clock, FileText, AlertCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { servicioService } from '../services/api'
 
 const CrearServicio = () => {
   const navigate = useNavigate()
@@ -16,19 +17,33 @@ const CrearServicio = () => {
     categoria: '',
     tipo: 'pregrabada', // pregrabada, asesoria, consultoria
     precio: '',
-    duracion: '', // Duración estimada del contenido
+    tiempoPrevisto: {
+      valor: '',
+      unidad: 'horas'
+    },
     archivos: [], // Múltiples archivos
     urlVideo: '',
     requisitos: '',
     objetivos: '',
-    modalidad: 'online' // solo online
+    modalidad: 'virtual' // virtual para servicios online
   })
 
   const categorias = [
-    'Programación', 'Diseño', 'Marketing', 'Idiomas', 'Excel', 
-    'Matemáticas', 'Física', 'Química', 'Contabilidad', 'Finanzas',
-    'Fotografía', 'Video', 'Música', 'Arte', 'Escritura',
-    'Desarrollo Personal', 'Negocios', 'Emprendimiento'
+    'Tesis y Trabajos Académicos',
+    'Desarrollo Web',
+    'Desarrollo de Apps',
+    'Diseño Gráfico',
+    'Marketing Digital',
+    'Consultoría de Negocios',
+    'Traducción',
+    'Redacción de Contenido',
+    'Asesoría Legal',
+    'Contabilidad y Finanzas',
+    'Fotografía',
+    'Video y Edición',
+    'Arquitectura y Diseño',
+    'Ingeniería',
+    'Otros'
   ]
 
   const handleChange = (e) => {
@@ -79,29 +94,30 @@ const CrearServicio = () => {
         throw new Error('Por favor ingresa un precio válido para el servicio')
       }
 
-      if (servicioData.tipo === 'pregrabada' && servicioData.archivos.length === 0 && !servicioData.urlVideo) {
-        throw new Error('Para servicios pregrabados debes subir archivos o proporcionar una URL de video')
+      // Validar tiempo previsto si se proporciona
+      if (servicioData.tiempoPrevisto.valor && (!servicioData.tiempoPrevisto.valor || servicioData.tiempoPrevisto.valor <= 0)) {
+        throw new Error('El tiempo previsto debe ser un número positivo')
       }
 
-      // Crear FormData para enviar archivos
-      const formData = new FormData()
-      Object.keys(servicioData).forEach(key => {
-        if (key === 'archivos' && servicioData[key].length > 0) {
-          servicioData[key].forEach((file, index) => {
-            formData.append(`archivo_${index}`, file)
-          })
-        } else {
-          formData.append(key, servicioData[key])
-        }
-      })
+      // Preparar datos para envío (sin archivos por ahora)
+      const datosParaEnviar = {
+        ...servicioData,
+        archivos: undefined // No enviar archivos por ahora
+      }
 
-      // Aquí se enviaría a la API
+      console.log('🚀 Enviando datos del servicio:', datosParaEnviar)
+      console.log('🔑 Token de usuario:', localStorage.getItem('token'))
 
-
-      // Simular envío
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      setSuccess('Servicio creado exitosamente')
+      // Enviar a la API usando el servicio centralizado
+      const response = await servicioService.crearServicio(datosParaEnviar)
+      
+      console.log('📡 Respuesta de la API:', response)
+      
+      if (response.success) {
+        setSuccess('Servicio creado exitosamente')
+      } else {
+        throw new Error(response.message || 'Error al crear el servicio')
+      }
       
       // Redirigir después de 2 segundos
       setTimeout(() => {
@@ -220,48 +236,60 @@ const CrearServicio = () => {
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 ${
+                  servicioData.tipo === 'pregrabada' 
+                    ? 'border-purple-400 bg-purple-500/20 shadow-lg' 
+                    : 'border-white/20 bg-white/10 hover:border-purple-400'
+                } backdrop-blur-sm`}>
                   <input
                     type="radio"
                     name="tipo"
                     value="pregrabada"
                     checked={servicioData.tipo === 'pregrabada'}
                     onChange={handleChange}
-                    className="mr-3"
+                    className="mr-3 w-4 h-4 text-purple-600"
                   />
                   <div>
-                    <div className="font-medium text-secondary-900">Curso Pregrabado</div>
-                    <div className="text-sm text-secondary-600">Videos, documentos, materiales</div>
+                    <div className="font-medium text-white">Curso Pregrabado</div>
+                    <div className="text-sm text-purple-100">Videos, documentos, materiales</div>
                   </div>
                 </label>
                 
-                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 ${
+                  servicioData.tipo === 'asesoria' 
+                    ? 'border-purple-400 bg-purple-500/20 shadow-lg' 
+                    : 'border-white/20 bg-white/10 hover:border-purple-400'
+                } backdrop-blur-sm`}>
                   <input
                     type="radio"
                     name="tipo"
                     value="asesoria"
                     checked={servicioData.tipo === 'asesoria'}
                     onChange={handleChange}
-                    className="mr-3"
+                    className="mr-3 w-4 h-4 text-purple-600"
                   />
                   <div>
-                    <div className="font-medium text-secondary-900">Asesoría</div>
-                    <div className="text-sm text-secondary-600">Consultoría personalizada</div>
+                    <div className="font-medium text-white">Asesoría</div>
+                    <div className="text-sm text-purple-100">Consultoría personalizada</div>
                   </div>
                 </label>
                 
-                <label className="flex items-center p-4 border border-white/20 rounded-xl cursor-pointer hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 ${
+                  servicioData.tipo === 'consultoria' 
+                    ? 'border-purple-400 bg-purple-500/20 shadow-lg' 
+                    : 'border-white/20 bg-white/10 hover:border-purple-400'
+                } backdrop-blur-sm`}>
                   <input
                     type="radio"
                     name="tipo"
                     value="consultoria"
                     checked={servicioData.tipo === 'consultoria'}
                     onChange={handleChange}
-                    className="mr-3"
+                    className="mr-3 w-4 h-4 text-purple-600"
                   />
                   <div>
-                    <div className="font-medium text-secondary-900">Consultoría</div>
-                    <div className="text-sm text-secondary-600">Servicios profesionales</div>
+                    <div className="font-medium text-white">Consultoría</div>
+                    <div className="text-sm text-purple-100">Servicios profesionales</div>
                   </div>
                 </label>
               </div>
@@ -287,19 +315,19 @@ const CrearServicio = () => {
                     Precio del servicio *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-500">$</span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-300">$</span>
                     <input
                       type="number"
                       name="precio"
                       value={servicioData.precio}
                       onChange={handleChange}
                       placeholder="10"
-                      className="w-full pl-8 pr-4 py-3 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                      className="w-full pl-8 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                       required
                     />
                   </div>
                   {servicioData.precio && (
-                    <p className="text-sm text-secondary-600 mt-1">
+                    <p className="text-sm text-purple-200 mt-1">
                       {formatPrecio(servicioData.precio)} por el servicio completo
                     </p>
                   )}
@@ -309,14 +337,45 @@ const CrearServicio = () => {
                   <label className="block text-sm font-semibold text-purple-200 mb-2">
                     Duración estimada (opcional)
                   </label>
-                  <input
-                    type="text"
-                    name="duracion"
-                    value={servicioData.duracion}
-                    onChange={handleChange}
-                    placeholder="Ej: 3 horas, 2 semanas, 1 mes"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
-                  />
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      name="tiempoPrevisto.valor"
+                      value={servicioData.tiempoPrevisto.valor}
+                      onChange={(e) => {
+                        const { value } = e.target
+                        setServicioData(prev => ({
+                          ...prev,
+                          tiempoPrevisto: {
+                            ...prev.tiempoPrevisto,
+                            valor: value
+                          }
+                        }))
+                      }}
+                      placeholder="3"
+                      className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
+                    />
+                    <select
+                      name="tiempoPrevisto.unidad"
+                      value={servicioData.tiempoPrevisto.unidad}
+                      onChange={(e) => {
+                        const { value } = e.target
+                        setServicioData(prev => ({
+                          ...prev,
+                          tiempoPrevisto: {
+                            ...prev.tiempoPrevisto,
+                            unidad: value
+                          }
+                        }))
+                      }}
+                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white backdrop-blur-sm"
+                    >
+                      <option value="horas" className="bg-slate-800 text-white">Horas</option>
+                      <option value="días" className="bg-slate-800 text-white">Días</option>
+                      <option value="semanas" className="bg-slate-800 text-white">Semanas</option>
+                      <option value="meses" className="bg-slate-800 text-white">Meses</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -339,7 +398,7 @@ const CrearServicio = () => {
                 <label className="block text-sm font-semibold text-purple-200 mb-2">
                   Subir archivos *
                 </label>
-                <div className="border-2 border-dashed border-secondary-300 rounded-xl p-6 text-center hover:border-primary-500 transition-colors">
+                <div className="border-2 border-dashed border-white/30 rounded-xl p-6 text-center hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
                   <input
                     type="file"
                     multiple
@@ -349,11 +408,11 @@ const CrearServicio = () => {
                     accept=".mp4,.avi,.mov,.pdf,.doc,.docx,.ppt,.pptx,.zip,.rar"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 text-secondary-400 mx-auto mb-4" />
-                    <p className="text-lg font-medium text-secondary-900 mb-2">
+                    <Upload className="w-12 h-12 text-purple-300 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-white mb-2">
                       Haz clic para subir archivos
                     </p>
-                    <p className="text-sm text-secondary-600">
+                    <p className="text-sm text-purple-200">
                       Videos, PDFs, presentaciones, documentos (máx. 100MB cada uno)
                     </p>
                   </label>
@@ -362,20 +421,20 @@ const CrearServicio = () => {
                 {/* Lista de archivos subidos */}
                 {servicioData.archivos.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium text-secondary-700">Archivos seleccionados:</p>
+                    <p className="text-sm font-medium text-purple-200">Archivos seleccionados:</p>
                     {servicioData.archivos.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-secondary-50 rounded-lg p-3">
+                      <div key={index} className="flex items-center justify-between bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-secondary-500 mr-2" />
-                          <span className="text-sm text-secondary-700">{file.name}</span>
-                          <span className="text-xs text-secondary-500 ml-2">
+                          <FileText className="w-4 h-4 text-purple-300 mr-2" />
+                          <span className="text-sm text-white">{file.name}</span>
+                          <span className="text-xs text-purple-200 ml-2">
                             ({(file.size / 1024 / 1024).toFixed(1)} MB)
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-400 hover:text-red-300"
                         >
                           ✕
                         </button>
@@ -385,7 +444,7 @@ const CrearServicio = () => {
                 )}
               </div>
 
-              <div className="text-center text-secondary-500">
+              <div className="text-center text-purple-300">
                 <span className="text-sm">o</span>
               </div>
 
@@ -401,7 +460,7 @@ const CrearServicio = () => {
                   placeholder="https://youtube.com/watch?v=... o https://vimeo.com/..."
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                 />
-                <p className="text-xs text-secondary-500 mt-1">
+                <p className="text-xs text-purple-200 mt-1">
                   Si prefieres usar un video de YouTube, Vimeo u otra plataforma
                 </p>
               </div>
@@ -428,7 +487,10 @@ const CrearServicio = () => {
 
             {/* Información adicional */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-secondary-900">Información Adicional</h3>
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-purple-300" />
+                Información Adicional
+              </h3>
               
               <div>
                 <label className="block text-sm font-semibold text-purple-200 mb-2">
