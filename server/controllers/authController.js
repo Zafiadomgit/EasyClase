@@ -1,7 +1,16 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
-import notificationScheduler from '../services/notificationSchedulerService.js';
+
+// Helper: enviar notificación sin bloquear ni crashear la función
+const sendNotification = async (type, data) => {
+  try {
+    const { default: notificationScheduler } = await import('../services/notificationSchedulerService.js');
+    await notificationScheduler.sendImmediateNotification(type, data);
+  } catch (e) {
+    console.warn(`⚠️ Notificación ${type} no enviada:`, e.message);
+  }
+};
 
 // Generar JWT token
 const generateToken = (userId) => {
@@ -88,16 +97,11 @@ export const register = async (req, res) => {
     console.log('🔍 newUser.id:', newUser?.id)
     console.log('🔍 newUser.tipoUsuario:', newUser?.tipoUsuario)
 
-    // Enviar correo de bienvenida
-    try {
-      if (newUser.tipoUsuario === 'profesor') {
-        await notificationScheduler.sendImmediateNotification('welcome_professor', { profesor: newUser });
-      } else {
-        await notificationScheduler.sendImmediateNotification('welcome', { user: newUser });
-      }
-    } catch (emailError) {
-      console.error('Error enviando correo de bienvenida:', emailError);
-      // No fallar el registro si falla el correo
+    // Enviar correo de bienvenida (no bloqueante)
+    if (newUser.tipoUsuario === 'profesor') {
+      sendNotification('welcome_professor', { profesor: newUser });
+    } else {
+      sendNotification('welcome', { user: newUser });
     }
 
     // Generar token
@@ -212,17 +216,14 @@ export const login = async (req, res) => {
     // Generar token
     const token = generateToken(user.id); // Cambiar _id por id
 
-    // Enviar notificación de login
-    try {
-      const loginInfo = {
+    // Enviar notificación de login (no bloqueante)
+    sendNotification('login_notification', {
+      user,
+      loginInfo: {
         device: req.headers['user-agent'] || 'No especificado',
         location: req.ip || 'No especificada'
-      };
-      await notificationScheduler.sendImmediateNotification('login_notification', { user, loginInfo });
-    } catch (emailError) {
-      console.error('Error enviando notificación de login:', emailError);
-      // No fallar el login si falla el correo
-    }
+      }
+    });
 
     // Respuesta sin la contraseña
     const userResponse = user.toPublicJSON(); // Cambiar getPublicProfile por toPublicJSON
