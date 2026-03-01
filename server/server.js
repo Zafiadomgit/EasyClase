@@ -4,24 +4,17 @@ import cors from 'cors';
 import routes from './routes/index.js';
 import authRoutes from './routes/auth.js';
 
-// Cargar variables de entorno
-// En producción, usar .env, en desarrollo usar env.production
-const envPath = './.env';
-console.log(`🔧 Cargando variables de entorno desde: ${envPath}`);
-console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
-dotenv.config({ path: envPath });
-
-// Verificar que las variables críticas estén cargadas
-console.log(`🔧 MP_ACCESS_TOKEN configurado: ${!!process.env.MP_ACCESS_TOKEN}`);
-console.log(`🔧 MP_PUBLIC_KEY configurado: ${!!process.env.MP_PUBLIC_KEY}`);
-if (process.env.MP_ACCESS_TOKEN) {
-  console.log(`🔧 Tipo de token: ${process.env.MP_ACCESS_TOKEN.startsWith('APP_USR-') ? 'PRODUCCIÓN' : 'TEST'}`);
-}
+// Cargar variables de entorno (funciona tanto local como en Vercel)
+dotenv.config();
 
 const app = express();
 
-// Middleware básico
-app.use(cors());
+// CORS abierto — necesario para Vercel serverless
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Servir archivos estáticos desde la carpeta public
