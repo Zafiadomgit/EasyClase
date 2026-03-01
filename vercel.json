@@ -12,15 +12,10 @@
       "src": "server/server.js",
       "use": "@vercel/node",
       "config": {
-        "installCommand": "npm install && cd server && node install-vercel.js"
+        "maxDuration": 30
       }
     }
   ],
-  "functions": {
-    "server/server.js": {
-      "maxDuration": 30
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",
