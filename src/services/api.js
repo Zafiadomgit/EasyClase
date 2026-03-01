@@ -1,9 +1,6 @@
 // Configuración base para las llamadas a la API
-// En desarrollo: usa proxy local (/api)
-// En producción: usa URL absoluta de Dreamhost con .php
-const API_BASE_URL = import.meta.env.PROD 
-  ? import.meta.env.VITE_API_URL || 'https://easyclaseapp.com/api'
-  : '/api';
+// Usa VITE_API_URL si está definida, si no usa /api relativo (funciona en Vercel)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper para manejar errores de la API
 const handleApiError = (error) => {
@@ -34,23 +31,7 @@ const apiRequest = async (url, options = {}) => {
     };
 
     // Construir URL completa
-    let fullUrl;
-    
-    if (import.meta.env.PROD) {
-      // En producción: si la URL ya empieza con /api/, remover /api/ y usar solo la parte después
-      if (url.startsWith('/api/')) {
-        const urlWithoutApi = url.substring(4); // Remover '/api'
-        fullUrl = `${API_BASE_URL}${urlWithoutApi}`;
-      } else if (!url.endsWith('.php')) {
-        // Para otras rutas, agregar .php
-        fullUrl = `${API_BASE_URL}${url}.php`;
-      } else {
-        fullUrl = `${API_BASE_URL}${url}`;
-      }
-    } else {
-      // En desarrollo: usar proxy local
-      fullUrl = `${API_BASE_URL}${url}`;
-    }
+    const fullUrl = `${API_BASE_URL}${url}`;
 
     console.log('🌐 API Request URL:', fullUrl); // Debug
 
