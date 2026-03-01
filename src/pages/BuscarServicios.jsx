@@ -4,6 +4,7 @@ import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, Briefcase, Chec
 import { servicioService } from '../services/api'
 import { compraService } from '../services/compraService'
 import ServicioCard from '../components/ServicioCard'
+import RotatingText from '../components/RotatingText'
 import { useAuth } from '../contexts/AuthContext'
 
 const BuscarServicios = () => {
@@ -242,12 +243,14 @@ const BuscarServicios = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-6 shadow-2xl">
               <Search className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Buscar Servicios
+            <h1 className="text-5xl font-bold mb-4 tracking-tight">
+              <span className="text-white">Buscar Servicios de </span>
+              <RotatingText
+                texts={['desarrollo', 'tesis', 'consultoría', 'diseño', 'marketing']}
+                rotationInterval={2500}
+                className="text-purple-400"
+              />
             </h1>
-            <p className="text-xl text-purple-200 max-w-2xl mx-auto leading-relaxed">
-              Encuentra servicios profesionales de desarrollo, tesis, consultoría y más
-            </p>
           </div>
 
           {/* Barra de búsqueda */}

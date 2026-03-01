@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Incluir clase JWT
+require_once 'utils/JWT.php';
+
 // Configuración de base de datos - Dreamhost
 $host = 'mysql.easyclaseapp.com';
 $dbname = 'easyclasebd_v2';
@@ -22,6 +25,24 @@ try {
 } catch (PDOException $e) {
     // Si falla la conexión, usar modo mock
     $pdo = null;
+}
+
+// Función para obtener el ID del usuario desde el token JWT
+function getUserIdFromToken() {
+    $jwt = new JWT();
+    $token = $jwt->getTokenFromHeader();
+    
+    if (!$token) {
+        return null;
+    }
+    
+    $payload = $jwt->verifyToken($token);
+    
+    if ($payload && isset($payload['user_id'])) {
+        return $payload['user_id'];
+    }
+    
+    return null;
 }
 
 // Obtener método HTTP
@@ -87,8 +108,8 @@ if ($method === 'POST') {
                 // Crear servicio en la tabla servicios
                 $stmt = $pdo->prepare("
                     INSERT INTO servicios 
-                    (titulo, descripcion, categoria, precio, tiempoPrevisto_valor, tiempoPrevisto_unidad, modalidad, proveedor, requisitos, objetivos, estado, created_at, updated_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    (titulo, descripcion, categoria, precio, tiempoPrevisto_valor, tiempoPrevisto_unidad, modalidad, proveedor, requisitos, estado, created_at, updated_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ");
                 
                 $stmt->execute([
@@ -99,9 +120,8 @@ if ($method === 'POST') {
                     intval($input['tiempoPrevisto']['valor'] ?? 1),
                     $input['tiempoPrevisto']['unidad'] ?? 'horas',
                     $input['modalidad'] ?? 'virtual',
-                    1, // ID del proveedor (en producción deberías obtenerlo del token)
-                    $input['requisitos'] ?? '',
-                    $input['objetivos'] ?? '',
+                    getUserIdFromToken() ?? 1, // ID del proveedor obtenido del token JWT
+                    $input['requisitos'] ? json_encode($input['requisitos']) : '[]',
                     'activo'
                 ]);
                 
@@ -121,10 +141,9 @@ if ($method === 'POST') {
                             'unidad' => $input['tiempoPrevisto']['unidad'] ?? 'horas'
                         ],
                         'modalidad' => $input['modalidad'] ?? 'virtual',
-                        'requisitos' => $input['requisitos'] ?? '',
-                        'objetivos' => $input['objetivos'] ?? '',
+                        'requisitos' => $input['requisitos'] ?? [],
                         'estado' => 'activo',
-                        'proveedor' => 1,
+                        'proveedor' => getUserIdFromToken() ?? 1,
                         'createdAt' => date('c'),
                         'updatedAt' => date('c')
                     ]

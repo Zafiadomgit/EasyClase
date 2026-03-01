@@ -3,6 +3,7 @@ import comprasServiciosRoutes from './comprasServicios.js';
 import disponibilidadRoutes from './disponibilidad.js';
 import clasesRoutes from './clases.js';
 import serviciosRoutes from './servicios.js';
+import profesoresRoutes from './profesores.js';
 import mercadopagoRoutes from './mercadopago.js';
 
 const router = express.Router();
@@ -18,6 +19,9 @@ router.use('/clases', clasesRoutes);
 
 // Rutas de servicios
 router.use('/servicios', serviciosRoutes);
+
+// Rutas de profesores
+router.use('/profesores', profesoresRoutes);
 
 // Rutas de MercadoPago
 router.use('/mercadopago', mercadopagoRoutes);

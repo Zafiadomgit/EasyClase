@@ -2,10 +2,11 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
+import authRoutes from './routes/auth.js';
 
 // Cargar variables de entorno
 // En producción, usar .env, en desarrollo usar env.production
-const envPath = process.env.NODE_ENV === 'production' ? './.env' : './env.production';
+const envPath = './.env';
 console.log(`🔧 Cargando variables de entorno desde: ${envPath}`);
 console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
 dotenv.config({ path: envPath });
@@ -28,6 +29,7 @@ app.use(express.static('../public'));
 
 // Rutas de la API
 app.use('/api', routes);
+app.use('/api/auth', authRoutes);
 
 // Ruta de estado
 app.get('/api/status', (req, res) => {

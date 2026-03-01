@@ -51,144 +51,144 @@ import './App.css'
 function App() {
   return (
     <AuthProvider>
-        <NotificationProvider>
-          <Router>
+      <NotificationProvider>
+        <Router>
           <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-20">
               <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
             </div>
             <div className="relative z-10">
-          <Routes>
-            {/* Rutas independientes (sin Layout) */}
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Register />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* Rutas públicas */}
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="/buscar" element={<BuscarClases />} />
-              <Route path="/servicios" element={<BuscarServicios />} />
-            <Route path="/servicios/crear" element={<CrearServicio />} />
-            <Route path="/clases/crear" element={<CrearClase />} />
-            <Route path="/mis-servicios-comprados" element={<MisServiciosComprados />} />
-            <Route path="/mis-reservas" element={<MisReservas />} />
-            <Route path="/pago-exitoso" element={<PagoExitoso />} />
-            <Route path="/pago-fallido" element={<PagoFallido />} />
-            <Route path="/pago-pendiente" element={<PagoPendiente />} />
-            <Route path="/profesor/onboarding" element={<OnboardingProfesor />} />
-              <Route path="/profesor/:id" element={<PerfilProfesor />} />
-              <Route path="/ser-profesor" element={<SerProfesor />} />
-              <Route path="/reservar/:id" element={<ReservarClase />} />
-              <Route path="/pago" element={<Pago />} />
-              <Route path="/videollamada/:id" element={<VideoCallRoom />} />
-              <Route path="/como-funciona" element={<ComoFunciona />} />
-              <Route path="/terminos" element={<Terminos />} />
-              <Route path="/privacidad" element={<Privacidad />} />
-              
-              {/* Rutas protegidas */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/perfil" 
-                element={
-                  <ProtectedRoute>
-                    <Perfil />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/mis-clases" 
-                element={
-                  <ProtectedRoute>
-                    <MisClases />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/clase/:id" 
-                element={
-                  <ProtectedRoute>
-                    <DetalleClase />
-                  </ProtectedRoute>
-                } 
-              />
+              <Routes>
+                {/* Rutas independientes (sin Layout) */}
+                <Route path="/onboarding" element={<OnboardingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/registro" element={<Register />} />
+                <Route path="/register" element={<Register />} />
 
-              <Route 
-                path="/chat" 
-                element={
-                  <ProtectedRoute>
-                    <Chat />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route
-                path="/seguridad"
-                element={
-                  <ProtectedRoute>
-                    <Seguridad />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/preferencias"
-                element={
-                  <ProtectedRoute>
-                    <Preferencias />
-                  </ProtectedRoute>
-                }
-              />
-              <Route 
-                path="/premium" 
-                element={
-                  <ProtectedRoute>
-                    <Premium />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/profesor/disponibilidad" 
-                element={
-                  <ProtectedRoute>
-                    <ProfesorDisponibilidad />
-                  </ProtectedRoute>
-                } 
-              />
-            </Route>
-            
-            {/* Rutas de Administración */}
-            <Route 
-              path="/admin/*" 
-              element={
-                <AdminRoute>
-                  <AdminLayout />
-                </AdminRoute>
-              } 
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="super" element={<SuperAdminPanel />} />
-              <Route path="users" element={<AdminUsuarios />} />
-              <Route path="classes" element={<AdminClases />} />
-              <Route path="payments" element={<AdminPagos />} />
-              <Route path="disputes" element={<AdminDisputas />} />
-              <Route path="reports" element={<AdminReportes />} />
-              <Route path="content" element={<AdminContenido />} />
-              <Route path="system" element={<AdminSistema />} />
-            </Route>
-          </Routes>
+                {/* Rutas públicas */}
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="/buscar" element={<BuscarClases />} />
+                  <Route path="/servicios" element={<BuscarServicios />} />
+                  <Route path="/servicios/crear" element={<CrearServicio />} />
+                  <Route path="/clases/crear" element={<CrearClase />} />
+                  <Route path="/mis-servicios-comprados" element={<MisServiciosComprados />} />
+                  <Route path="/mis-reservas" element={<MisReservas />} />
+                  <Route path="/pago-exitoso" element={<PagoExitoso />} />
+                  <Route path="/pago-fallido" element={<PagoFallido />} />
+                  <Route path="/pago-pendiente" element={<PagoPendiente />} />
+                  <Route path="/profesor/onboarding" element={<OnboardingProfesor />} />
+                  <Route path="/profesor/:id" element={<PerfilProfesor />} />
+                  <Route path="/ser-profesor" element={<SerProfesor />} />
+                  <Route path="/reservar/:id" element={<ReservarClase />} />
+                  <Route path="/pago" element={<Pago />} />
+                  <Route path="/videollamada/:id" element={<VideoCallRoom />} />
+                  <Route path="/como-funciona" element={<ComoFunciona />} />
+                  <Route path="/terminos" element={<Terminos />} />
+                  <Route path="/privacidad" element={<Privacidad />} />
+
+                  {/* Rutas protegidas */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/perfil"
+                    element={
+                      <ProtectedRoute>
+                        <Perfil />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/mis-clases"
+                    element={
+                      <ProtectedRoute>
+                        <MisClases />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/clase/:id"
+                    element={
+                      <ProtectedRoute>
+                        <DetalleClase />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <Chat />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/seguridad"
+                    element={
+                      <ProtectedRoute>
+                        <Seguridad />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/preferencias"
+                    element={
+                      <ProtectedRoute>
+                        <Preferencias />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/premium"
+                    element={
+                      <ProtectedRoute>
+                        <Premium />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profesor/disponibilidad"
+                    element={
+                      <ProtectedRoute>
+                        <ProfesorDisponibilidad />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
+
+                {/* Rutas de Administración */}
+                <Route
+                  path="/admin/*"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="super" element={<SuperAdminPanel />} />
+                  <Route path="users" element={<AdminUsuarios />} />
+                  <Route path="classes" element={<AdminClases />} />
+                  <Route path="payments" element={<AdminPagos />} />
+                  <Route path="disputes" element={<AdminDisputas />} />
+                  <Route path="reports" element={<AdminReportes />} />
+                  <Route path="content" element={<AdminContenido />} />
+                  <Route path="system" element={<AdminSistema />} />
+                </Route>
+              </Routes>
             </div>
           </div>
         </Router>
-        </NotificationProvider>
-      </AuthProvider>
+      </NotificationProvider>
+    </AuthProvider>
   )
 }
 

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { sentryVitePlugin } from "@sentry/vite-plugin"
+// import { sentryVitePlugin } from "@sentry/vite-plugin"
 import path from 'path'
 
 // https://vitejs.dev/config/
@@ -16,10 +16,11 @@ export default defineConfig({
     // })
   ].filter(Boolean),
   server: {
-    port: 3000,
+    port: 3001,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        // En desarrollo, el servidor Node.js puede estar en 3000 o usar VITE_API_URL
+        target: process.env.VITE_API_URL || 'http://localhost:3000',
         changeOrigin: true,
         secure: false
       }
@@ -39,8 +40,7 @@ export default defineConfig({
     include: ['speakeasy', 'qrcode']
   },
   define: {
-    global: 'globalThis',
-    'process.env': process.env
+    global: 'globalThis'
   },
   publicDir: 'public'
 })

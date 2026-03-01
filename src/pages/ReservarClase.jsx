@@ -6,7 +6,7 @@ const ReservarClase = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const servicioId = searchParams.get('servicio')
-  
+
   const [clase, setClase] = useState(null)
   const [servicio, setServicio] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -65,7 +65,7 @@ const ReservarClase = () => {
       setLoading(true)
       const response = await fetch(`/api/clases/reservar.php?id=${id}`)
       const data = await response.json()
-      
+
       if (data.success) {
         setClase(data.data.clase)
         console.log('Datos de clase cargados:', data.data.clase)
@@ -85,7 +85,7 @@ const ReservarClase = () => {
     try {
       const response = await fetch(`/api/servicios/detalle.php?id=${servicioId}`)
       const data = await response.json()
-      
+
       if (data.success) {
         setServicio(data.data.servicio)
         // Si el servicio permite ambos tipos, no establecer uno por defecto
@@ -102,7 +102,7 @@ const ReservarClase = () => {
     try {
       const response = await fetch(`/api/clases/verificar-horario.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&hora=${horaSeleccionada}`)
       const data = await response.json()
-      
+
       if (data.success) {
         setEstadoHorario(data.data.estado) // 'disponible', 'individual', 'grupal'
         setAlumnosInscritos(data.data.alumnosInscritos || 0)
@@ -121,11 +121,11 @@ const ReservarClase = () => {
     try {
       const response = await fetch(`/api/clases/verificar-disponibilidad-multiple.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&horaInicio=${horaSeleccionada}&cantidadHoras=4`)
       const data = await response.json()
-      
+
       if (data.success) {
         setDisponibilidadMultiple(data.data)
         setMaxHorasDisponibles(data.data.maxHorasDisponibles)
-        
+
         // Si la cantidad de horas seleccionada es mayor a la disponible, ajustarla
         if (cantidadHoras > data.data.maxHorasDisponibles) {
           setCantidadHoras(data.data.maxHorasDisponibles)
@@ -152,7 +152,7 @@ const ReservarClase = () => {
       alert('Este horario ya fue reservado como individual')
       return
     }
-    
+
     if (estadoHorario === 'grupal' && tipoAgenda !== 'grupal') {
       alert('Este horario ya fue reservado como grupal')
       return
@@ -177,9 +177,9 @@ const ReservarClase = () => {
           tipoAgenda: tipoAgenda
         })
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         // Redirigir al sistema de pagos en lugar de reservar directamente
         let precioPorHora = 0
@@ -194,15 +194,16 @@ const ReservarClase = () => {
           // Fallback para clases sin servicio específico
           precioPorHora = tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 10) * 0.7)
         }
-        
+
         // Asegurar precio mínimo de $10 COP para pruebas
         precioPorHora = Math.max(precioPorHora, 10)
-        
+
         const duracionHoras = cantidadHoras // Usar la cantidad de horas seleccionada por el estudiante
         const precioTotal = precioPorHora * duracionHoras
-        
+
         const reservaData = {
-          profesorId: id,
+          claseId: id,
+          profesorId: clase?.profesor?.id || id,
           servicioId: servicioId,
           fecha: fechaSeleccionada,
           hora: horaSeleccionada,
@@ -214,12 +215,12 @@ const ReservarClase = () => {
           servicioTitulo: servicio?.titulo || 'Clase General',
           servicioCategoria: servicio?.categoria || 'General'
         }
-        
+
         // Guardar datos de reserva en localStorage para el pago
         console.log('Guardando reserva en localStorage:', reservaData)
         localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
         console.log('Reserva guardada, verificando:', localStorage.getItem('reservaPendiente'))
-        
+
         // También guardar en localStorage del estudiante para "Mis Clases"
         const claseEstudiante = {
           id: `clase_estudiante_${Date.now()}`,
@@ -237,11 +238,11 @@ const ReservarClase = () => {
           fechaReserva: new Date().toISOString(),
           linkLlamada: null // Se asignará cuando el profesor acepte
         }
-        
+
         const clasesExistentes = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
         clasesExistentes.push(claseEstudiante)
         localStorage.setItem('misClasesEstudiante', JSON.stringify(clasesExistentes))
-        
+
         // Redirigir a la página de pago
         navigate('/pago')
       } else {
@@ -288,7 +289,7 @@ const ReservarClase = () => {
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
       </div>
-      
+
       <div className="relative z-10 py-12">
         <div className="max-w-7xl mx-auto px-4">
           {/* Header elegante */}
@@ -339,7 +340,7 @@ const ReservarClase = () => {
                     <span className="text-purple-200 font-medium">Precio/hora</span>
                     <span className="text-white font-semibold">${clase.profesor.precioHora.toLocaleString()}</span>
                   </div>
-                  
+
                   {clase.profesor.esPremium && (
                     <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-4 border border-yellow-400/30">
                       <div className="flex items-center">
@@ -428,7 +429,7 @@ const ReservarClase = () => {
                       <label className="block text-lg font-semibold text-white mb-4">
                         Tipo de Clase
                       </label>
-                      
+
                       {/* Estado del horario */}
                       {estadoHorario && (
                         <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
@@ -462,13 +463,12 @@ const ReservarClase = () => {
                       {/* Opciones de tipo */}
                       <div className="space-y-4">
                         {/* Individual */}
-                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${
-                          tipoAgenda === 'individual' 
-                            ? 'border-purple-500 bg-purple-500/20 shadow-lg' 
-                            : estadoHorario === 'individual' 
+                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${tipoAgenda === 'individual'
+                            ? 'border-purple-500 bg-purple-500/20 shadow-lg'
+                            : estadoHorario === 'individual'
                               ? 'border-white/20 bg-white/5 cursor-not-allowed opacity-50'
                               : 'border-white/20 bg-white/5 hover:border-purple-400/50 hover:bg-purple-500/10'
-                        }`}>
+                          }`}>
                           <input
                             type="radio"
                             name="tipoAgenda"
@@ -487,13 +487,12 @@ const ReservarClase = () => {
                         </label>
 
                         {/* Grupal */}
-                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${
-                          tipoAgenda === 'grupal' 
-                            ? 'border-purple-500 bg-purple-500/20 shadow-lg' 
-                            : estadoHorario === 'individual' 
+                        <label className={`flex items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${tipoAgenda === 'grupal'
+                            ? 'border-purple-500 bg-purple-500/20 shadow-lg'
+                            : estadoHorario === 'individual'
                               ? 'border-white/20 bg-white/5 cursor-not-allowed opacity-50'
                               : 'border-white/20 bg-white/5 hover:border-purple-400/50 hover:bg-purple-500/10'
-                        }`}>
+                          }`}>
                           <input
                             type="radio"
                             name="tipoAgenda"
@@ -525,7 +524,7 @@ const ReservarClase = () => {
                       <label className="block text-lg font-semibold text-white mb-4">
                         Cantidad de Horas
                       </label>
-                      
+
                       {/* Mostrar información de disponibilidad */}
                       {disponibilidadMultiple && (
                         <div className="bg-blue-500/20 rounded-2xl p-4 border border-blue-400/30">
@@ -543,7 +542,7 @@ const ReservarClase = () => {
                           )}
                         </div>
                       )}
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[1, 2, 3, 4].map(horas => {
                           const disponible = horas <= maxHorasDisponibles
@@ -553,13 +552,12 @@ const ReservarClase = () => {
                               type="button"
                               onClick={() => disponible && setCantidadHoras(horas)}
                               disabled={!disponible}
-                              className={`p-4 border rounded-2xl text-center transition-all duration-300 ${
-                                !disponible
+                              className={`p-4 border rounded-2xl text-center transition-all duration-300 ${!disponible
                                   ? 'border-white/20 bg-white/5 text-gray-400 cursor-not-allowed opacity-50'
                                   : cantidadHoras === horas
                                     ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg'
                                     : 'border-white/20 bg-white/5 text-white hover:border-purple-400/50 hover:bg-purple-500/10'
-                              }`}
+                                }`}
                             >
                               <div className="font-bold text-lg">
                                 {horas} hora{horas > 1 ? 's' : ''}
@@ -568,7 +566,7 @@ const ReservarClase = () => {
                               <div className="text-sm text-purple-200 mt-1">
                                 {disponible ? (
                                   servicio ? (
-                                    tipoAgenda === 'individual' 
+                                    tipoAgenda === 'individual'
                                       ? `$${((servicio.precioIndividual || servicio.precio || 0) * horas).toLocaleString()}`
                                       : `$${((servicio.precioGrupal || servicio.precio || 0) * horas).toLocaleString()}`
                                   ) : (
@@ -604,16 +602,16 @@ const ReservarClase = () => {
                       className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-2xl hover:from-purple-700 hover:to-blue-700 font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                     >
                       {reservando ? 'Reservando...' : (
-                        tipoAgenda && cantidadHoras ? 
+                        tipoAgenda && cantidadHoras ?
                           (() => {
                             let precioTotal = 0
                             if (servicio) {
-                              const precioPorHora = tipoAgenda === 'individual' 
+                              const precioPorHora = tipoAgenda === 'individual'
                                 ? (servicio.precioIndividual || servicio.precio || 0)
                                 : (servicio.precioGrupal || servicio.precio || 0)
                               precioTotal = precioPorHora * cantidadHoras
                             } else {
-                              const precioPorHora = tipoAgenda === 'individual' 
+                              const precioPorHora = tipoAgenda === 'individual'
                                 ? (clase?.profesor?.precioHora || 0)
                                 : Math.round((clase?.profesor?.precioHora || 0) * 0.7)
                               precioTotal = precioPorHora * cantidadHoras

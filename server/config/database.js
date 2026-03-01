@@ -153,7 +153,7 @@ export const initializeDatabase = async () => {
 };
 
 // Inicializar base de datos
-initializeDatabase();
+// initializeDatabase();
 
 // Funciones de utilidad para testing
 export const testConnection = async () => {

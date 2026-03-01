@@ -19,10 +19,10 @@ const Header = () => {
   const navigate = useNavigate()
   const { isAuthenticated, user, logout, loading } = useAuth()
   const { addPersistentNotification } = useNotifications()
-  
+
   // Evitar renderizar elementos de usuario mientras se verifica autenticación
   const shouldShowUserElements = !loading && isAuthenticated && user;
-  
+
   // Cerrar menús cuando se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -42,11 +42,11 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
-  
+
   // Función para mostrar notificaciones del sistema
   const showSystemNotification = (type, title, message) => {
     if (!user?.id) return
-    
+
     const systemNotifications = {
       welcome: {
         type: 'info',
@@ -70,7 +70,7 @@ const Header = () => {
         color: 'yellow'
       }
     }
-    
+
     const notification = systemNotifications[type]
     if (notification) {
       addPersistentNotification(user.id, notification)
@@ -85,46 +85,46 @@ const Header = () => {
     }
     return icons[type] || '📢'
   }
-  
+
   const getNotificationColor = (priority) => {
     return 'border-gray-500 bg-gray-50'
   }
 
   // Categorías con popularidad
   const categorias = [
-    { 
-      name: 'Programación', 
-      icon: <Code className="w-5 h-5" />, 
+    {
+      name: 'Programación',
+      icon: <Code className="w-5 h-5" />,
       popular: true,
       profesores: 245
     },
-    { 
-      name: 'Matemáticas', 
-      icon: <Calculator className="w-5 h-5" />, 
+    {
+      name: 'Matemáticas',
+      icon: <Calculator className="w-5 h-5" />,
       popular: true,
       profesores: 189
     },
-    { 
-      name: 'Inglés', 
-      icon: <Globe className="w-5 h-5" />, 
+    {
+      name: 'Inglés',
+      icon: <Globe className="w-5 h-5" />,
       popular: true,
       profesores: 167
     },
-    { 
-      name: 'Excel', 
-      icon: <FileText className="w-5 h-5" />, 
+    {
+      name: 'Excel',
+      icon: <FileText className="w-5 h-5" />,
       popular: false,
       profesores: 89
     },
-    { 
-      name: 'Diseño Gráfico', 
-      icon: <Palette className="w-5 h-5" />, 
+    {
+      name: 'Diseño Gráfico',
+      icon: <Palette className="w-5 h-5" />,
       popular: false,
       profesores: 76
     },
-    { 
-      name: 'Marketing', 
-      icon: <TrendingUp className="w-5 h-5" />, 
+    {
+      name: 'Marketing',
+      icon: <TrendingUp className="w-5 h-5" />,
       popular: false,
       profesores: 54
     }
@@ -185,9 +185,9 @@ const Header = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="block">
-              <img 
-                src="/Logo_reducido-removebg-preview.png" 
-                alt="EasyClase" 
+              <img
+                src="/Logo_reducido-removebg-preview.png"
+                alt="EasyClase"
                 className="h-16 w-auto object-contain hover:opacity-90 transition-opacity duration-200"
                 onError={(e) => {
                   // Fallback al logo reducido original
@@ -209,13 +209,7 @@ const Header = () => {
             >
               Buscar Clases
             </Link>
-            <Link
-              to="/servicios"
-              className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
-            >
-              Servicios
-            </Link>
-            
+
             {/* Dropdown de Categorías */}
             <div className="relative" ref={categoriesRef}>
               <button
@@ -225,14 +219,14 @@ const Header = () => {
                 <span>Categorías</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
               </button>
-              
+
               {isCategoriesOpen && (
                 <div className="absolute top-full left-0 mt-2 w-80 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 py-4 z-50">
                   <div className="px-4 py-2 border-b border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-800">Todas las Categorías</h3>
                     <p className="text-xs text-gray-600">Encuentra tu profesor ideal</p>
                   </div>
-                  
+
                   <div className="py-2">
                     {categorias.map((categoria) => (
                       <button
@@ -261,7 +255,7 @@ const Header = () => {
                       </button>
                     ))}
                   </div>
-                  
+
                   <div className="px-4 py-2 border-t border-white/10">
                     <button
                       onClick={() => {
@@ -276,7 +270,7 @@ const Header = () => {
                 </div>
               )}
             </div>
-            
+
             <Link
               to="/como-funciona"
               className="text-white hover:text-purple-100 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 hover:bg-white/20 shadow-sm"
@@ -297,9 +291,9 @@ const Header = () => {
               <>
                 {/* Botón de Notificaciones */}
                 <NotificationBell />
-                
 
-                
+
+
                 {/* Menú de Usuario */}
                 <div className="relative" ref={userMenuRef}>
                   <button
@@ -314,118 +308,111 @@ const Header = () => {
                     </div>
                     <span className="font-semibold">{user?.nombre?.split(' ')[0]}</span>
                   </button>
-                
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border border-white/30">
-                    <Link
-                      to="/dashboard"
-                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Mi Dashboard
-                    </Link>
-                    
-                    {user?.tipoUsuario === 'profesor' && (
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border border-white/30">
                       <Link
-                        to="/profesor/disponibilidad"
+                        to="/dashboard"
                         className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        📅 Configurar Disponibilidad
+                        Mi Dashboard
                       </Link>
-                    )}
-                    <Link
-                      to="/perfil"
-                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Mi Perfil
-                    </Link>
-                    
-                    {/* Super Admin Panel - Solo para admin@easyclase.com */}
-                    {user?.email === 'admin@easyclase.com' && (
+
+                      {user?.tipoUsuario === 'profesor' && (
+                        <Link
+                          to="/profesor/disponibilidad"
+                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          📅 Configurar Disponibilidad
+                        </Link>
+                      )}
                       <Link
-                        to="/admin/super"
-                        className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <div className="flex items-center">
-                          <Shield className="w-4 h-4 mr-2" />
-                          Super Admin Panel
-                          <span className="ml-auto px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                            SUPER
-                          </span>
-                        </div>
-                      </Link>
-                    )}
-                    {user?.tipoUsuario === 'profesor' && (
-                      <Link
-                        to="/mis-clases"
+                        to="/perfil"
                         className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        Mis Clases
+                        Mi Perfil
                       </Link>
-                    )}
-                    
-                    {user?.tipoUsuario === 'estudiante' && (
-                      <>
+
+                      {/* Super Admin Panel - Solo para admin@easyclase.com */}
+                      {user?.email === 'admin@easyclase.com' && (
                         <Link
-                          to="/mis-servicios-comprados"
+                          to="/admin/super"
+                          className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <div className="flex items-center">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Super Admin Panel
+                            <span className="ml-auto px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                              SUPER
+                            </span>
+                          </div>
+                        </Link>
+                      )}
+                      {user?.tipoUsuario === 'profesor' && (
+                        <Link
+                          to="/mis-clases"
                           className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          Mis Servicios Comprados
+                          Mis Clases
                         </Link>
-                        <Link
-                          to="/mis-reservas"
-                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Mis Reservas
-                        </Link>
-                      </>
-                    )}
-                    
-                    {/* Opción Premium para Profesores */}
-                    {user?.tipoUsuario === 'profesor' && (
-                      <>
-                        <hr className="my-1" />
-                        <Link
-                          to="/premium"
-                          className="block px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 font-medium"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          ⭐ Obtener Premium
-                        </Link>
-                      </>
-                    )}
-                    
-                    {(user?.tipoUsuario === 'admin' || ['admin', 'superadmin'].includes(user?.rol)) && (
-                      <>
-                        <hr className="my-1" />
-                        <Link
-                          to="/admin"
-                          className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          🛡️ Panel Admin
-                        </Link>
-                      </>
-                    )}
-                    <hr className="my-1" />
-                    
-                    
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center transition-colors rounded-xl mx-2"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                )}
-              </div>
+                      )}
+
+                      {user?.tipoUsuario === 'estudiante' && (
+                        <>
+                          <Link
+                            to="/mis-reservas"
+                            className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            Mis Reservas
+                          </Link>
+                        </>
+                      )}
+
+                      {/* Opción Premium para Profesores */}
+                      {user?.tipoUsuario === 'profesor' && (
+                        <>
+                          <hr className="my-1" />
+                          <Link
+                            to="/premium"
+                            className="block px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 font-medium"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            ⭐ Obtener Premium
+                          </Link>
+                        </>
+                      )}
+
+                      {(user?.tipoUsuario === 'admin' || ['admin', 'superadmin'].includes(user?.rol)) && (
+                        <>
+                          <hr className="my-1" />
+                          <Link
+                            to="/admin"
+                            className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            🛡️ Panel Admin
+                          </Link>
+                        </>
+                      )}
+                      <hr className="my-1" />
+
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center transition-colors rounded-xl mx-2"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -441,7 +428,7 @@ const Header = () => {
                 >
                   Registrarse
                 </Link>
-                
+
               </>
             )}
           </div>
@@ -469,13 +456,6 @@ const Header = () => {
                 Buscar Clases
               </Link>
               <Link
-                to="/servicios"
-                className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50"
-                onClick={toggleMenu}
-              >
-                Servicios
-              </Link>
-              <Link
                 to="/como-funciona"
                 className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50"
                 onClick={toggleMenu}
@@ -489,8 +469,8 @@ const Header = () => {
               >
                 Ser Profesor
               </Link>
-              
-              
+
+
               <div className="border-t border-secondary-200 pt-3 mt-3">
                 {shouldShowUserElements ? (
                   <>
@@ -502,7 +482,7 @@ const Header = () => {
                       </div>
                       <span className="text-secondary-900 font-medium">{user?.nombre}</span>
                     </div>
-                    
+
                     {/* Notificaciones en móvil */}
                     <div className="px-3 py-2 mb-2">
                       <NotificationBell />
@@ -566,9 +546,9 @@ const Header = () => {
       </div>
 
       {/* Modal de Categorías */}
-      <CategoriesModal 
-        isOpen={showCategoriesModal} 
-        onClose={() => setShowCategoriesModal(false)} 
+      <CategoriesModal
+        isOpen={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
       />
     </header>
   )

@@ -99,6 +99,11 @@ const CrearServicio = () => {
         throw new Error('El tiempo previsto debe ser un número positivo')
       }
 
+      // Validar archivos para clases pregrabadas
+      if (servicioData.tipo === 'pregrabada' && servicioData.archivos.length === 0) {
+        throw new Error('Para clases pregrabadas es obligatorio subir al menos un archivo (video o material)')
+      }
+
       // Preparar datos para envío (sin archivos por ahora)
       const datosParaEnviar = {
         ...servicioData,
@@ -387,16 +392,31 @@ const CrearServicio = () => {
                 Archivos del Servicio
               </h3>
               
-              <div className="bg-green-500/20 border border-green-400/50 rounded-lg p-4 mb-4 backdrop-blur-sm">
-                <p className="text-sm text-green-200">
-                  <strong>📁 Archivos:</strong> Sube videos, documentos, presentaciones y otros materiales. 
-                  Máximo 100MB por archivo.
+              <div className={`border rounded-lg p-4 mb-4 backdrop-blur-sm ${
+                servicioData.tipo === 'pregrabada' 
+                  ? 'bg-blue-500/20 border-blue-400/50' 
+                  : 'bg-green-500/20 border-green-400/50'
+              }`}>
+                <p className={`text-sm ${
+                  servicioData.tipo === 'pregrabada' ? 'text-blue-200' : 'text-green-200'
+                }`}>
+                  {servicioData.tipo === 'pregrabada' ? (
+                    <>
+                      <strong>📁 Archivos (obligatorios):</strong> Para clases pregrabadas, debes subir los videos y materiales del curso. 
+                      Máximo 100MB por archivo.
+                    </>
+                  ) : (
+                    <>
+                      <strong>📁 Archivos (opcional):</strong> Para servicios como asesorías o consultorías, los archivos no son obligatorios. 
+                      Si tienes materiales complementarios, súbelos aquí. Máximo 100MB por archivo.
+                    </>
+                  )}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-purple-200 mb-2">
-                  Subir archivos *
+                  Subir archivos {servicioData.tipo === 'pregrabada' ? '*' : '(opcional)'}
                 </label>
                 <div className="border-2 border-dashed border-white/30 rounded-xl p-6 text-center hover:border-purple-400 transition-colors bg-white/5 backdrop-blur-sm">
                   <input
@@ -410,7 +430,7 @@ const CrearServicio = () => {
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <Upload className="w-12 h-12 text-purple-300 mx-auto mb-4" />
                     <p className="text-lg font-medium text-white mb-2">
-                      Haz clic para subir archivos
+                      Haz clic para subir archivos {servicioData.tipo === 'pregrabada' ? '' : '(opcional)'}
                     </p>
                     <p className="text-sm text-purple-200">
                       Videos, PDFs, presentaciones, documentos (máx. 100MB cada uno)

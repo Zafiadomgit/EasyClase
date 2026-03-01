@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import * as Sentry from '@sentry/react'
+// import * as Sentry from '@sentry/react'
 import NotificationTriggers from '../../components/NotificationTriggers'
-import { 
-  Calendar, 
-  Clock, 
-  Star, 
-  BookOpen, 
-  DollarSign, 
-  Users, 
+import {
+  Calendar,
+  Clock,
+  Star,
+  BookOpen,
+  DollarSign,
+  Users,
   TrendingUp,
   MessageCircle,
   Bell,
@@ -24,13 +24,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
-import { servicioService, profesorService } from '../../services/api'
+import { profesorService } from '../../services/api'
 import claseServiceLocal from '../../services/claseService'
 import notificationService from '../../services/notificationService'
 import { formatPrecio } from '../../utils/currencyUtils'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 import ReservasPendientes from '../Professor/ReservasPendientes'
-import MisServicios from '../Professor/MisServicios'
 import MisClases from '../Professor/MisClases'
 
 // Componente de prueba para Sentry
@@ -99,9 +98,8 @@ const Dashboard = () => {
   }
 
   const [clases, setClases] = useState([])
-  const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(null)
   const [showVideoCall, setShowVideoCall] = useState(false)
   const [selectedClaseId, setSelectedClaseId] = useState(null)
   const [mensajeExito, setMensajeExito] = useState('')
@@ -110,11 +108,11 @@ const Dashboard = () => {
   const [showRetiroModal, setShowRetiroModal] = useState(false)
   const [montoRetiro, setMontoRetiro] = useState(0)
   const [showReservasPendientes, setShowReservasPendientes] = useState(false)
-  const [activeSection, setActiveSection] = useState('dashboard') // 'dashboard', 'servicios', 'clases'
+  const [activeSection, setActiveSection] = useState('dashboard') // 'dashboard', 'clases'
 
   useEffect(() => {
     cargarDatos()
-    
+
     // Verificar si hay un mensaje de éxito desde la navegación
     if (location.state && location.state.mensaje) {
       setMensajeExito(location.state.mensaje)
@@ -130,25 +128,16 @@ const Dashboard = () => {
       try {
         // Usar un userId consistente
         const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
-        
+
         // Guardar el userId en localStorage para consistencia
         if (!localStorage.getItem('easyclase_user_id')) {
           localStorage.setItem('easyclase_user_id', userId)
         }
-        
+
         const proximasClases = await claseServiceLocal.obtenerProximasClases(userId)
         setClases(proximasClases)
       } catch (clasesError) {
         setClases([])
-      }
-
-      // Obtener servicios si el usuario puede ofrecer servicios
-      try {
-        const serviciosResponse = await servicioService.obtenerMisServicios()
-        setServicios(serviciosResponse.data?.servicios || [])
-      } catch (serviciosError) {
-        // Si falla, solo logueamos, no es crítico
-        setServicios([])
       }
 
       // Obtener balance si es profesor
@@ -273,11 +262,11 @@ const Dashboard = () => {
 
       // Crear el retiro
       const response = await profesorService.crearRetiro(montoRetiro)
-      
+
       if (response.success && response.data.init_point) {
         // Redirigir a MercadoPago
         window.open(response.data.init_point, '_blank')
-        
+
         setMensajeExito('Retiro iniciado correctamente. Completa el proceso en MercadoPago.')
       } else {
         throw new Error('Error al crear el retiro')
@@ -289,25 +278,21 @@ const Dashboard = () => {
     }
   }
 
-  
+
 
   // Filtrar clases por estado
-  const proximasClases = clases.filter(clase => 
+  const proximasClases = clases.filter(clase =>
     ['solicitada', 'confirmada'].includes(clase.estado) &&
     new Date(clase.fecha) >= new Date()
   )
 
   const clasesCompletadas = clases.filter(clase => clase.estado === 'completada')
 
-  // Calcular estadísticas básicas
-  const serviciosActivos = servicios.filter(servicio => servicio.estado === 'activo')
   const estadisticas = {
     totalClases: clasesCompletadas.length,
     horasTotales: clasesCompletadas.reduce((total, clase) => total + clase.duracion, 0),
     gastoTotal: isEstudiante() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0,
-    ingresoTotal: isProfesor() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0,
-    totalServicios: serviciosActivos.length,
-    ingresosServicios: servicios.reduce((total, servicio) => total + (servicio.precio * (servicio.totalVentas || 0)), 0)
+    ingresoTotal: isProfesor() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0
   }
 
   if (loading) {
@@ -329,518 +314,495 @@ const Dashboard = () => {
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
       </div>
-      
+
       <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Mensaje de éxito */}
-      {mensajeExito && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl flex items-center">
-          <CheckCircle className="w-6 h-6 mr-3 text-green-600" />
-          <span className="font-medium">{mensajeExito}</span>
-          <button
-            onClick={() => setMensajeExito('')}
-            className="ml-auto text-green-600 hover:text-green-800"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-white font-display">
-              ¡Hola, {user?.nombre?.split(' ')[0]}! 👋
-            </h1>
-            <p className="text-purple-200 mt-2 text-lg">
-              {isEstudiante() 
-                ? 'Gestiona tus clases y revisa tu progreso de aprendizaje'
-                : 'Gestiona tus clases y revisa tus estadísticas de enseñanza'
-              }
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700">{error}</p>
-          <button 
-            onClick={cargarDatos}
-            className="mt-2 text-red-600 hover:text-red-800 underline text-sm"
-          >
-            Reintentar
-          </button>
-        </div>
-      )}
-
-      {/* Estadísticas */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${isProfesor() ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6 mb-8`}>
-        {isEstudiante() ? (
-          <>
-            <div className="card text-center">
-              <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
-              <p className="text-secondary-600">Clases Tomadas</p>
-            </div>
-            <div className="card text-center">
-              <Clock className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{estadisticas.horasTotales}</p>
-              <p className="text-secondary-600">Horas de Estudio</p>
-            </div>
-            <div className="card text-center">
-              <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
-              <p className="text-secondary-600">Tu Progreso</p>
-            </div>
-            <div className="card text-center">
-              <Calendar className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{proximasClases.length}</p>
-              <p className="text-secondary-600">Próximas Clases</p>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="card text-center">
-              <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
-              <p className="text-secondary-600">Clases Impartidas</p>
-            </div>
-            <div className="card text-center">
-              <Users className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{new Set(clasesCompletadas.map(c => c.estudiante)).size}</p>
-              <p className="text-secondary-600">Estudiantes Únicos</p>
-            </div>
-            <div className="card text-center relative">
-              <TrendingUp className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{formatPrecio(estadisticas.ingresoTotal)}</p>
-              <p className="text-secondary-600">Ingresos Totales</p>
-              {balanceDisponible > 0 && (
-                <div className="mt-2 text-xs text-secondary-500">
-                  <p>Disponible: {formatPrecio(balanceDisponible)}</p>
-                  <p>Comisión: 20%</p>
-                </div>
-              )}
-              {isProfesor() && (
-                <button 
-                  onClick={() => handleRetirarDinero(estadisticas.ingresoTotal || balanceDisponible)}
-                  disabled={loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)}
-                  className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${
-                    loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-                >
-                  {loadingRetiro ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      {estadisticas.ingresoTotal === 0 && balanceDisponible === 0 ? 'Sin fondos disponibles' : 'Retirar Dinero'}
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-            <div className="card text-center">
-              <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
-              <p className="text-secondary-600">Calificación Promedio</p>
-            </div>
-            <div className="card text-center">
-              <Briefcase className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalServicios}</p>
-              <p className="text-secondary-600">Servicios Activos</p>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Columna principal */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Próximas clases */}
-          <div className="card">
-            <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Próximas Clases
-            </h2>
-            
-            {clases.length > 0 ? (
-              <div className="space-y-4">
-                {clases.map((clase) => (
-                  <div key={clase.id} className="border border-secondary-200 rounded-lg p-4 hover:bg-secondary-50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-secondary-900">{clase.tema}</h3>
-                        <p className="text-secondary-600 text-sm">
-                          {isEstudiante() ? `Profesor: ${clase.profesorNombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
-                        </p>
-                                                 <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
-                           <span className="flex items-center">
-                             <Calendar className="w-4 h-4 mr-1" />
-                             {new Date(clase.fecha + 'T00:00:00').toLocaleDateString('es-ES')}
-                           </span>
-                          <span className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            {clase.hora} ({clase.duracion}h)
-                          </span>
-                        </div>
-                        <p className="text-secondary-500 text-sm mt-1">
-                          {formatPrecio(clase.total)} • {clase.metodoPago}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          clase.estado === 'confirmada' 
-                            ? 'bg-green-100 text-green-800' 
-                            : clase.estado === 'solicitada'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {clase.estado === 'confirmada' ? 'Confirmada' : 
-                           clase.estado === 'solicitada' ? 'Solicitada' : clase.estado}
-                        </span>
-                        <div className="mt-2 space-y-2">
-                          {clase.estado === 'confirmada' && claseServiceLocal.verificarClaseProxima(clase) && (
-                            <button 
-                              onClick={() => unirseAClase(clase.id)}
-                              className="bg-green-600 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-700 flex items-center space-x-1 animate-pulse"
-                            >
-                              <Video className="w-4 h-4" />
-                              <span>¡Unirse Ahora!</span>
-                            </button>
-                          )}
-                          {clase.estado === 'confirmada' && !claseServiceLocal.verificarClaseProxima(clase) && (
-                            <p className="text-xs text-green-600">Videollamada disponible 10 min antes</p>
-                          )}
-                          <button 
-                            onClick={() => navigate(`/clase/${clase.id}`, { state: { clase } })}
-                            className="btn-primary text-sm px-3 py-1"
-                          >
-                            Ver Detalles
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-                         ) : (
-               <div className="text-center py-8 text-secondary-500">
-                 <Calendar className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
-                 <p>No tienes clases programadas próximamente</p>
-                 <div className="space-y-3 mt-4">
-                   <button 
-                     className="btn-primary"
-                     onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
-                   >
-                     {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
-                   </button>
-                 </div>
-               </div>
-             )}
-          </div>
-
-          {/* Navegación por pestañas */}
-          <div className="card">
-            <div className="border-b border-secondary-200 mb-6">
-              <nav className="flex space-x-8">
-                <button
-                  onClick={() => setActiveSection('servicios')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeSection === 'servicios'
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4 mr-2 inline" />
-                  Mis Servicios
-                </button>
-                <button
-                  onClick={() => setActiveSection('clases')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeSection === 'clases'
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                  }`}
-                >
-                  <Video className="w-4 h-4 mr-2 inline" />
-                  Mis Clases
-                </button>
-              </nav>
-            </div>
-
-            {/* Contenido de las pestañas */}
-            {activeSection === 'servicios' && <MisServicios />}
-            {activeSection === 'clases' && <MisClases />}
-          </div>
-
-          {/* Solicitudes pendientes (solo para profesores) */}
-          {userType === 'profesor' && (
-            <div className="card">
-              <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
-                <Bell className="w-5 h-5 mr-2" />
-                Solicitudes Pendientes
-              </h2>
-              
-              {data.solicitudesPendientes.length > 0 ? (
-                <div className="space-y-4">
-                  {data.solicitudesPendientes.map((solicitud, index) => (
-                    <div key={index} className="border border-secondary-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-secondary-900">{solicitud.materia}</h3>
-                          <p className="text-secondary-600 text-sm">Estudiante: {solicitud.estudiante}</p>
-                          <p className="text-secondary-600 text-sm">
-                            Solicitud: {solicitud.fechaSolicitud} • Propuesta: {solicitud.fechaPropuesta} a las {solicitud.hora}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button className="btn-primary text-sm px-3 py-1">Aceptar</button>
-                          <button className="btn-secondary text-sm px-3 py-1">Rechazar</button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-secondary-500">
-                  <Bell className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
-                  <p>No tienes solicitudes pendientes</p>
-                </div>
-              )}
+          {/* Mensaje de éxito */}
+          {mensajeExito && (
+            <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 text-green-600" />
+              <span className="font-medium">{mensajeExito}</span>
+              <button
+                onClick={() => setMensajeExito('')}
+                className="ml-auto text-green-600 hover:text-green-800"
+              >
+                ×
+              </button>
             </div>
           )}
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Acciones rápidas */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">Acciones Rápidas</h3>
-            <div className="space-y-3">
-              {userType === 'estudiante' ? (
-                <>
-                  <Link
-                    to="/buscar"
-                    className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-                  >
-                    <Search className="w-4 h-4 mr-2" />
-                    Explorar Clases
-                  </Link>
-                  <button
-                    onClick={() => navigate('/buscar?filtro=mis-profesores')}
-                    className="w-full border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    Mis Profesores
-                  </button>
-                  <button
-                    onClick={() => {/* Confirmar servicios pendientes */}}
-                    className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Confirmar Clases
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowReservasPendientes(true)}
-                    className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Aceptar Reservas
-                  </button>
-                  <button
-                    onClick={() => {/* Confirmar completado */}}
-                    className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Confirmar Completado
-                  </button>
-                </>
-              )}
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-white font-display">
+                  ¡Hola, {user?.nombre?.split(' ')[0]}! 👋
+                </h1>
+                <p className="text-purple-200 mt-2 text-lg">
+                  {isEstudiante()
+                    ? 'Gestiona tus clases y revisa tu progreso de aprendizaje'
+                    : 'Gestiona tus clases y revisa tus estadísticas de enseñanza'
+                  }
+                </p>
+              </div>
+
             </div>
           </div>
 
-          {/* Historial reciente */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">
-              {userType === 'estudiante' ? 'Últimas Clases' : 'Actividad Reciente'}
-            </h3>
-            
-            {userType === 'estudiante' && data.historialClases.length > 0 ? (
-              <div className="space-y-3">
-                {data.historialClases.map((clase, index) => (
-                  <div key={index} className="text-sm">
-                    <p className="font-medium text-secondary-900">{clase.materia}</p>
-                    <p className="text-secondary-600">Prof. {clase.profesor}</p>
-                    <div className="flex items-center mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3 h-3 ${
-                            i < clase.calificacion ? 'text-yellow-400 fill-current' : 'text-secondary-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700">{error}</p>
+              <button
+                onClick={cargarDatos}
+                className="mt-2 text-red-600 hover:text-red-800 underline text-sm"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
+          {/* Estadísticas */}
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${isProfesor() ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6 mb-8`}>
+            {isEstudiante() ? (
+              <>
+                <div className="card text-center">
+                  <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
+                  <p className="text-secondary-600">Clases Tomadas</p>
+                </div>
+                <div className="card text-center">
+                  <Clock className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.horasTotales}</p>
+                  <p className="text-secondary-600">Horas de Estudio</p>
+                </div>
+                <div className="card text-center">
+                  <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
+                  <p className="text-secondary-600">Tu Progreso</p>
+                </div>
+                <div className="card text-center">
+                  <Calendar className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{proximasClases.length}</p>
+                  <p className="text-secondary-600">Próximas Clases</p>
+                </div>
+              </>
             ) : (
-              <div className="text-center py-4 text-secondary-500">
-                <p className="text-sm">No hay actividad reciente</p>
-              </div>
+              <>
+                <div className="card text-center">
+                  <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
+                  <p className="text-secondary-600">Clases Impartidas</p>
+                </div>
+                <div className="card text-center">
+                  <Users className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{new Set(clasesCompletadas.map(c => c.estudiante)).size}</p>
+                  <p className="text-secondary-600">Estudiantes Únicos</p>
+                </div>
+                <div className="card text-center relative">
+                  <TrendingUp className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{formatPrecio(estadisticas.ingresoTotal)}</p>
+                  <p className="text-secondary-600">Ingresos Totales</p>
+                  {balanceDisponible > 0 && (
+                    <div className="mt-2 text-xs text-secondary-500">
+                      <p>Disponible: {formatPrecio(balanceDisponible)}</p>
+                      <p>Comisión: 20%</p>
+                    </div>
+                  )}
+                  {isProfesor() && (
+                    <button
+                      onClick={() => handleRetirarDinero(estadisticas.ingresoTotal || balanceDisponible)}
+                      disabled={loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)}
+                      className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                        }`}
+                    >
+                      {loadingRetiro ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          {estadisticas.ingresoTotal === 0 && balanceDisponible === 0 ? 'Sin fondos disponibles' : 'Retirar Dinero'}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                <div className="card text-center">
+                  <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
+                  <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
+                  <p className="text-secondary-600">Calificación Promedio</p>
+                </div>
+              </>
             )}
           </div>
 
-          {/* Progreso o métricas */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-secondary-900 mb-4">
-              {userType === 'estudiante' ? 'Tu Progreso' : 'Rendimiento'}
-            </h3>
-            
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-secondary-600">
-                    {userType === 'estudiante' ? 'Horas completadas' : 'Meta mensual'}
-                  </span>
-                  <span className="text-secondary-900">
-                    {userType === 'estudiante' ? '18/25' : '85/100'}
-                  </span>
-                </div>
-                <div className="w-full bg-secondary-200 rounded-full h-2">
-                  <div 
-                    className="bg-primary-600 h-2 rounded-full" 
-                    style={{ width: userType === 'estudiante' ? '72%' : '85%' }}
-                  ></div>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Columna principal */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Próximas clases */}
+              <div className="card">
+                <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Próximas Clases
+                </h2>
+
+                {clases.length > 0 ? (
+                  <div className="space-y-4">
+                    {clases.map((clase) => (
+                      <div key={clase.id} className="border border-secondary-200 rounded-lg p-4 hover:bg-secondary-50 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-secondary-900">{clase.tema}</h3>
+                            <p className="text-secondary-600 text-sm">
+                              {isEstudiante() ? `Profesor: ${clase.profesorNombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
+                            </p>
+                            <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
+                              <span className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {new Date(clase.fecha + 'T00:00:00').toLocaleDateString('es-ES')}
+                              </span>
+                              <span className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {clase.hora} ({clase.duracion}h)
+                              </span>
+                            </div>
+                            <p className="text-secondary-500 text-sm mt-1">
+                              {formatPrecio(clase.total)} • {clase.metodoPago}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${clase.estado === 'confirmada'
+                              ? 'bg-green-100 text-green-800'
+                              : clase.estado === 'solicitada'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
+                              }`}>
+                              {clase.estado === 'confirmada' ? 'Confirmada' :
+                                clase.estado === 'solicitada' ? 'Solicitada' : clase.estado}
+                            </span>
+                            <div className="mt-2 space-y-2">
+                              {clase.estado === 'confirmada' && claseServiceLocal.verificarClaseProxima(clase) && (
+                                <button
+                                  onClick={() => unirseAClase(clase.id)}
+                                  className="bg-green-600 text-white text-sm px-3 py-1 rounded-lg hover:bg-green-700 flex items-center space-x-1 animate-pulse"
+                                >
+                                  <Video className="w-4 h-4" />
+                                  <span>¡Unirse Ahora!</span>
+                                </button>
+                              )}
+                              {clase.estado === 'confirmada' && !claseServiceLocal.verificarClaseProxima(clase) && (
+                                <p className="text-xs text-green-600">Videollamada disponible 10 min antes</p>
+                              )}
+                              <button
+                                onClick={() => navigate(`/clase/${clase.id}`, { state: { clase } })}
+                                className="btn-primary text-sm px-3 py-1"
+                              >
+                                Ver Detalles
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-secondary-500">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                    <p>No tienes clases programadas próximamente</p>
+                    <div className="space-y-3 mt-4">
+                      <button
+                        className="btn-primary"
+                        onClick={() => navigate(isEstudiante() ? '/buscar' : '/profesor/disponibilidad')}
+                      >
+                        {isEstudiante() ? 'Buscar Clases' : 'Configurar Disponibilidad'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-secondary-600">
-                    {userType === 'estudiante' ? 'Objetivos logrados' : 'Satisfacción estudiantes'}
-                  </span>
-                  <span className="text-secondary-900">
-                    {userType === 'estudiante' ? '7/10' : '4.9/5.0'}
-                  </span>
+
+              <div className="card">
+                <div className="border-b border-secondary-200 mb-6">
+                  <nav className="flex space-x-8">
+                    <button
+                      onClick={() => setActiveSection('clases')}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'clases' || activeSection === 'servicios'
+                        ? 'border-primary-500 text-primary-600'
+                        : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                        }`}
+                    >
+                      <Video className="w-4 h-4 mr-2 inline" />
+                      Mis Clases
+                    </button>
+                  </nav>
                 </div>
-                <div className="w-full bg-secondary-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full" 
-                    style={{ width: userType === 'estudiante' ? '70%' : '98%' }}
-                  ></div>
-                </div>
+
+                {/* Contenido de las pestañas */}
+                <MisClases />
               </div>
+
+              {/* Solicitudes pendientes (solo para profesores) */}
+              {userType === 'profesor' && (
+                <div className="card">
+                  <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
+                    <Bell className="w-5 h-5 mr-2" />
+                    Solicitudes Pendientes
+                  </h2>
+
+                  {data.solicitudesPendientes.length > 0 ? (
+                    <div className="space-y-4">
+                      {data.solicitudesPendientes.map((solicitud, index) => (
+                        <div key={index} className="border border-secondary-200 rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-secondary-900">{solicitud.materia}</h3>
+                              <p className="text-secondary-600 text-sm">Estudiante: {solicitud.estudiante}</p>
+                              <p className="text-secondary-600 text-sm">
+                                Solicitud: {solicitud.fechaSolicitud} • Propuesta: {solicitud.fechaPropuesta} a las {solicitud.hora}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button className="btn-primary text-sm px-3 py-1">Aceptar</button>
+                              <button className="btn-secondary text-sm px-3 py-1">Rechazar</button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-secondary-500">
+                      <Bell className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                      <p>No tienes solicitudes pendientes</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* VideoCall Room Modal */}
-      {showVideoCall && (
-        <VideoCallRoom 
-          claseId={selectedClaseId} 
-          onLeave={salirDeVideoLlamada}
-        />
-      )}
 
-      {/* Modal de Confirmación de Retiro */}
-      {showRetiroModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-            <div className="text-center">
-              <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-secondary-900 mb-4">
-                Confirmar Retiro de Dinero
-              </h3>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-secondary-600">Monto a retirar:</span>
-                    <span className="font-semibold">{formatPrecio(montoRetiro)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-secondary-600">Comisión (20%):</span>
-                    <span className="text-red-600">-{formatPrecio(montoRetiro * 0.20)}</span>
-                  </div>
-                  <hr className="border-gray-300" />
-                  <div className="flex justify-between font-bold">
-                    <span className="text-secondary-900">Monto neto:</span>
-                    <span className="text-green-600">{formatPrecio(montoRetiro * 0.80)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-sm text-secondary-600 mb-6">
-                Serás redirigido a MercadoPago para completar el retiro de forma segura.
-              </p>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowRetiroModal(false)}
-                  className="flex-1 px-4 py-2 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={confirmarRetiro}
-                  disabled={loadingRetiro}
-                  className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors ${
-                    loadingRetiro 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-                >
-                  {loadingRetiro ? (
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Acciones rápidas */}
+              <div className="card">
+                <h3 className="text-lg font-semibold text-secondary-900 mb-4">Acciones Rápidas</h3>
+                <div className="space-y-3">
+                  {userType === 'estudiante' ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
-                      Procesando...
+                      <Link
+                        to="/buscar"
+                        className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                      >
+                        <Search className="w-4 h-4 mr-2" />
+                        Explorar Clases
+                      </Link>
+                      <button
+                        onClick={() => navigate('/buscar?filtro=mis-profesores')}
+                        className="w-full border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Mis Profesores
+                      </button>
+                      <button
+                        onClick={() => {/* Confirmar servicios pendientes */ }}
+                        className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Confirmar Clases
+                      </button>
                     </>
                   ) : (
-                    'Confirmar Retiro'
+                    <>
+                      <button
+                        onClick={() => setShowReservasPendientes(true)}
+                        className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Aceptar Reservas
+                      </button>
+                      <button
+                        onClick={() => {/* Confirmar completado */ }}
+                        className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Confirmar Completado
+                      </button>
+                    </>
                   )}
-                </button>
+                </div>
+              </div>
+
+              {/* Historial reciente */}
+              <div className="card">
+                <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+                  {userType === 'estudiante' ? 'Últimas Clases' : 'Actividad Reciente'}
+                </h3>
+
+                {userType === 'estudiante' && data.historialClases.length > 0 ? (
+                  <div className="space-y-3">
+                    {data.historialClases.map((clase, index) => (
+                      <div key={index} className="text-sm">
+                        <p className="font-medium text-secondary-900">{clase.materia}</p>
+                        <p className="text-secondary-600">Prof. {clase.profesor}</p>
+                        <div className="flex items-center mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${i < clase.calificacion ? 'text-yellow-400 fill-current' : 'text-secondary-300'
+                                }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-secondary-500">
+                    <p className="text-sm">No hay actividad reciente</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Progreso o métricas */}
+              <div className="card">
+                <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+                  {userType === 'estudiante' ? 'Tu Progreso' : 'Rendimiento'}
+                </h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-secondary-600">
+                        {userType === 'estudiante' ? 'Horas completadas' : 'Meta mensual'}
+                      </span>
+                      <span className="text-secondary-900">
+                        {userType === 'estudiante' ? '18/25' : '85/100'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-secondary-200 rounded-full h-2">
+                      <div
+                        className="bg-primary-600 h-2 rounded-full"
+                        style={{ width: userType === 'estudiante' ? '72%' : '85%' }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-secondary-600">
+                        {userType === 'estudiante' ? 'Objetivos logrados' : 'Satisfacción estudiantes'}
+                      </span>
+                      <span className="text-secondary-900">
+                        {userType === 'estudiante' ? '7/10' : '4.9/5.0'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-secondary-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: userType === 'estudiante' ? '70%' : '98%' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Modal de Reservas Pendientes */}
-      {showReservasPendientes && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Reservas Pendientes</h2>
-              <button
-                onClick={() => setShowReservasPendientes(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+          {/* VideoCall Room Modal */}
+          {showVideoCall && (
+            <VideoCallRoom
+              claseId={selectedClaseId}
+              onLeave={salirDeVideoLlamada}
+            />
+          )}
+
+          {/* Modal de Confirmación de Retiro */}
+          {showRetiroModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                <div className="text-center">
+                  <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-secondary-900 mb-4">
+                    Confirmar Retiro de Dinero
+                  </h3>
+
+                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-secondary-600">Monto a retirar:</span>
+                        <span className="font-semibold">{formatPrecio(montoRetiro)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-secondary-600">Comisión (20%):</span>
+                        <span className="text-red-600">-{formatPrecio(montoRetiro * 0.20)}</span>
+                      </div>
+                      <hr className="border-gray-300" />
+                      <div className="flex justify-between font-bold">
+                        <span className="text-secondary-900">Monto neto:</span>
+                        <span className="text-green-600">{formatPrecio(montoRetiro * 0.80)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-secondary-600 mb-6">
+                    Serás redirigido a MercadoPago para completar el retiro de forma segura.
+                  </p>
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setShowRetiroModal(false)}
+                      className="flex-1 px-4 py-2 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={confirmarRetiro}
+                      disabled={loadingRetiro}
+                      className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors ${loadingRetiro
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                        }`}
+                    >
+                      {loadingRetiro ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
+                          Procesando...
+                        </>
+                      ) : (
+                        'Confirmar Retiro'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <ReservasPendientes />
+          )}
+
+          {/* Modal de Reservas Pendientes */}
+          {showReservasPendientes && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">Reservas Pendientes</h2>
+                  <button
+                    onClick={() => setShowReservasPendientes(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                  <ReservasPendientes />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
         </div>
       </div>
-      
+
       {/* Componente de prueba para notificaciones (solo en desarrollo) */}
       <NotificationTriggers />
     </div>

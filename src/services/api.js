@@ -37,8 +37,16 @@ const apiRequest = async (url, options = {}) => {
     let fullUrl;
     
     if (import.meta.env.PROD) {
-      // En producción: agregar .php a todas las rutas
-      fullUrl = `${API_BASE_URL}${url}.php`;
+      // En producción: si la URL ya empieza con /api/, remover /api/ y usar solo la parte después
+      if (url.startsWith('/api/')) {
+        const urlWithoutApi = url.substring(4); // Remover '/api'
+        fullUrl = `${API_BASE_URL}${urlWithoutApi}`;
+      } else if (!url.endsWith('.php')) {
+        // Para otras rutas, agregar .php
+        fullUrl = `${API_BASE_URL}${url}.php`;
+      } else {
+        fullUrl = `${API_BASE_URL}${url}`;
+      }
     } else {
       // En desarrollo: usar proxy local
       fullUrl = `${API_BASE_URL}${url}`;
@@ -47,7 +55,24 @@ const apiRequest = async (url, options = {}) => {
     console.log('🌐 API Request URL:', fullUrl); // Debug
 
     const response = await fetch(fullUrl, config);
-    const data = await response.json();
+    
+    // Verificar si la respuesta tiene contenido antes de parsear JSON
+    const contentType = response.headers.get('content-type');
+    const text = await response.text();
+    
+    if (!text || text.trim() === '') {
+      throw new Error('El servidor devolvió una respuesta vacía');
+    }
+    
+    // Verificar si la respuesta es JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('❌ Error parseando JSON:', parseError);
+      console.error('📄 Respuesta recibida:', text.substring(0, 500));
+      throw new Error('El servidor devolvió una respuesta inválida. ¿El servidor está corriendo correctamente?');
+    }
 
     if (!response.ok) {
       throw new Error(data.message || 'Error en la petición');
@@ -64,7 +89,7 @@ const apiRequest = async (url, options = {}) => {
 export const authService = {
   // Registrar usuario
   register: async (userData) => {
-    const response = await apiRequest('/auth/register-test', {
+    const response = await apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -80,7 +105,7 @@ export const authService = {
 
   // Iniciar sesión
   login: async (credentials) => {
-    const response = await apiRequest('/auth/login-test', {
+    const response = await apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -340,16 +365,9 @@ export const servicioService = {
     });
     
     const queryString = queryParams.toString();
-    const url = `https://easyclaseapp.com/api/plantillas.php?tipo=servicios${queryString ? `&${queryString}` : ''}`;
+    const url = `/servicios${queryString ? `?${queryString}` : ''}`;
     
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Error en la petición');
-    }
-    
-    return data;
+    return await apiRequest(url);
   },
 
   // Obtener mis servicios
@@ -375,26 +393,10 @@ export const servicioService = {
 
   // Crear un nuevo servicio
   crearServicio: async (servicioData) => {
-    // Usar fetch directamente para evitar el .php automático
-    const token = localStorage.getItem('token');
-    const url = 'https://easyclaseapp.com/api/plantillas.php?tipo=servicios';
-    
-    const response = await fetch(url, {
+    return await apiRequest('/servicios', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
       body: JSON.stringify(servicioData),
     });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Error en la petición');
-    }
-    
-    return data;
   },
 
   // Actualizar un servicio

@@ -1,6 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import * as Sentry from "@sentry/react"
+// import * as Sentry from "@sentry/react"
 import App from './App.jsx'
 import './index.css'
 
@@ -8,6 +8,7 @@ import './index.css'
 // import './utils/securityHeaders.js'
 
 // Configurar Sentry para monitoreo de errores
+/* Sentry temporarily disabled - missing dependency
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -40,6 +41,7 @@ if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
     replaysOnErrorSampleRate: 1.0, // Siempre grabar cuando hay errores
   })
 }
+*/
 
 const container = document.getElementById('root')
 const root = createRoot(container)
