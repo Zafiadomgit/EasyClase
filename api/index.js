@@ -3,6 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Sequelize, DataTypes } from 'sequelize';
+import pg from 'pg'; // Import explícito para que Vercel lo incluya en el bundle (Sequelize lo carga con require dinámico)
 
 const app = express();
 
@@ -24,6 +25,7 @@ const initDB = async () => {
   try {
     sequelize = new Sequelize(connectionString, {
       dialect: 'postgres',
+      dialectModule: pg, // Evita "Please install pg package manually" en serverless
       logging: false,
       dialectOptions: {
         ssl: { require: true, rejectUnauthorized: false }
