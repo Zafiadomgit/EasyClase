@@ -23,15 +23,26 @@ const initDB = async () => {
   }
 
   try {
-    sequelize = new Sequelize(connectionString, {
-      dialect: 'postgres',
-      dialectModule: pg, // Evita "Please install pg package manually" en serverless
-      logging: false,
-      dialectOptions: {
-        ssl: { require: true, rejectUnauthorized: false }
-      },
-      pool: { max: 2, min: 0, acquire: 10000, idle: 5000 }
-    });
+    // Parseamos la URL nosotros mismos: el usuario del pooler de Supabase tiene un
+    // punto (postgres.<ref>) y el parser de URI de Sequelize deja el password en null,
+    // provocando un error en el login SASL de pg. Pasar campos explícitos lo evita.
+    const dbUrl = new URL(connectionString);
+    sequelize = new Sequelize(
+      dbUrl.pathname.replace(/^\//, '') || 'postgres',
+      decodeURIComponent(dbUrl.username),
+      decodeURIComponent(dbUrl.password),
+      {
+        host: dbUrl.hostname,
+        port: Number(dbUrl.port) || 5432,
+        dialect: 'postgres',
+        dialectModule: pg, // Evita "Please install pg package manually" en serverless
+        logging: false,
+        dialectOptions: {
+          ssl: { require: true, rejectUnauthorized: false }
+        },
+        pool: { max: 2, min: 0, acquire: 10000, idle: 5000 }
+      }
+    );
 
     User = sequelize.define('User', {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
