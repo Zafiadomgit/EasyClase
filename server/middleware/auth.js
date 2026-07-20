@@ -26,10 +26,10 @@ export const authMiddleware = async (req, res, next) => {
     try {
       // Verificar el token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      // Buscar el usuario en la base de datos
-      const user = await User.findById(decoded.userId).select('-password');
-      
+
+      // Buscar el usuario en la base de datos (Sequelize/PostgreSQL)
+      const user = await User.findByPk(decoded.userId, { attributes: { exclude: ['password'] } });
+
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -77,7 +77,7 @@ export const optionalAuth = async (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.userId).select('-password');
+      const user = await User.findByPk(decoded.userId, { attributes: { exclude: ['password'] } });
       req.user = user || null;
       next();
       
@@ -130,8 +130,8 @@ export const requireOwnership = (resourceField = 'userId') => {
     }
 
     const resourceUserId = req.params[resourceField] || req.body[resourceField];
-    
-    if (req.user._id.toString() !== resourceUserId && req.user.tipoUsuario !== 'admin') {
+
+    if (String(req.user.id) !== String(resourceUserId) && req.user.tipoUsuario !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para acceder a este recurso'
