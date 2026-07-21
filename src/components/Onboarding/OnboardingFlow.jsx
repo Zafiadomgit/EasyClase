@@ -96,7 +96,7 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-x-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
@@ -104,7 +104,7 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
       
       <div className="relative z-10 overflow-y-auto">
         {/* Header */}
-        <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 px-4 py-6">
+        <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 px-4 py-4">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             {/* Progress */}
             <div className="flex items-center space-x-3">
@@ -154,9 +154,9 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
       </div>
 
         {/* Content */}
-        <div className="flex-1 py-12 px-4">
+        <div className="flex-1 py-6 px-4">
           <div className="w-full max-w-2xl mx-auto">
-            <div className="bg-white rounded-3xl border border-secondary-200 p-8 shadow-2xl">
+            <div className="bg-white rounded-3xl border border-secondary-200 p-6 sm:p-8 shadow-2xl">
               <CurrentStepComponent
                 formData={formData}
                 updateFormData={updateFormData}
