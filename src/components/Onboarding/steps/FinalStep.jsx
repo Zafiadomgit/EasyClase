@@ -122,9 +122,9 @@ const FinalStep = ({ formData, onNext }) => {
           <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Gift className="w-6 h-6 text-yellow-600" />
           </div>
-          <h4 className="font-semibold text-secondary-900 mb-2">Ofertas Especiales</h4>
+          <h4 className="font-semibold text-secondary-900 mb-2">Paga por Hora</h4>
           <p className="text-sm text-secondary-600">
-            Acceso a descuentos y promociones exclusivas
+            Pagas solo por las horas que tomas, de forma segura y sin riesgos
           </p>
         </div>
       </div>
