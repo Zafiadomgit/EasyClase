@@ -156,7 +156,7 @@ const OnboardingFlow = ({ onComplete, onSkip }) => {
         {/* Content */}
         <div className="flex-1 py-12 px-4">
           <div className="w-full max-w-2xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl">
+            <div className="bg-white rounded-3xl border border-secondary-200 p-8 shadow-2xl">
               <CurrentStepComponent
                 formData={formData}
                 updateFormData={updateFormData}
