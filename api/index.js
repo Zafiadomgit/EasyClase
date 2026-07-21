@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Sequelize, DataTypes } from 'sequelize';
 import pg from 'pg'; // Import explícito para que Vercel lo incluya en el bundle (Sequelize lo carga con require dinámico)
+import crypto from 'crypto';
 
 const app = express();
 
@@ -11,7 +12,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, dbReady = false;
+let sequelize, User, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -63,6 +64,7 @@ const initDB = async () => {
     console.log('✅ Neon PostgreSQL conectado');
   } catch (e) {
     console.error('❌ Error conectando a DB:', e.message);
+    lastDbError = `${e.code ? e.code + ': ' : ''}${e.message}`;
     dbReady = false;
   }
 };
@@ -85,10 +87,47 @@ const authMiddleware = (req, res, next) => {
 
 // ─── Rutas ───────────────────────────────────────────────────────────────────
 
-// Status
-app.get('/api/status', (req, res) =>
-  res.json({ status: 'OK', message: 'EasyClase API funcionando', db: dbReady, timestamp: new Date().toISOString() })
-);
+// Status + diagnóstico seguro de DB (no filtra el password; solo host/usuario/longitud/hash corto)
+app.get('/api/status', async (req, res) => {
+  const out = { status: 'OK', message: 'EasyClase API funcionando', timestamp: new Date().toISOString() };
+  const cs = process.env.DATABASE_URL;
+  out.hasDatabaseUrl = !!cs;
+
+  if (cs) {
+    try {
+      const u = new URL(cs);
+      out.dbUrl = {
+        host: u.hostname,
+        port: u.port || '(default)',
+        user: decodeURIComponent(u.username),
+        database: u.pathname.replace(/^\//, ''),
+        passwordLength: u.password ? decodeURIComponent(u.password).length : 0,
+        passwordSha8: u.password
+          ? crypto.createHash('sha256').update(decodeURIComponent(u.password)).digest('hex').slice(0, 8)
+          : null,
+        rawLength: cs.length
+      };
+    } catch (e) {
+      out.dbUrl = { parseError: e.message, rawLength: cs.length };
+    }
+  }
+
+  try {
+    await initDB();
+    out.dbReady = dbReady;
+    if (dbReady) {
+      const [rows] = await sequelize.query('select current_user, current_database()');
+      out.dbQuery = rows[0];
+    } else {
+      out.dbError = lastDbError;
+    }
+  } catch (e) {
+    out.dbReady = false;
+    out.dbError = `${e.code ? e.code + ': ' : ''}${e.message}`;
+  }
+
+  res.json(out);
+});
 
 // LOGIN
 app.post('/api/auth/login', async (req, res) => {
