@@ -16,9 +16,9 @@ const PerfilProfesor = () => {
   const cargarPerfilProfesor = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/profesores/perfil.php?id=${id}`)
+      const response = await fetch(`/api/profesores/${id}`)
       const data = await response.json()
-      
+
       if (data.success) {
         setProfesor(data.data.profesor)
         // Cargar servicios del profesor
@@ -35,16 +35,8 @@ const PerfilProfesor = () => {
   }
 
   const cargarServiciosProfesor = async () => {
-    try {
-      const response = await fetch(`/api/servicios/profesor.php?profesorId=${id}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setServicios(data.data.servicios || [])
-      }
-    } catch (error) {
-      console.error('Error al cargar servicios:', error)
-    }
+    // Los servicios se habilitan en una fase posterior; por ahora no hay endpoint.
+    setServicios([])
   }
 
   const reservarServicio = (servicioId) => {

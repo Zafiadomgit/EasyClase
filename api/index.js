@@ -54,19 +54,82 @@ const initDB = async () => {
       telefono: DataTypes.STRING(20),
       codigoPais: { type: DataTypes.STRING(10), defaultValue: '+57' },
       activo: { type: DataTypes.BOOLEAN, defaultValue: true },
-      preferencias: { type: DataTypes.JSON, defaultValue: {} }
+      preferencias: { type: DataTypes.JSON, defaultValue: {} },
+      // ── Campos de perfil de profesor ─────────────────────────────
+      bio: { type: DataTypes.TEXT, defaultValue: '' },
+      especialidades: { type: DataTypes.JSON, defaultValue: [] },
+      categoria: { type: DataTypes.STRING(80), defaultValue: '' },
+      precioPorHora: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+      calificacionPromedio: { type: DataTypes.DECIMAL(3, 2), defaultValue: 0 },
+      totalReviews: { type: DataTypes.INTEGER, defaultValue: 0 },
+      totalClases: { type: DataTypes.INTEGER, defaultValue: 0 },
+      estudiantesAyudados: { type: DataTypes.INTEGER, defaultValue: 0 },
+      modalidad: { type: DataTypes.STRING(40), defaultValue: 'Online' },
+      ubicacion: { type: DataTypes.STRING(120), defaultValue: '' },
+      premium: { type: DataTypes.BOOLEAN, defaultValue: false },
+      avatarUrl: { type: DataTypes.STRING(400), defaultValue: '' },
+      profesorVisible: { type: DataTypes.BOOLEAN, defaultValue: true }
     }, { tableName: 'users', timestamps: true });
 
     await sequelize.authenticate();
-    // Crear tabla si no existe
-    await User.sync({ force: false });
+    // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
+    await User.sync({ alter: true });
+    await seedProfesores();
     dbReady = true;
-    console.log('✅ Neon PostgreSQL conectado');
+    console.log('✅ Supabase PostgreSQL conectado');
   } catch (e) {
     console.error('❌ Error conectando a DB:', e.message);
     lastDbError = `${e.code ? e.code + ': ' : ''}${e.message}`;
     dbReady = false;
   }
+};
+
+// Seed idempotente de profesores demo (para que buscar/perfil tengan datos)
+const seedProfesores = async () => {
+  try {
+    const count = await User.count({ where: { tipoUsuario: 'profesor' } });
+    if (count > 0) return;
+    const hashed = await bcrypt.hash('demo1234', 10);
+    const demo = [
+      { nombre: 'Laura Gómez', categoria: 'Programación', especialidades: ['JavaScript', 'React', 'Node.js'], precioPorHora: 45000, bio: 'Ingeniera de software con 6 años enseñando desarrollo web full-stack.', calificacionPromedio: 4.9, totalReviews: 128, totalClases: 340, estudiantesAyudados: 210, modalidad: 'Online', ubicacion: 'Bogotá', premium: true },
+      { nombre: 'Carlos Ramírez', categoria: 'Excel & Office', especialidades: ['Excel', 'Tablas dinámicas', 'VBA'], precioPorHora: 30000, bio: 'Analista de datos. Te ayudo a dominar Excel desde cero hasta macros.', calificacionPromedio: 4.7, totalReviews: 86, totalClases: 190, estudiantesAyudados: 150, modalidad: 'Online', ubicacion: 'Medellín', premium: false },
+      { nombre: 'Ana Martínez', categoria: 'Idiomas', especialidades: ['Inglés', 'Francés'], precioPorHora: 38000, bio: 'Profesora certificada de idiomas, enfoque conversacional y práctico.', calificacionPromedio: 4.8, totalReviews: 154, totalClases: 420, estudiantesAyudados: 300, modalidad: 'Online', ubicacion: 'Cali', premium: true },
+      { nombre: 'Diego Torres', categoria: 'Diseño Gráfico', especialidades: ['Photoshop', 'Illustrator', 'Figma'], precioPorHora: 40000, bio: 'Diseñador UI/UX. Aprende diseño con proyectos reales.', calificacionPromedio: 4.6, totalReviews: 63, totalClases: 120, estudiantesAyudados: 95, modalidad: 'Online', ubicacion: 'Bogotá', premium: false },
+      { nombre: 'Valentina Ríos', categoria: 'Apoyo Académico', especialidades: ['Matemáticas', 'Física', 'Química'], precioPorHora: 28000, bio: 'Estudiante de ingeniería, refuerzo escolar y universitario.', calificacionPromedio: 4.9, totalReviews: 97, totalClases: 260, estudiantesAyudados: 180, modalidad: 'Online', ubicacion: 'Barranquilla', premium: false }
+    ];
+    for (const d of demo) {
+      await User.create({ ...d, email: `${d.nombre.toLowerCase().replace(/[^a-z]/g, '')}@demo.easyclase.com`, password: hashed, tipoUsuario: 'profesor', activo: true, profesorVisible: true });
+    }
+    console.log('🌱 Profesores demo creados');
+  } catch (e) {
+    console.warn('⚠️ Seed profesores omitido:', e.message);
+  }
+};
+
+// Forma canónica de profesor: incluye ambos nombres de campo usados por las
+// distintas páginas del frontend (precioPorHora/precioHora, premium/esPremium, etc.)
+const shapeProfesor = (u) => {
+  const j = u.toJSON ? u.toJSON() : u;
+  const precio = Number(j.precioPorHora) || 0;
+  const rating = Number(j.calificacionPromedio) || 0;
+  return {
+    _id: String(j.id), id: j.id,
+    nombre: j.nombre,
+    bio: j.bio || '', descripcion: j.bio || '',
+    especialidades: j.especialidades || [],
+    categoria: j.categoria || '',
+    precioPorHora: precio, precioHora: precio,
+    calificacionPromedio: rating,
+    totalReviews: j.totalReviews || 0, totalResenas: j.totalReviews || 0,
+    totalClases: j.totalClases || 0,
+    estudiantesAyudados: j.estudiantesAyudados || 0,
+    modalidad: j.modalidad || 'Online',
+    ubicacion: j.ubicacion || '',
+    premium: !!j.premium, esPremium: !!j.premium,
+    avatarUrl: j.avatarUrl || '',
+    disponibilidad: {},
+    reseñas: []
+  };
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -243,6 +306,90 @@ app.get('/api/auth/preferencias', authMiddleware, async (req, res) => {
     res.json({ success: true, data: user.preferencias || {} });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Error' });
+  }
+});
+
+// ─── Profesores ──────────────────────────────────────────────────────────────
+const requireDB = async (res) => {
+  await initDB();
+  if (!dbReady || !User) {
+    res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+    return false;
+  }
+  return true;
+};
+
+// Buscar / listar profesores
+app.get('/api/profesores', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const { categoria, q } = req.query;
+    const where = { tipoUsuario: 'profesor', activo: true, profesorVisible: true };
+    if (categoria) where.categoria = categoria;
+    const profes = await User.findAll({
+      where,
+      order: [['premium', 'DESC'], ['calificacionPromedio', 'DESC']]
+    });
+    let data = profes.map(shapeProfesor);
+    if (q) {
+      const s = String(q).toLowerCase();
+      data = data.filter(p =>
+        p.nombre.toLowerCase().includes(s) ||
+        (p.especialidades || []).some(e => String(e).toLowerCase().includes(s)) ||
+        p.bio.toLowerCase().includes(s)
+      );
+    }
+    res.json({ success: true, data: { profesores: data }, profesores: data });
+  } catch (e) {
+    console.error('Error buscando profesores:', e);
+    res.status(500).json({ success: false, message: 'Error al buscar profesores' });
+  }
+});
+
+// Profesores destacados
+app.get('/api/profesores/destacados', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const profes = await User.findAll({
+      where: { tipoUsuario: 'profesor', activo: true, profesorVisible: true },
+      order: [['premium', 'DESC'], ['calificacionPromedio', 'DESC']],
+      limit: 8
+    });
+    const data = profes.map(shapeProfesor);
+    res.json({ success: true, data: { profesores: data }, profesores: data });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error al obtener destacados' });
+  }
+});
+
+// Categorías (derivadas de los profesores existentes)
+app.get('/api/profesores/categorias', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const profes = await User.findAll({
+      where: { tipoUsuario: 'profesor', activo: true },
+      attributes: ['categoria']
+    });
+    const categorias = [...new Set(profes.map(p => p.categoria).filter(Boolean))];
+    res.json({ success: true, data: { categorias }, categorias });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error al obtener categorías' });
+  }
+});
+
+// Perfil de un profesor
+app.get('/api/profesores/:id', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const profe = await User.findOne({
+      where: { id: req.params.id, tipoUsuario: 'profesor' }
+    });
+    if (!profe) return res.status(404).json({ success: false, message: 'Profesor no encontrado' });
+    const profesor = shapeProfesor(profe);
+    res.json({ success: true, data: { profesor }, profesor });
+  } catch (e) {
+    console.error('Error obteniendo profesor:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener el profesor' });
   }
 });
 

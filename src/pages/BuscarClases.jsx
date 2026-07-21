@@ -158,224 +158,25 @@ const BuscarClases = () => {
   }
 
   useEffect(() => {
-    // Datos de ejemplo ampliados con profesores premium
-    const profesoresEjemplo = [
-      // Programación
-      {
-        _id: '1',
-        nombre: 'Carlos Mendoza',
-        especialidades: ['Programación', 'Python', 'JavaScript'],
-        calificacionPromedio: 4.9,
-        totalReviews: 127,
-        precioPorHora: 35000,
-        modalidad: 'online',
-        ubicacion: 'Bogotá',
-        descripcion: 'Ingeniero de software con 8 años de experiencia. Especialista en Python, Django y desarrollo web.',
-        premium: false,
-        categoria: 'Programación'
-      },
-      {
-        _id: '2',
-        nombre: 'Ana Rodríguez',
-        especialidades: ['Programación', 'React', 'Node.js'],
-        calificacionPromedio: 5.0,
-        totalReviews: 203,
-        precioPorHora: 45000,
-        modalidad: 'online',
-        ubicacion: 'Online',
-        descripcion: 'Senior Developer en Google. Especializada en React, Node.js y arquitectura de software.',
-        premium: true,
-        categoria: 'Programación'
-      },
-      
-      // Excel
-      {
-        _id: '3',
-        nombre: 'María García',
-        especialidades: ['Excel', 'Análisis de datos', 'Power BI'],
-        calificacionPromedio: 4.8,
-        totalReviews: 89,
-        precioPorHora: 25000,
-        modalidad: 'online',
-        ubicacion: 'Medellín',
-        descripcion: 'Contadora pública especializada en análisis de datos y automatización con Excel.',
-        premium: false,
-        categoria: 'Excel'
-      },
-      {
-        _id: '4',
-        nombre: 'Roberto Silva',
-        especialidades: ['Excel', 'Macros', 'VBA', 'Power Query'],
-        calificacionPromedio: 4.95,
-        totalReviews: 156,
-        precioPorHora: 40000,
-        modalidad: 'online',
-        ubicacion: 'Online',
-        descripcion: 'Microsoft Excel MVP. Especialista en automatización y macros avanzadas.',
-        premium: true,
-        categoria: 'Excel'
-      },
-
-      // Inglés
-      {
-        _id: '5',
-        nombre: 'Jennifer Thompson',
-        especialidades: ['Inglés', 'TOEFL', 'Business English'],
-        calificacionPromedio: 4.7,
-        totalReviews: 78,
-        precioPorHora: 30000,
-        modalidad: 'online',
-        ubicacion: 'Online',
-        descripcion: 'Profesora nativa de inglés con certificación CELTA. Especialista en preparación para exámenes internacionales.',
-        premium: false,
-        categoria: 'Inglés'
-      },
-      {
-        _id: '6',
-        nombre: 'David Wilson',
-        especialidades: ['Inglés', 'Conversacional', 'IELTS'],
-        calificacionPromedio: 4.9,
-        totalReviews: 134,
-        precioPorHora: 38000,
-        modalidad: 'online',
-        ubicacion: 'Bogotá',
-        descripcion: 'Profesor bilingüe con 10 años de experiencia. Especialista en inglés conversacional y preparación IELTS.',
-        premium: true,
-        categoria: 'Inglés'
-      },
-
-      // Matemáticas
-      {
-        _id: '7',
-        nombre: 'Luis Hernández',
-        especialidades: ['Matemáticas', 'Cálculo', 'Álgebra'],
-        calificacionPromedio: 4.6,
-        totalReviews: 92,
-        precioPorHora: 28000,
-        modalidad: 'online',
-        ubicacion: 'Cali',
-        descripcion: 'Matemático con maestría en educación. Especialista en cálculo diferencial e integral.',
-        premium: false,
-        categoria: 'Matemáticas'
-      },
-      {
-        _id: '8',
-        nombre: 'Carmen Vega',
-        especialidades: ['Matemáticas', 'Estadística', 'Probabilidad'],
-        calificacionPromedio: 4.8,
-        totalReviews: 67,
-        precioPorHora: 32000,
-        modalidad: 'online',
-        ubicacion: 'Medellín',
-        descripcion: 'Estadística con experiencia en investigación. Especialista en análisis estadístico y probabilidad.',
-        premium: false,
-        categoria: 'Matemáticas'
-      },
-
-      // Diseño Gráfico
-      {
-        _id: '9',
-        nombre: 'Sofia Martínez',
-        especialidades: ['Diseño Gráfico', 'Photoshop', 'Illustrator'],
-        calificacionPromedio: 4.7,
-        totalReviews: 45,
-        precioPorHora: 35000,
-        modalidad: 'online',
-        ubicacion: 'Bogotá',
-        descripcion: 'Diseñadora gráfica freelance con 6 años de experiencia. Especialista en Adobe Creative Suite.',
-        premium: false,
-        categoria: 'Diseño Gráfico'
-      },
-      {
-        _id: '10',
-        nombre: 'Alejandro Torres',
-        especialidades: ['Diseño Gráfico', 'Figma', 'UI/UX'],
-        calificacionPromedio: 4.9,
-        totalReviews: 89,
-        precioPorHora: 42000,
-        modalidad: 'online',
-        ubicacion: 'Online',
-        descripcion: 'Diseñador UI/UX senior. Especialista en Figma y diseño de interfaces digitales.',
-        premium: true,
-        categoria: 'Diseño Gráfico'
-      },
-
-      // Marketing Digital
-      {
-        _id: '11',
-        nombre: 'Valentina Ruiz',
-        especialidades: ['Marketing Digital', 'SEO', 'Google Ads'],
-        calificacionPromedio: 4.5,
-        totalReviews: 56,
-        precioPorHora: 30000,
-        modalidad: 'online',
-        ubicacion: 'Barranquilla',
-        descripcion: 'Especialista en marketing digital con experiencia en agencias. Especialista en SEO y publicidad online.',
-        premium: false,
-        categoria: 'Marketing Digital'
-      },
-      {
-        _id: '12',
-        nombre: 'Ricardo Morales',
-        especialidades: ['Marketing Digital', 'Redes Sociales', 'Content Marketing'],
-        calificacionPromedio: 4.8,
-        totalReviews: 78,
-        precioPorHora: 38000,
-        modalidad: 'online',
-        ubicacion: 'Online',
-        descripcion: 'Consultor de marketing digital. Especialista en estrategias de redes sociales y content marketing.',
-        premium: true,
-        categoria: 'Marketing Digital'
-      },
-
-      // Contabilidad
-      {
-        _id: '13',
-        nombre: 'Patricia López',
-        especialidades: ['Contabilidad', 'Excel', 'SAP'],
-        calificacionPromedio: 4.6,
-        totalReviews: 34,
-        precioPorHora: 28000,
-        modalidad: 'online',
-        ubicacion: 'Cartagena',
-        descripcion: 'Contadora pública con experiencia en sistemas ERP. Especialista en contabilidad y finanzas.',
-        premium: false,
-        categoria: 'Contabilidad'
-      },
-
-      // Finanzas
-      {
-        _id: '14',
-        nombre: 'Fernando Castro',
-        especialidades: ['Finanzas', 'Inversiones', 'Análisis Financiero'],
-        calificacionPromedio: 4.9,
-        totalReviews: 112,
-        precioPorHora: 45000,
-        modalidad: 'online',
-        ubicacion: 'Bogotá',
-        descripcion: 'Analista financiero senior. Especialista en inversiones y análisis de mercado.',
-        premium: true,
-        categoria: 'Finanzas'
-      },
-
-      // Análisis de Datos
-      {
-        _id: '15',
-        nombre: 'Laura Jiménez',
-        especialidades: ['Análisis de Datos', 'Python', 'Power BI'],
-        calificacionPromedio: 4.7,
-        totalReviews: 67,
-        precioPorHora: 40000,
-        modalidad: 'online',
-        ubicacion: 'Medellín',
-        descripcion: 'Data Scientist con experiencia en empresas tecnológicas. Especialista en Python y visualización de datos.',
-        premium: true,
-        categoria: 'Análisis de Datos'
+    let activo = true
+    const cargarProfesores = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const response = await profesorService.buscarProfesores({})
+        const lista = response?.data?.profesores || response?.profesores || []
+        if (activo) setProfesores(lista)
+      } catch (err) {
+        if (activo) {
+          setError('No se pudieron cargar los profesores. Intenta de nuevo más tarde.')
+          setProfesores([])
+        }
+      } finally {
+        if (activo) setLoading(false)
       }
-    ]
-
-    setProfesores(profesoresEjemplo)
-    setLoading(false)
+    }
+    cargarProfesores()
+    return () => { activo = false }
   }, [])
 
 
