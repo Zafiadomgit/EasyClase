@@ -5,8 +5,30 @@ import bcrypt from 'bcryptjs';
 import { Sequelize, DataTypes } from 'sequelize';
 import pg from 'pg'; // Import explícito para que Vercel lo incluya en el bundle (Sequelize lo carga con require dinámico)
 import crypto from 'crypto';
+import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 
 const app = express();
+
+// ─── Mercado Pago (Checkout Pro) ─────────────────────────────────────────────
+// SDK oficial de backend. El Access Token es privado y se toma de las variables
+// de entorno (MP_ACCESS_TOKEN; el token de pruebas empieza con el prefijo
+// APP_USR). El cliente y los recursos se crean de forma perezosa para que la
+// función arranque aunque falte la credencial (otras rutas siguen operativas).
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN;
+
+let mpClient, mpPreference, mpPayment;
+const getMercadoPago = () => {
+  if (!MP_ACCESS_TOKEN) return null;
+  if (!mpClient) {
+    mpClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN, options: { timeout: 10000 } });
+    mpPreference = new Preference(mpClient);
+    mpPayment = new Payment(mpClient);
+  }
+  return { preference: mpPreference, payment: mpPayment };
+};
+
+// URL pública del frontend para construir las back_urls y el webhook.
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://easy-clase-er9o.vercel.app').replace(/\/$/, '');
 
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json());
@@ -390,6 +412,114 @@ app.get('/api/profesores/:id', async (req, res) => {
   } catch (e) {
     console.error('Error obteniendo profesor:', e);
     res.status(500).json({ success: false, message: 'Error al obtener el profesor' });
+  }
+});
+
+// ─── Pagos (Checkout Pro) ────────────────────────────────────────────────────
+
+// Crear una preferencia de pago.
+// Recibe los datos del ítem a cobrar y devuelve el `init_point` al que se debe
+// redirigir al comprador para completar el pago en Mercado Pago.
+//
+// Body:
+//   { titulo, precio, cantidad?, email?, referencia?, descripcion?, metadata? }
+app.post('/api/pagos/crear-preferencia', async (req, res) => {
+  try {
+    const mp = getMercadoPago();
+    if (!mp) {
+      return res.status(503).json({
+        success: false,
+        message: 'Mercado Pago no está configurado. Falta la variable de entorno MP_ACCESS_TOKEN.'
+      });
+    }
+
+    const { titulo, precio, cantidad, email, referencia, descripcion, metadata } = req.body || {};
+
+    // Validaciones mínimas del ítem.
+    const unitPrice = Number(precio);
+    if (!titulo || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requieren un título y un precio válido (mayor a 0).'
+      });
+    }
+    const quantity = Number.isFinite(Number(cantidad)) && Number(cantidad) > 0 ? Math.floor(Number(cantidad)) : 1;
+
+    const preferenceBody = {
+      items: [
+        {
+          title: String(titulo),
+          description: descripcion ? String(descripcion) : undefined,
+          quantity,
+          currency_id: 'COP',
+          unit_price: unitPrice
+        }
+      ],
+      back_urls: {
+        success: `${FRONTEND_URL}/pago-exitoso`,
+        failure: `${FRONTEND_URL}/pago-fallido`,
+        pending: `${FRONTEND_URL}/pago-pendiente`
+      },
+      auto_return: 'approved',
+      notification_url: `${FRONTEND_URL}/api/pagos/webhook`,
+      ...(email ? { payer: { email: String(email) } } : {}),
+      ...(referencia ? { external_reference: String(referencia) } : {}),
+      ...(metadata && typeof metadata === 'object' ? { metadata } : {})
+    };
+
+    const result = await mp.preference.create({ body: preferenceBody });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: result.id,
+        init_point: result.init_point,
+        sandbox_init_point: result.sandbox_init_point
+      }
+    });
+  } catch (error) {
+    // El SDK expone el detalle del error de la API en error.message / error.cause.
+    console.error('Error creando preferencia de Mercado Pago:', error?.message || error);
+    return res.status(500).json({
+      success: false,
+      message: 'No se pudo crear la preferencia de pago.',
+      error: error?.message
+    });
+  }
+});
+
+// Consultar el estado de un pago por su ID (útil tras la redirección de vuelta
+// desde Mercado Pago para confirmar la operación).
+app.get('/api/pagos/:id', async (req, res) => {
+  try {
+    const mp = getMercadoPago();
+    if (!mp) {
+      return res.status(503).json({
+        success: false,
+        message: 'Mercado Pago no está configurado. Falta la variable de entorno MP_ACCESS_TOKEN.'
+      });
+    }
+
+    const payment = await mp.payment.get({ id: req.params.id });
+    return res.json({
+      success: true,
+      data: {
+        id: payment.id,
+        status: payment.status,
+        status_detail: payment.status_detail,
+        transaction_amount: payment.transaction_amount,
+        external_reference: payment.external_reference,
+        payment_method_id: payment.payment_method_id,
+        date_approved: payment.date_approved
+      }
+    });
+  } catch (error) {
+    console.error('Error consultando pago de Mercado Pago:', error?.message || error);
+    return res.status(500).json({
+      success: false,
+      message: 'No se pudo consultar el estado del pago.',
+      error: error?.message
+    });
   }
 });
 
