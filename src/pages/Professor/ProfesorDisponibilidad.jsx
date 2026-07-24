@@ -50,9 +50,11 @@ const ProfesorDisponibilidad = () => {
 
   const cargarHorarios = async () => {
     try {
-      const response = await fetch('/api/profesor/horarios.php')
+      const response = await fetch('/api/profesor/horarios', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      })
       const data = await response.json()
-      
+
       if (data.success) {
         setHorarios(data.data.horarios || [])
       } else {
@@ -80,10 +82,11 @@ const ProfesorDisponibilidad = () => {
 
   const guardarHorarios = async (nuevosHorarios) => {
     try {
-      const response = await fetch('/api/profesor/horarios.php', {
+      const response = await fetch('/api/profesor/horarios', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify({ horarios: nuevosHorarios })
       })

@@ -85,11 +85,11 @@ const CrearClase = () => {
       }
 
       // Crear la plantilla de clase
-      const response = await fetch('/api/plantillas.php', {
+      const response = await fetch('/api/plantillas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(claseData)
       })

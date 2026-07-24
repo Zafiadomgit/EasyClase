@@ -18,9 +18,9 @@ const MisClases = () => {
       setLoading(true)
       
       // Cargar desde API de plantillas de clases
-      const response = await fetch('/api/plantillas.php', {
+      const response = await fetch('/api/plantillas', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       })
       
@@ -60,10 +60,10 @@ const MisClases = () => {
   const eliminarClase = async (claseId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta clase? Esta acción no se puede deshacer.')) {
       try {
-        const response = await fetch(`/api/plantillas.php/${claseId}`, {
+        const response = await fetch(`/api/plantillas/${claseId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
           }
         })
         

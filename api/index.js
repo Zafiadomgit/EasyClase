@@ -34,7 +34,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -140,11 +140,40 @@ const initDB = async () => {
       hora: { type: DataTypes.STRING(20), defaultValue: '' }
     }, { tableName: 'transacciones', timestamps: true, indexes: [{ fields: ['referencia'] }, { fields: ['usuario'] }] });
 
+    // Plantillas de clase creadas por un profesor (clases en vivo ofrecidas).
+    Plantilla = sequelize.define('Plantilla', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      profesor: { type: DataTypes.INTEGER, allowNull: false },
+      titulo: { type: DataTypes.STRING(150), allowNull: false },
+      descripcion: { type: DataTypes.TEXT, defaultValue: '' },
+      materia: { type: DataTypes.STRING(80), defaultValue: '' },
+      categoria: { type: DataTypes.STRING(80), defaultValue: '' },
+      tipo: { type: DataTypes.STRING(20), defaultValue: 'individual' },
+      precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+      duracion: { type: DataTypes.INTEGER, defaultValue: 1 },
+      maxEstudiantes: { type: DataTypes.INTEGER, defaultValue: 1 },
+      modalidad: { type: DataTypes.STRING(20), defaultValue: 'online' },
+      requisitos: { type: DataTypes.TEXT, defaultValue: '' },
+      objetivos: { type: DataTypes.TEXT, defaultValue: '' }
+    }, { tableName: 'plantillas', timestamps: true, indexes: [{ fields: ['profesor'] }] });
+
+    // Franjas de disponibilidad semanal del profesor.
+    Disponibilidad = sequelize.define('Disponibilidad', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      profesor: { type: DataTypes.INTEGER, allowNull: false },
+      dia: { type: DataTypes.STRING(15), allowNull: false },
+      horaInicio: { type: DataTypes.STRING(10), allowNull: false },
+      horaFin: { type: DataTypes.STRING(10), allowNull: false },
+      disponible: { type: DataTypes.BOOLEAN, defaultValue: true }
+    }, { tableName: 'disponibilidades', timestamps: true, indexes: [{ fields: ['profesor'] }] });
+
     await sequelize.authenticate();
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
     await User.sync({ alter: true });
     await Servicio.sync({ alter: true });
     await Transaccion.sync({ alter: true });
+    await Plantilla.sync({ alter: true });
+    await Disponibilidad.sync({ alter: true });
     await seedProfesores();
     await seedServicios();
     dbReady = true;
@@ -678,6 +707,130 @@ app.delete('/api/servicios/:id', authMiddleware, async (req, res) => {
   } catch (e) {
     console.error('Error eliminando servicio:', e);
     res.status(500).json({ success: false, message: 'Error al eliminar el servicio' });
+  }
+});
+
+// ─── Panel de profesor: plantillas de clase ──────────────────────────────────
+const shapePlantilla = (p) => {
+  const j = p.toJSON ? p.toJSON() : p;
+  return {
+    id: j.id,
+    titulo: j.titulo,
+    descripcion: j.descripcion || '',
+    materia: j.materia || '',
+    categoria: j.categoria || '',
+    tipo: j.tipo || 'individual',
+    precio: Number(j.precio) || 0,
+    duracion: j.duracion || 1,
+    maxEstudiantes: j.maxEstudiantes || 1,
+    max_estudiantes: j.maxEstudiantes || 1,
+    modalidad: j.modalidad || 'online'
+  };
+};
+
+// Plantillas del profesor autenticado.
+app.get('/api/plantillas', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const plantillas = await Plantilla.findAll({ where: { profesor: req.userId }, order: [['createdAt', 'DESC']] });
+    const data = plantillas.map(shapePlantilla);
+    res.json({ success: true, data: { plantillas: data }, plantillas: data });
+  } catch (e) {
+    console.error('Error obteniendo plantillas:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus clases' });
+  }
+});
+
+// Crear una plantilla de clase.
+app.post('/api/plantillas', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const b = req.body || {};
+    const precio = Number(b.precio);
+    if (!b.titulo || !b.descripcion || !b.materia || !b.categoria) {
+      return res.status(400).json({ success: false, message: 'Título, descripción, materia y categoría son obligatorios' });
+    }
+    if (!Number.isFinite(precio) || precio < 10) {
+      return res.status(400).json({ success: false, message: 'El precio debe ser como mínimo $10' });
+    }
+    const tipo = b.tipo === 'grupal' ? 'grupal' : 'individual';
+    const nueva = await Plantilla.create({
+      profesor: req.userId,
+      titulo: b.titulo,
+      descripcion: b.descripcion,
+      materia: b.materia,
+      categoria: b.categoria,
+      tipo,
+      precio,
+      duracion: Number(b.duracion) || 1,
+      maxEstudiantes: tipo === 'grupal' ? (Number(b.maxEstudiantes) || 5) : 1,
+      modalidad: b.modalidad || 'online',
+      requisitos: b.requisitos || '',
+      objetivos: b.objetivos || ''
+    });
+    res.status(201).json({ success: true, message: 'Clase creada', data: { plantilla: shapePlantilla(nueva) } });
+  } catch (e) {
+    console.error('Error creando plantilla:', e);
+    res.status(500).json({ success: false, message: 'Error al crear la clase' });
+  }
+});
+
+// Eliminar una plantilla (solo el profesor dueño).
+app.delete('/api/plantillas/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const p = await Plantilla.findByPk(req.params.id);
+    if (!p) return res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    if (p.profesor !== req.userId) return res.status(403).json({ success: false, message: 'No autorizado' });
+    await p.destroy();
+    res.json({ success: true, message: 'Clase eliminada' });
+  } catch (e) {
+    console.error('Error eliminando plantilla:', e);
+    res.status(500).json({ success: false, message: 'Error al eliminar la clase' });
+  }
+});
+
+// ─── Panel de profesor: disponibilidad ───────────────────────────────────────
+const shapeHorario = (h) => {
+  const j = h.toJSON ? h.toJSON() : h;
+  return { id: j.id, dia: j.dia, horaInicio: j.horaInicio, horaFin: j.horaFin, disponible: !!j.disponible };
+};
+
+// Horarios del profesor autenticado.
+app.get('/api/profesor/horarios', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const horarios = await Disponibilidad.findAll({ where: { profesor: req.userId }, order: [['dia', 'ASC'], ['horaInicio', 'ASC']] });
+    const data = horarios.map(shapeHorario);
+    res.json({ success: true, data: { horarios: data }, horarios: data });
+  } catch (e) {
+    console.error('Error obteniendo horarios:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener los horarios' });
+  }
+});
+
+// Guardar (reemplazar) el set completo de horarios del profesor.
+app.post('/api/profesor/horarios', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const horarios = Array.isArray(req.body?.horarios) ? req.body.horarios : [];
+    // Reemplazo total: se borran los del profesor y se recrean.
+    await Disponibilidad.destroy({ where: { profesor: req.userId } });
+    const filas = horarios
+      .filter(h => h && h.dia && h.horaInicio && h.horaFin)
+      .map(h => ({
+        profesor: req.userId,
+        dia: String(h.dia),
+        horaInicio: String(h.horaInicio),
+        horaFin: String(h.horaFin),
+        disponible: h.disponible !== false
+      }));
+    const creados = filas.length ? await Disponibilidad.bulkCreate(filas) : [];
+    const data = creados.map(shapeHorario);
+    res.json({ success: true, message: 'Horarios guardados', data: { horarios: data }, horarios: data });
+  } catch (e) {
+    console.error('Error guardando horarios:', e);
+    res.status(500).json({ success: false, message: 'Error al guardar los horarios' });
   }
 });
 
