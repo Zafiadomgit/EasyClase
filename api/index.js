@@ -523,6 +523,43 @@ app.get('/api/pagos/:id', async (req, res) => {
   }
 });
 
+// Webhook de notificaciones de Mercado Pago.
+// Mercado Pago llama a esta URL cuando cambia el estado de un pago. Puede
+// enviar los datos por query (?type=payment&data.id=123 o ?topic=payment&id=123)
+// o en el body. Confirmamos el pago consultando la API (nunca confiar solo en
+// la notificación) y respondemos 200 para que MP no reintente.
+app.post('/api/pagos/webhook', async (req, res) => {
+  try {
+    const type = req.query.type || req.query.topic || req.body?.type || req.body?.action?.split('.')[0];
+    const paymentId = req.query['data.id'] || req.query.id || req.body?.data?.id;
+
+    if (type === 'payment' && paymentId) {
+      const mp = getMercadoPago();
+      if (mp) {
+        const payment = await mp.payment.get({ id: paymentId });
+        console.log('🔔 Webhook MP:', {
+          id: payment.id,
+          status: payment.status,
+          status_detail: payment.status_detail,
+          external_reference: payment.external_reference,
+          amount: payment.transaction_amount
+        });
+        // TODO (persistencia): cuando exista la tabla de pagos/reservas, aquí se
+        // debe actualizar el registro identificado por external_reference según
+        // payment.status (approved / rejected / pending) de forma idempotente.
+      }
+    }
+
+    // Siempre 200: MP reintenta ante cualquier otro código.
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Error procesando webhook de Mercado Pago:', error?.message || error);
+    // Aun ante error respondemos 200 para no entrar en bucle de reintentos;
+    // el detalle queda en logs para diagnóstico.
+    return res.status(200).json({ received: true });
+  }
+});
+
 // 404
 app.use((req, res) => res.status(404).json({ success: false, message: 'Ruta no encontrada' }));
 
