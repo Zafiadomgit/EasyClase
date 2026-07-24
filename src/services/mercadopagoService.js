@@ -3,12 +3,14 @@
 
 class MercadoPagoService {
   constructor() {
-    // Configurar MercadoPago con credenciales reales
-    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-3e36c45d-0048-4aaf-88ea-7df857eb3ea5'
-    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN || 'APP_USR-5890608562147325-082512-c5909ffb078ebcb8d07406452753cbed-345306681'
+    // La Public Key es la única credencial de Mercado Pago que puede vivir en el
+    // frontend (se usa para el SDK de JS / Bricks). Se toma de las variables de
+    // entorno de build (Vite).
+    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || ''
+    // IMPORTANTE: el Access Token es una credencial PRIVADA y jamás debe estar en
+    // el frontend. Toda operación que lo requiera (crear preferencia, consultar
+    // pagos) se hace en el backend vía /api/pagos/*.
     this.baseURL = import.meta.env.VITE_API_URL || '/api'
-    
-    console.log('MercadoPago Service inicializado (modo simulación)')
   }
 
   /**

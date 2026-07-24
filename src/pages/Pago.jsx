@@ -55,26 +55,28 @@ const Pago = () => {
   const handlePayment = async () => {
     setIsLoading(true)
     try {
-      // Crear preferencia de MercadoPago
-      const response = await fetch('/api/crear-preferencia-mercadopago-MINIMAL.php', {
+      const titulo = reservaData.servicioTitulo || reservaData.titulo || 'Reserva de clase'
+      const referencia = reservaData.reservaId || reservaData.id || `clase_${Date.now()}`
+
+      // Crear la preferencia de pago en el backend (Checkout Pro).
+      const response = await fetch('/api/pagos/crear-preferencia', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          titulo: reservaData.titulo,
-          precio: formData.monto,
-          descripcion: `Reserva de clase: ${reservaData.titulo}`,
-          reservaData: reservaData
+          titulo,
+          precio: Number(formData.monto),
+          descripcion: `Reserva de clase: ${titulo}`,
+          email: formData.email,
+          referencia
         })
       })
 
       const data = await response.json()
+      const initPoint = data?.data?.init_point || data?.data?.sandbox_init_point
 
-      if (data.success && data.init_point) {
-        // Redirigir a MercadoPago
-        window.location.href = data.init_point
+      if (data.success && initPoint) {
+        // Redirigir al checkout de Mercado Pago.
+        window.location.href = initPoint
       } else {
         alert('Error al crear el pago: ' + (data.message || 'Error desconocido'))
       }
