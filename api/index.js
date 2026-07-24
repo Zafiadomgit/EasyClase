@@ -34,7 +34,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -93,10 +93,39 @@ const initDB = async () => {
       profesorVisible: { type: DataTypes.BOOLEAN, defaultValue: true }
     }, { tableName: 'users', timestamps: true });
 
+    // Servicios ofrecidos por los profesores (cursos, asesorías, consultorías).
+    // Se usan STRING en vez de ENUM para evitar migraciones de tipos en Postgres.
+    Servicio = sequelize.define('Servicio', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      titulo: { type: DataTypes.STRING(150), allowNull: false },
+      descripcion: { type: DataTypes.TEXT, defaultValue: '' },
+      categoria: { type: DataTypes.STRING(80), defaultValue: 'Otros' },
+      tipo: { type: DataTypes.STRING(40), defaultValue: 'pregrabada' },
+      precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+      tiempoPrevistoValor: { type: DataTypes.INTEGER, defaultValue: 0 },
+      tiempoPrevistoUnidad: { type: DataTypes.STRING(20), defaultValue: 'horas' },
+      modalidad: { type: DataTypes.STRING(20), defaultValue: 'virtual' },
+      urlVideo: { type: DataTypes.STRING(400), defaultValue: '' },
+      requisitos: { type: DataTypes.TEXT, defaultValue: '' },
+      objetivos: { type: DataTypes.TEXT, defaultValue: '' },
+      proveedor: { type: DataTypes.INTEGER, allowNull: false },
+      estado: { type: DataTypes.STRING(20), defaultValue: 'activo' },
+      premium: { type: DataTypes.BOOLEAN, defaultValue: false },
+      calificacionPromedio: { type: DataTypes.DECIMAL(3, 2), defaultValue: 0 },
+      totalReviews: { type: DataTypes.INTEGER, defaultValue: 0 },
+      totalVentas: { type: DataTypes.INTEGER, defaultValue: 0 },
+      disponible: { type: DataTypes.BOOLEAN, defaultValue: true }
+    }, { tableName: 'servicios', timestamps: true });
+
+    // Asociación: cada servicio pertenece a un usuario (proveedor).
+    Servicio.belongsTo(User, { as: 'proveedorUser', foreignKey: 'proveedor' });
+
     await sequelize.authenticate();
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
     await User.sync({ alter: true });
+    await Servicio.sync({ alter: true });
     await seedProfesores();
+    await seedServicios();
     dbReady = true;
     console.log('✅ Supabase PostgreSQL conectado');
   } catch (e) {
@@ -126,6 +155,55 @@ const seedProfesores = async () => {
   } catch (e) {
     console.warn('⚠️ Seed profesores omitido:', e.message);
   }
+};
+
+// Seed idempotente de servicios demo, asociados a profesores existentes, para
+// que la página de servicios muestre contenido desde el arranque.
+const seedServicios = async () => {
+  try {
+    const count = await Servicio.count();
+    if (count > 0) return;
+    const profes = await User.findAll({ where: { tipoUsuario: 'profesor' }, limit: 3 });
+    if (profes.length === 0) return;
+    const demo = [
+      { titulo: 'Curso completo de Excel Avanzado', descripcion: 'Domina tablas dinámicas, fórmulas y macros con proyectos reales.', categoria: 'Contabilidad y Finanzas', tipo: 'pregrabada', precio: 60000, tiempoPrevistoValor: 8, tiempoPrevistoUnidad: 'horas', premium: true, calificacionPromedio: 4.8, totalReviews: 42, totalVentas: 120 },
+      { titulo: 'Landing page profesional en React', descripcion: 'Construí y desplegá una landing moderna desde cero.', categoria: 'Desarrollo Web', tipo: 'asesoria', precio: 90000, tiempoPrevistoValor: 2, tiempoPrevistoUnidad: 'semanas', premium: false, calificacionPromedio: 4.9, totalReviews: 30, totalVentas: 65 },
+      { titulo: 'Asesoría de tesis y trabajos académicos', descripcion: 'Acompañamiento metodológico y de redacción para tu tesis.', categoria: 'Tesis y Trabajos Académicos', tipo: 'consultoria', precio: 45000, tiempoPrevistoValor: 3, tiempoPrevistoUnidad: 'días', premium: false, calificacionPromedio: 4.7, totalReviews: 51, totalVentas: 88 }
+    ];
+    for (let i = 0; i < demo.length; i++) {
+      await Servicio.create({ ...demo[i], proveedor: profes[i % profes.length].id, estado: 'activo', disponible: true });
+    }
+    console.log('🌱 Servicios demo creados');
+  } catch (e) {
+    console.warn('⚠️ Seed servicios omitido:', e.message);
+  }
+};
+
+// Forma canónica de servicio para el frontend (incluye _id e id, y el proveedor).
+const shapeServicio = (s) => {
+  const j = s.toJSON ? s.toJSON() : s;
+  const prov = j.proveedorUser || null;
+  return {
+    _id: String(j.id), id: j.id,
+    titulo: j.titulo,
+    descripcion: j.descripcion || '',
+    categoria: j.categoria || 'Otros',
+    tipo: j.tipo || 'pregrabada',
+    precio: Number(j.precio) || 0,
+    tiempoPrevisto: { valor: j.tiempoPrevistoValor || 0, unidad: j.tiempoPrevistoUnidad || 'horas' },
+    modalidad: j.modalidad || 'virtual',
+    urlVideo: j.urlVideo || '',
+    requisitos: j.requisitos || '',
+    objetivos: j.objetivos || '',
+    estado: j.estado || 'activo',
+    premium: !!j.premium, esPremium: !!j.premium,
+    calificacionPromedio: Number(j.calificacionPromedio) || 0,
+    totalReviews: j.totalReviews || 0,
+    totalVentas: j.totalVentas || 0,
+    disponible: !!j.disponible,
+    proveedor: prov ? { _id: String(prov.id), id: prov.id, nombre: prov.nombre } : { id: j.proveedor },
+    proveedorNombre: prov ? prov.nombre : ''
+  };
 };
 
 // Forma canónica de profesor: incluye ambos nombres de campo usados por las
@@ -412,6 +490,161 @@ app.get('/api/profesores/:id', async (req, res) => {
   } catch (e) {
     console.error('Error obteniendo profesor:', e);
     res.status(500).json({ success: false, message: 'Error al obtener el profesor' });
+  }
+});
+
+// ─── Servicios ───────────────────────────────────────────────────────────────
+const CATEGORIAS_SERVICIOS = [
+  'Tesis y Trabajos Académicos', 'Desarrollo Web', 'Desarrollo de Apps',
+  'Diseño Gráfico', 'Marketing Digital', 'Consultoría de Negocios', 'Traducción',
+  'Redacción de Contenido', 'Asesoría Legal', 'Contabilidad y Finanzas',
+  'Fotografía', 'Video y Edición', 'Arquitectura y Diseño', 'Ingeniería', 'Otros'
+];
+const incluirProveedor = () => [{ model: User, as: 'proveedorUser', attributes: ['id', 'nombre'] }];
+
+// Categorías disponibles (lista fija). Debe ir antes de /servicios/:id.
+app.get('/api/servicios/categorias', (req, res) => {
+  res.json({ success: true, data: { categorias: CATEGORIAS_SERVICIOS }, categorias: CATEGORIAS_SERVICIOS });
+});
+
+// Servicios del usuario autenticado. Debe ir antes de /servicios/:id.
+app.get('/api/servicios/usuario/mis-servicios', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const servicios = await Servicio.findAll({
+      where: { proveedor: req.userId },
+      include: incluirProveedor(),
+      order: [['createdAt', 'DESC']]
+    });
+    const data = servicios.map(shapeServicio);
+    res.json({ success: true, data: { servicios: data }, servicios: data });
+  } catch (e) {
+    console.error('Error obteniendo mis servicios:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus servicios' });
+  }
+});
+
+// Buscar / listar servicios activos.
+app.get('/api/servicios', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const { categoria, q } = req.query;
+    const where = { estado: 'activo', disponible: true };
+    if (categoria) where.categoria = categoria;
+    const servicios = await Servicio.findAll({
+      where,
+      include: incluirProveedor(),
+      order: [['premium', 'DESC'], ['createdAt', 'DESC']]
+    });
+    let data = servicios.map(shapeServicio);
+    if (q) {
+      const s = String(q).toLowerCase();
+      data = data.filter(x =>
+        x.titulo.toLowerCase().includes(s) ||
+        x.descripcion.toLowerCase().includes(s) ||
+        x.categoria.toLowerCase().includes(s)
+      );
+    }
+    res.json({ success: true, data: { servicios: data }, servicios: data });
+  } catch (e) {
+    console.error('Error buscando servicios:', e);
+    res.status(500).json({ success: false, message: 'Error al buscar servicios' });
+  }
+});
+
+// Detalle de un servicio.
+app.get('/api/servicios/:id', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const s = await Servicio.findByPk(req.params.id, { include: incluirProveedor() });
+    if (!s) return res.status(404).json({ success: false, message: 'Servicio no encontrado' });
+    const servicio = shapeServicio(s);
+    res.json({ success: true, data: { servicio }, servicio });
+  } catch (e) {
+    console.error('Error obteniendo servicio:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener el servicio' });
+  }
+});
+
+// Crear un servicio (proveedor autenticado).
+app.post('/api/servicios', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const b = req.body || {};
+    const precio = Number(b.precio);
+    if (!b.titulo || !b.descripcion || !b.categoria) {
+      return res.status(400).json({ success: false, message: 'Título, descripción y categoría son obligatorios' });
+    }
+    if (!Number.isFinite(precio) || precio <= 0) {
+      return res.status(400).json({ success: false, message: 'El precio debe ser un número mayor a 0' });
+    }
+    const tp = b.tiempoPrevisto || {};
+    const nuevo = await Servicio.create({
+      titulo: b.titulo,
+      descripcion: b.descripcion,
+      categoria: b.categoria,
+      tipo: b.tipo || 'pregrabada',
+      precio,
+      tiempoPrevistoValor: Number(tp.valor) || 0,
+      tiempoPrevistoUnidad: tp.unidad || 'horas',
+      modalidad: b.modalidad || 'virtual',
+      urlVideo: b.urlVideo || '',
+      requisitos: b.requisitos || '',
+      objetivos: b.objetivos || '',
+      proveedor: req.userId,
+      estado: 'activo',
+      disponible: true
+    });
+    const conProveedor = await Servicio.findByPk(nuevo.id, { include: incluirProveedor() });
+    res.status(201).json({ success: true, message: 'Servicio creado', data: { servicio: shapeServicio(conProveedor) } });
+  } catch (e) {
+    console.error('Error creando servicio:', e);
+    res.status(500).json({ success: false, message: 'Error al crear el servicio' });
+  }
+});
+
+// Actualizar un servicio (solo el proveedor dueño).
+app.put('/api/servicios/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const s = await Servicio.findByPk(req.params.id);
+    if (!s) return res.status(404).json({ success: false, message: 'Servicio no encontrado' });
+    if (s.proveedor !== req.userId) return res.status(403).json({ success: false, message: 'No autorizado' });
+
+    const b = req.body || {};
+    const updates = {};
+    ['titulo', 'descripcion', 'categoria', 'tipo', 'modalidad', 'urlVideo', 'requisitos', 'objetivos', 'estado'].forEach(k => {
+      if (b[k] !== undefined) updates[k] = b[k];
+    });
+    if (b.precio !== undefined) {
+      const precio = Number(b.precio);
+      if (Number.isFinite(precio) && precio > 0) updates.precio = precio;
+    }
+    if (b.tiempoPrevisto) {
+      if (b.tiempoPrevisto.valor !== undefined) updates.tiempoPrevistoValor = Number(b.tiempoPrevisto.valor) || 0;
+      if (b.tiempoPrevisto.unidad !== undefined) updates.tiempoPrevistoUnidad = b.tiempoPrevisto.unidad;
+    }
+    await s.update(updates);
+    const conProveedor = await Servicio.findByPk(s.id, { include: incluirProveedor() });
+    res.json({ success: true, message: 'Servicio actualizado', data: { servicio: shapeServicio(conProveedor) } });
+  } catch (e) {
+    console.error('Error actualizando servicio:', e);
+    res.status(500).json({ success: false, message: 'Error al actualizar el servicio' });
+  }
+});
+
+// Eliminar un servicio (solo el proveedor dueño).
+app.delete('/api/servicios/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const s = await Servicio.findByPk(req.params.id);
+    if (!s) return res.status(404).json({ success: false, message: 'Servicio no encontrado' });
+    if (s.proveedor !== req.userId) return res.status(403).json({ success: false, message: 'No autorizado' });
+    await s.destroy();
+    res.json({ success: true, message: 'Servicio eliminado' });
+  } catch (e) {
+    console.error('Error eliminando servicio:', e);
+    res.status(500).json({ success: false, message: 'Error al eliminar el servicio' });
   }
 });
 
