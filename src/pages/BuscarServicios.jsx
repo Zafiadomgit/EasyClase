@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, Briefcase, CheckCircle, Eye } from 'lucide-react'
 import { servicioService } from '../services/api'
-import { compraService } from '../services/compraService'
 import ServicioCard from '../components/ServicioCard'
 import RotatingText from '../components/RotatingText'
 import { useAuth } from '../contexts/AuthContext'
@@ -185,11 +184,33 @@ const BuscarServicios = () => {
 
   const handleComprar = async (servicioId) => {
     try {
-      const response = await compraService.crearCompra(servicioId)
-      
-      if (response.success) {
-        // Redirigir a MercadoPago
-        window.location.href = response.data.pago.init_point
+      const servicio = servicios.find(s => (s._id || s.id) === servicioId)
+      if (!servicio) {
+        alert('Servicio no encontrado')
+        return
+      }
+
+      // Cobro vía Mercado Pago (Checkout Pro): se crea la preferencia en el
+      // backend con el Access Token único y se redirige al checkout.
+      const response = await fetch('/api/pagos/crear-preferencia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: servicio.titulo,
+          precio: Number(servicio.precio),
+          descripcion: `Compra de servicio: ${servicio.titulo}`,
+          email: user?.email,
+          referencia: `servicio_${servicioId}`
+        })
+      })
+
+      const data = await response.json()
+      const initPoint = data?.data?.init_point || data?.data?.sandbox_init_point
+
+      if (data.success && initPoint) {
+        window.location.href = initPoint
+      } else {
+        alert('Error al crear el pago: ' + (data.message || 'Error desconocido'))
       }
     } catch (error) {
       alert(error.message || 'Error procesando la compra')
