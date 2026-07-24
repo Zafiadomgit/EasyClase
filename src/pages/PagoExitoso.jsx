@@ -6,55 +6,48 @@ const PagoExitoso = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [reservaData, setReservaData] = useState(null)
+  const [estadoPago, setEstadoPago] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Cargar datos de la reserva desde localStorage
+    // Mostrar los datos de la reserva guardados antes de ir a pagar.
     const reserva = localStorage.getItem('reservaPendiente')
+    let pendiente = null
     if (reserva) {
       try {
-        const data = JSON.parse(reserva)
-        setReservaData(data)
-        
-        // Crear la reserva en la base de datos
-        crearReserva(data)
+        pendiente = JSON.parse(reserva)
+        setReservaData(pendiente)
       } catch (error) {
         console.error('Error parseando datos de reserva:', error)
       }
     }
+
+    // Confirmar el estado del pago con el backend si Mercado Pago devolvió el id.
+    const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
+    if (paymentId) {
+      fetch(`/api/pagos/${paymentId}`)
+        .then(r => r.json())
+        .then(d => { if (d.success) setEstadoPago(d.data.status) })
+        .catch(() => {})
+    }
+
+    // Marcar como programadas las clases que estaban pendientes de pago y limpiar
+    // la reserva pendiente para no reprocesarla.
+    if (pendiente) {
+      try {
+        const clases = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
+        const actualizadas = clases.map(c =>
+          c.estado === 'pendiente_pago' ? { ...c, estado: 'programada' } : c
+        )
+        localStorage.setItem('misClasesEstudiante', JSON.stringify(actualizadas))
+      } catch (e) {
+        console.error('Error actualizando mis clases:', e)
+      }
+      localStorage.removeItem('reservaPendiente')
+    }
+
     setLoading(false)
   }, [])
-
-  const crearReserva = async (data) => {
-    try {
-      const response = await fetch('/api/reservar-clase.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
-        },
-        body: JSON.stringify({
-          claseId: data.claseId,
-          estudianteId: data.estudianteId,
-          fecha: data.fecha,
-          hora: data.hora,
-          comentarios: data.comentarios
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        // Limpiar datos de reserva pendiente
-        localStorage.removeItem('reservaPendiente')
-        console.log('Reserva creada exitosamente')
-      } else {
-        console.error('Error creando reserva:', result.message)
-      }
-    } catch (error) {
-      console.error('Error creando reserva:', error)
-    }
-  }
 
   if (loading) {
     return (
@@ -77,9 +70,14 @@ const PagoExitoso = () => {
               ¡Pago Exitoso!
             </h1>
             
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 mb-2">
               Tu pago ha sido procesado correctamente
             </p>
+            {estadoPago && (
+              <p className="text-sm text-gray-500 mb-8">
+                Estado del pago: <strong>{estadoPago === 'approved' ? 'Aprobado' : estadoPago}</strong>
+              </p>
+            )}
 
             {reservaData && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
