@@ -194,13 +194,19 @@ const BuscarServicios = () => {
       // backend con el Access Token único y se redirige al checkout.
       const response = await fetch('/api/pagos/crear-preferencia', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify({
           titulo: servicio.titulo,
           precio: Number(servicio.precio),
-          descripcion: `Compra de servicio: ${servicio.titulo}`,
+          descripcion: servicio.descripcion || `Compra de servicio: ${servicio.titulo}`,
+          categoria: servicio.categoria,
           email: user?.email,
-          referencia: `servicio_${servicioId}`
+          tipo: 'servicio',
+          servicioId: servicioId,
+          referencia: `servicio_${servicioId}_${Date.now()}`
         })
       })
 

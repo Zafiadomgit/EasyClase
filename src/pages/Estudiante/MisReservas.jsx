@@ -19,9 +19,9 @@ const MisReservas = () => {
     try {
       setLoading(true)
       
-      const response = await fetch(`/api/reservar-clase.php?estudianteId=${user.id}`, {
+      const response = await fetch('/api/reservas/mis-reservas', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock_token_for_testing'}`
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       })
       

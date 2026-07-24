@@ -61,13 +61,21 @@ const Pago = () => {
       // Crear la preferencia de pago en el backend (Checkout Pro).
       const response = await fetch('/api/pagos/crear-preferencia', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify({
           titulo,
           precio: Number(formData.monto),
           descripcion: `Reserva de clase: ${titulo}`,
+          categoria: reservaData.servicioCategoria || '',
           email: formData.email,
-          referencia
+          tipo: 'clase',
+          profesorId: reservaData.profesorId,
+          fecha: reservaData.fecha,
+          hora: reservaData.hora,
+          referencia: `${referencia}_${Date.now()}`
         })
       })
 

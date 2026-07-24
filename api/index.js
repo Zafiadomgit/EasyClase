@@ -34,7 +34,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -120,10 +120,31 @@ const initDB = async () => {
     // Asociación: cada servicio pertenece a un usuario (proveedor).
     Servicio.belongsTo(User, { as: 'proveedorUser', foreignKey: 'proveedor' });
 
+    // Transacciones: registro de cada pago (compra de servicio o reserva de clase).
+    // Es la fuente de verdad de "Mis compras" y "Mis reservas".
+    Transaccion = sequelize.define('Transaccion', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      usuario: { type: DataTypes.INTEGER, allowNull: true },       // comprador (payer)
+      tipo: { type: DataTypes.STRING(20), defaultValue: 'servicio' }, // 'servicio' | 'clase'
+      referencia: { type: DataTypes.STRING(120) },                 // external_reference de MP
+      titulo: { type: DataTypes.STRING(200), defaultValue: '' },
+      descripcion: { type: DataTypes.TEXT, defaultValue: '' },
+      categoria: { type: DataTypes.STRING(80), defaultValue: '' },
+      precio: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+      estado: { type: DataTypes.STRING(20), defaultValue: 'pendiente' }, // pendiente|aprobado|rechazado
+      preferenceId: { type: DataTypes.STRING(120), defaultValue: '' },
+      paymentId: { type: DataTypes.STRING(120), defaultValue: '' },
+      servicioId: { type: DataTypes.INTEGER, allowNull: true },
+      profesorId: { type: DataTypes.INTEGER, allowNull: true },
+      fecha: { type: DataTypes.STRING(20), defaultValue: '' },
+      hora: { type: DataTypes.STRING(20), defaultValue: '' }
+    }, { tableName: 'transacciones', timestamps: true, indexes: [{ fields: ['referencia'] }, { fields: ['usuario'] }] });
+
     await sequelize.authenticate();
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
     await User.sync({ alter: true });
     await Servicio.sync({ alter: true });
+    await Transaccion.sync({ alter: true });
     await seedProfesores();
     await seedServicios();
     dbReady = true;
@@ -245,6 +266,18 @@ const authMiddleware = (req, res, next) => {
     next();
   } catch {
     res.status(401).json({ success: false, message: 'Token inválido' });
+  }
+};
+
+// Extrae el userId si viene un token válido, sin bloquear si no lo hay.
+// Se usa en el cobro para asociar la transacción al comprador cuando está logueado.
+const getUserIdOptional = (req) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return null;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod').userId;
+  } catch {
+    return null;
   }
 };
 
@@ -648,6 +681,66 @@ app.delete('/api/servicios/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── Mis compras / Mis reservas (transacciones) ──────────────────────────────
+
+// Servicios comprados por el usuario autenticado.
+app.get('/api/compras-servicios/mis-compras', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const txs = await Transaccion.findAll({
+      where: { usuario: req.userId, tipo: 'servicio' },
+      order: [['createdAt', 'DESC']]
+    });
+    const compras = txs.map(t => {
+      const j = t.toJSON();
+      const estado = j.estado === 'aprobado' ? 'pagado' : j.estado === 'rechazado' ? 'reembolsado' : 'pendiente';
+      return {
+        id: j.id,
+        estado,
+        precio: Number(j.precio) || 0,
+        createdAt: j.createdAt,
+        servicioInfo: { titulo: j.titulo, descripcion: j.descripcion || '' }
+      };
+    });
+    res.json({ success: true, data: { compras }, compras });
+  } catch (e) {
+    console.error('Error obteniendo mis compras:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus compras' });
+  }
+});
+
+// Reservas de clase del usuario autenticado.
+app.get('/api/reservas/mis-reservas', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const txs = await Transaccion.findAll({
+      where: { usuario: req.userId, tipo: 'clase' },
+      order: [['createdAt', 'DESC']]
+    });
+    const reservas = txs.map(t => {
+      const j = t.toJSON();
+      const estado = j.estado === 'aprobado' ? 'confirmada' : j.estado === 'rechazado' ? 'cancelada' : 'pendiente';
+      return {
+        id: j.id,
+        titulo: j.titulo,
+        categoria: j.categoria || '',
+        materia: j.categoria || '',
+        descripcion: j.descripcion || '',
+        estado,
+        fecha: j.fecha || '',
+        hora: j.hora || '',
+        precio: Number(j.precio) || 0,
+        comentarios: '',
+        created_at: j.createdAt
+      };
+    });
+    res.json({ success: true, data: { reservas }, reservas });
+  } catch (e) {
+    console.error('Error obteniendo mis reservas:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus reservas' });
+  }
+});
+
 // ─── Pagos (Checkout Pro) ────────────────────────────────────────────────────
 
 // Crear una preferencia de pago.
@@ -701,6 +794,32 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
     };
 
     const result = await mp.preference.create({ body: preferenceBody });
+
+    // Registrar la transacción (best-effort) para "Mis compras" / "Mis reservas".
+    // No bloquea el cobro si la base falla.
+    try {
+      await initDB();
+      if (Transaccion) {
+        const b = req.body || {};
+        await Transaccion.create({
+          usuario: getUserIdOptional(req),
+          tipo: b.tipo === 'clase' ? 'clase' : 'servicio',
+          referencia: referencia ? String(referencia) : String(result.id),
+          titulo: String(titulo),
+          descripcion: descripcion ? String(descripcion) : '',
+          categoria: b.categoria ? String(b.categoria) : '',
+          precio: unitPrice * quantity,
+          estado: 'pendiente',
+          preferenceId: result.id,
+          servicioId: Number.isFinite(Number(b.servicioId)) ? Number(b.servicioId) : null,
+          profesorId: Number.isFinite(Number(b.profesorId)) ? Number(b.profesorId) : null,
+          fecha: b.fecha ? String(b.fecha) : '',
+          hora: b.hora ? String(b.hora) : ''
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo registrar la transacción:', e.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -777,9 +896,22 @@ app.post('/api/pagos/webhook', async (req, res) => {
           external_reference: payment.external_reference,
           amount: payment.transaction_amount
         });
-        // TODO (persistencia): cuando exista la tabla de pagos/reservas, aquí se
-        // debe actualizar el registro identificado por external_reference según
-        // payment.status (approved / rejected / pending) de forma idempotente.
+
+        // Actualizar la transacción por external_reference de forma idempotente.
+        try {
+          await initDB();
+          if (Transaccion && payment.external_reference) {
+            const nuevoEstado = payment.status === 'approved' ? 'aprobado'
+              : payment.status === 'rejected' ? 'rechazado'
+              : 'pendiente';
+            await Transaccion.update(
+              { estado: nuevoEstado, paymentId: String(payment.id) },
+              { where: { referencia: String(payment.external_reference) } }
+            );
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudo actualizar la transacción desde el webhook:', e.message);
+        }
       }
     }
 
