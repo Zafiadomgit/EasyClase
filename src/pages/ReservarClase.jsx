@@ -63,19 +63,20 @@ const ReservarClase = () => {
   const cargarInformacionClase = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/clases/reservar.php?id=${id}`)
+      // El :id de la ruta es el id del profesor. Se obtiene del backend real.
+      const response = await fetch(`/api/profesores/${id}`)
       const data = await response.json()
+      const profesor = data.data?.profesor || data.profesor
 
-      if (data.success) {
-        setClase(data.data.clase)
-        console.log('Datos de clase cargados:', data.data.clase)
-        console.log('Nombre del profesor:', data.data.clase.profesor.nombre)
+      if (data.success && profesor) {
+        // La UI consume la forma { profesor: {...} }.
+        setClase({ profesor })
       } else {
-        setError('Error al cargar la información de la clase')
+        setError('Error al cargar la información del profesor')
       }
     } catch (error) {
       console.error('Error:', error)
-      setError('Error al cargar la información de la clase')
+      setError('Error al cargar la información del profesor')
     } finally {
       setLoading(false)
     }
@@ -83,15 +84,11 @@ const ReservarClase = () => {
 
   const cargarInformacionServicio = async () => {
     try {
-      const response = await fetch(`/api/servicios/detalle.php?id=${servicioId}`)
+      const response = await fetch(`/api/servicios/${servicioId}`)
       const data = await response.json()
-
-      if (data.success) {
-        setServicio(data.data.servicio)
-        // Si el servicio permite ambos tipos, no establecer uno por defecto
-        if (data.data.servicio.tipo && data.data.servicio.tipo !== 'ambos') {
-          setTipoAgenda(data.data.servicio.tipo)
-        }
+      const s = data.data?.servicio || data.servicio
+      if (data.success && s) {
+        setServicio(s)
       }
     } catch (error) {
       console.error('Error al cargar servicio:', error)
@@ -165,89 +162,64 @@ const ReservarClase = () => {
 
     try {
       setReservando(true)
-      const response = await fetch('/api/clases/reservar.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          profesorId: id,
-          fecha: fechaSeleccionada,
-          hora: horaSeleccionada,
-          tipoAgenda: tipoAgenda
-        })
-      })
 
-      const data = await response.json()
-
-      if (data.success) {
-        // Redirigir al sistema de pagos en lugar de reservar directamente
-        let precioPorHora = 0
-        if (servicio) {
-          // Usar precios del servicio según el tipo seleccionado
-          if (tipoAgenda === 'individual') {
-            precioPorHora = servicio.precioIndividual || servicio.precio || 10
-          } else if (tipoAgenda === 'grupal') {
-            precioPorHora = servicio.precioGrupal || servicio.precio || 10
-          }
-        } else {
-          // Fallback para clases sin servicio específico
-          precioPorHora = tipoAgenda === 'individual' ? clase?.profesor?.precioHora : Math.round((clase?.profesor?.precioHora || 10) * 0.7)
-        }
-
-        // Asegurar precio mínimo de $10 COP para pruebas
-        precioPorHora = Math.max(precioPorHora, 10)
-
-        const duracionHoras = cantidadHoras // Usar la cantidad de horas seleccionada por el estudiante
-        const precioTotal = precioPorHora * duracionHoras
-
-        const reservaData = {
-          claseId: id,
-          profesorId: clase?.profesor?.id || id,
-          servicioId: servicioId,
-          fecha: fechaSeleccionada,
-          hora: horaSeleccionada,
-          tipoAgenda: tipoAgenda,
-          duracionHoras: duracionHoras,
-          precioPorHora: precioPorHora,
-          precio: precioTotal,
-          profesorNombre: clase?.profesor?.nombre || 'Profesor Especializado',
-          servicioTitulo: servicio?.titulo || 'Clase General',
-          servicioCategoria: servicio?.categoria || 'General'
-        }
-
-        // Guardar datos de reserva en localStorage para el pago
-        console.log('Guardando reserva en localStorage:', reservaData)
-        localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
-        console.log('Reserva guardada, verificando:', localStorage.getItem('reservaPendiente'))
-
-        // También guardar en localStorage del estudiante para "Mis Clases"
-        const claseEstudiante = {
-          id: `clase_estudiante_${Date.now()}`,
-          titulo: servicio?.titulo || 'Clase General',
-          profesor: {
-            nombre: clase?.profesor?.nombre || 'Profesor Especializado',
-            email: clase?.profesor?.email || 'profesor@easyclase.com'
-          },
-          fecha: fechaSeleccionada,
-          hora: horaSeleccionada,
-          duracion: duracionHoras,
-          tipo: tipoAgenda,
-          precio: precioTotal,
-          estado: 'pendiente_aprobacion',
-          fechaReserva: new Date().toISOString(),
-          linkLlamada: null // Se asignará cuando el profesor acepte
-        }
-
-        const clasesExistentes = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
-        clasesExistentes.push(claseEstudiante)
-        localStorage.setItem('misClasesEstudiante', JSON.stringify(clasesExistentes))
-
-        // Redirigir a la página de pago
-        navigate('/pago')
+      // Calcular el precio por hora según el tipo elegido.
+      let precioPorHora = 0
+      if (servicio) {
+        precioPorHora = servicio.precio || 10
       } else {
-        alert('Error al procesar la reserva: ' + data.message)
+        precioPorHora = tipoAgenda === 'individual'
+          ? clase?.profesor?.precioHora
+          : Math.round((clase?.profesor?.precioHora || 10) * 0.7)
       }
+      // Precio mínimo de $10 para pruebas de sandbox.
+      precioPorHora = Math.max(precioPorHora, 10)
+
+      const duracionHoras = cantidadHoras
+      const precioTotal = precioPorHora * duracionHoras
+
+      const reservaData = {
+        claseId: id,
+        profesorId: clase?.profesor?.id || id,
+        servicioId: servicioId,
+        fecha: fechaSeleccionada,
+        hora: horaSeleccionada,
+        tipoAgenda: tipoAgenda,
+        duracionHoras: duracionHoras,
+        precioPorHora: precioPorHora,
+        precio: precioTotal,
+        titulo: servicio?.titulo || `Clase con ${clase?.profesor?.nombre || 'profesor'}`,
+        profesorNombre: clase?.profesor?.nombre || 'Profesor Especializado',
+        servicioTitulo: servicio?.titulo || 'Clase General',
+        servicioCategoria: servicio?.categoria || 'General'
+      }
+
+      // Guardar la reserva pendiente para la página de pago (Checkout Pro).
+      localStorage.setItem('reservaPendiente', JSON.stringify(reservaData))
+
+      // Registrar la clase en "Mis Clases" del estudiante (vista local).
+      const claseEstudiante = {
+        id: `clase_estudiante_${Date.now()}`,
+        titulo: servicio?.titulo || 'Clase General',
+        profesor: {
+          nombre: clase?.profesor?.nombre || 'Profesor Especializado',
+          email: clase?.profesor?.email || 'profesor@easyclase.com'
+        },
+        fecha: fechaSeleccionada,
+        hora: horaSeleccionada,
+        duracion: duracionHoras,
+        tipo: tipoAgenda,
+        precio: precioTotal,
+        estado: 'pendiente_pago',
+        fechaReserva: new Date().toISOString(),
+        linkLlamada: null
+      }
+      const clasesExistentes = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
+      clasesExistentes.push(claseEstudiante)
+      localStorage.setItem('misClasesEstudiante', JSON.stringify(clasesExistentes))
+
+      // Ir a la página de pago.
+      navigate('/pago')
     } catch (error) {
       console.error('Error:', error)
       alert('Error al reservar la clase')
