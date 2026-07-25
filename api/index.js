@@ -34,7 +34,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -182,6 +182,17 @@ const initDB = async () => {
       respuesta: { type: DataTypes.TEXT, defaultValue: '' }
     }, { tableName: 'reviews', timestamps: true, indexes: [{ fields: ['profesorId'] }, { fields: ['autor'] }] });
 
+    // Solicitudes de retiro de dinero de los profesores.
+    Retiro = sequelize.define('Retiro', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      profesor: { type: DataTypes.INTEGER, allowNull: false },
+      monto: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+      comision: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+      montoNeto: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+      estado: { type: DataTypes.STRING(20), defaultValue: 'pendiente' }, // pendiente|aprobado|pagado|rechazado
+      datosPago: { type: DataTypes.JSON, defaultValue: {} }
+    }, { tableName: 'retiros', timestamps: true, indexes: [{ fields: ['profesor'] }, { fields: ['estado'] }] });
+
     await sequelize.authenticate();
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
     await User.sync({ alter: true });
@@ -190,6 +201,7 @@ const initDB = async () => {
     await Plantilla.sync({ alter: true });
     await Disponibilidad.sync({ alter: true });
     await Review.sync({ alter: true });
+    await Retiro.sync({ alter: true });
     await seedProfesores();
     await seedServicios();
     await seedAdmin();
@@ -648,6 +660,73 @@ app.get('/api/profesores/categorias', async (req, res) => {
 });
 
 // Perfil de un profesor
+// Comisión de la plataforma según si el profesor es premium.
+const comisionProfesor = (u) => (u?.premium ? 0.15 : 0.20);
+
+// Calcula el balance disponible para retiro de un profesor.
+const calcularBalance = async (prof) => {
+  const claseGross = (await Transaccion.sum('precio', { where: { profesorId: prof.id, tipo: 'clase', estado: 'aprobado' } })) || 0;
+  const misServicios = await Servicio.findAll({ where: { proveedor: prof.id }, attributes: ['id'] });
+  const ids = misServicios.map(s => s.id);
+  const servicioGross = ids.length ? ((await Transaccion.sum('precio', { where: { servicioId: ids, tipo: 'servicio', estado: 'aprobado' } })) || 0) : 0;
+  const bruto = Number(claseGross) + Number(servicioGross);
+  const comision = comisionProfesor(prof);
+  const neto = bruto * (1 - comision);
+  const retirado = (await Retiro.sum('monto', { where: { profesor: prof.id, estado: ['pendiente', 'aprobado', 'pagado'] } })) || 0;
+  return { bruto, comision, disponible: Math.max(0, Math.round(neto - Number(retirado))) };
+};
+
+// Balance disponible del profesor (antes de /profesores/:id).
+app.get('/api/profesores/balance', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const prof = await User.findByPk(req.userId);
+    if (!prof) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    const { comision, disponible, bruto } = await calcularBalance(prof);
+    res.json({ success: true, data: { balanceDisponible: disponible, comision, montoMinimoRetiro: 50000, totalGanado: Math.round(bruto) } });
+  } catch (e) {
+    console.error('Error calculando balance:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener el balance' });
+  }
+});
+
+// Solicitar un retiro (queda pendiente hasta que el admin lo procese).
+app.post('/api/profesores/retirar', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const prof = await User.findByPk(req.userId);
+    if (!prof) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    const monto = Number(req.body?.monto);
+    const { comision, disponible } = await calcularBalance(prof);
+    if (!Number.isFinite(monto) || monto <= 0) return res.status(400).json({ success: false, message: 'Monto inválido' });
+    if (monto > disponible) return res.status(400).json({ success: false, message: 'El monto supera tu balance disponible' });
+    const retiro = await Retiro.create({
+      profesor: prof.id,
+      monto,
+      comision: Math.round(monto * comision),
+      montoNeto: Math.round(monto * (1 - comision)),
+      estado: 'pendiente',
+      datosPago: req.body?.datosPago && typeof req.body.datosPago === 'object' ? req.body.datosPago : {}
+    });
+    res.status(201).json({ success: true, message: 'Solicitud de retiro enviada', data: { retiro: retiro.toJSON() } });
+  } catch (e) {
+    console.error('Error creando retiro:', e);
+    res.status(500).json({ success: false, message: 'Error al solicitar el retiro' });
+  }
+});
+
+// Retiros del profesor autenticado.
+app.get('/api/profesores/retiros', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const retiros = await Retiro.findAll({ where: { profesor: req.userId }, order: [['createdAt', 'DESC']] });
+    res.json({ success: true, data: { retiros: retiros.map(r => r.toJSON()) } });
+  } catch (e) {
+    console.error('Error obteniendo retiros:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener los retiros' });
+  }
+});
+
 app.get('/api/profesores/:id', async (req, res) => {
   try {
     if (!(await requireDB(res))) return;
@@ -1391,6 +1470,39 @@ app.get('/api/admin/clases', adminMiddleware, async (req, res) => {
   } catch (e) {
     console.error('Error en admin clases:', e);
     res.status(500).json({ success: false, message: 'Error al obtener clases' });
+  }
+});
+
+// Lista de solicitudes de retiro (admin).
+app.get('/api/admin/retiros', adminMiddleware, async (req, res) => {
+  try {
+    const [retiros, nombres] = await Promise.all([
+      Retiro.findAll({ order: [['createdAt', 'DESC']] }),
+      nombreMapUsuarios()
+    ]);
+    const data = retiros.map(r => {
+      const j = r.toJSON();
+      return { ...j, profesorNombre: nombres[j.profesor] || 'Profesor' };
+    });
+    res.json({ success: true, data: { retiros: data }, retiros: data });
+  } catch (e) {
+    console.error('Error en admin retiros:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener los retiros' });
+  }
+});
+
+// Actualizar el estado de un retiro (aprobar / pagar / rechazar).
+app.put('/api/admin/retiros/:id/estado', adminMiddleware, async (req, res) => {
+  try {
+    const r = await Retiro.findByPk(req.params.id);
+    if (!r) return res.status(404).json({ success: false, message: 'Retiro no encontrado' });
+    const estados = ['pendiente', 'aprobado', 'pagado', 'rechazado'];
+    const estado = estados.includes(req.body?.estado) ? req.body.estado : r.estado;
+    await r.update({ estado });
+    res.json({ success: true, message: 'Retiro actualizado', data: { retiro: r.toJSON() } });
+  } catch (e) {
+    console.error('Error actualizando retiro:', e);
+    res.status(500).json({ success: false, message: 'Error al actualizar el retiro' });
   }
 });
 

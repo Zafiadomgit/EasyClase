@@ -260,16 +260,18 @@ const Dashboard = () => {
       setLoadingRetiro(true)
       setShowRetiroModal(false)
 
-      // Crear el retiro
+      // Solicitar el retiro (queda pendiente hasta que el admin lo procese).
       const response = await profesorService.crearRetiro(montoRetiro)
 
-      if (response.success && response.data.init_point) {
-        // Redirigir a MercadoPago
-        window.open(response.data.init_point, '_blank')
-
-        setMensajeExito('Retiro iniciado correctamente. Completa el proceso en MercadoPago.')
+      if (response.success) {
+        setMensajeExito('Solicitud de retiro enviada. Un administrador la procesará pronto.')
+        // Refrescar el balance disponible.
+        try {
+          const balanceResponse = await profesorService.obtenerBalance()
+          setBalanceDisponible(balanceResponse.data?.balanceDisponible || 0)
+        } catch (e) { /* noop */ }
       } else {
-        throw new Error('Error al crear el retiro')
+        throw new Error(response.message || 'Error al crear el retiro')
       }
     } catch (error) {
       setError('Error al procesar el retiro. Intenta nuevamente.')
@@ -747,7 +749,7 @@ const Dashboard = () => {
                   </div>
 
                   <p className="text-sm text-secondary-600 mb-6">
-                    Serás redirigido a MercadoPago para completar el retiro de forma segura.
+                    Se enviará una solicitud de retiro. Un administrador la revisará y realizará el pago a tu cuenta.
                   </p>
 
                   <div className="flex space-x-3">
