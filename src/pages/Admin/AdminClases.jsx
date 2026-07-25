@@ -62,10 +62,19 @@ const AdminClases = () => {
       }
     ]
     
-    setTimeout(() => {
-      setClases(clasesEjemplo)
-      setLoading(false)
-    }, 1000)
+    ;(async () => {
+      try {
+        const response = await fetch('/api/admin/clases', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const data = await response.json()
+        setClases(data.success ? (data.data?.clases || data.clases || []) : clasesEjemplo)
+      } catch {
+        setClases(clasesEjemplo)
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
   const filteredClases = clases.filter(clase => {

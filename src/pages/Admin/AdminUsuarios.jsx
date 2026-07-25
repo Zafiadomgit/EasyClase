@@ -43,10 +43,19 @@ const AdminUsuarios = () => {
       }
     ]
     
-    setTimeout(() => {
-      setUsuarios(usuariosEjemplo)
-      setLoading(false)
-    }, 1000)
+    ;(async () => {
+      try {
+        const response = await fetch('/api/admin/users', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const data = await response.json()
+        setUsuarios(data.success ? (data.data?.usuarios || data.usuarios || []) : usuariosEjemplo)
+      } catch {
+        setUsuarios(usuariosEjemplo)
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
   const filteredUsuarios = usuarios.filter(usuario => {

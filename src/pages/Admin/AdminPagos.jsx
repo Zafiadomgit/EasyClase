@@ -45,10 +45,19 @@ const AdminPagos = () => {
       }
     ]
     
-    setTimeout(() => {
-      setPagos(pagosEjemplo)
-      setLoading(false)
-    }, 1000)
+    ;(async () => {
+      try {
+        const response = await fetch('/api/admin/payments', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const data = await response.json()
+        setPagos(data.success ? (data.data?.pagos || data.pagos || []) : pagosEjemplo)
+      } catch {
+        setPagos(pagosEjemplo)
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
   const filteredPagos = pagos.filter(pago => {

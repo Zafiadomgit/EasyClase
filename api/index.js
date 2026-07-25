@@ -176,6 +176,7 @@ const initDB = async () => {
     await Disponibilidad.sync({ alter: true });
     await seedProfesores();
     await seedServicios();
+    await seedAdmin();
     dbReady = true;
     console.log('✅ Supabase PostgreSQL conectado');
   } catch (e) {
@@ -226,6 +227,27 @@ const seedServicios = async () => {
     console.log('🌱 Servicios demo creados');
   } catch (e) {
     console.warn('⚠️ Seed servicios omitido:', e.message);
+  }
+};
+
+// Asegura un usuario administrador a partir de variables de entorno, sin dejar
+// credenciales en el código (el repo es público). Configurar ADMIN_EMAIL y
+// ADMIN_PASSWORD en Vercel y redeployar para poder entrar al panel admin.
+const seedAdmin = async () => {
+  try {
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+    if (!email || !password) return; // sin credenciales configuradas no se crea admin
+    const hashed = await bcrypt.hash(password, 10);
+    const existing = await User.findOne({ where: { email } });
+    if (existing) {
+      await existing.update({ tipoUsuario: 'admin', password: hashed, activo: true });
+    } else {
+      await User.create({ nombre: 'Administrador', email, password: hashed, tipoUsuario: 'admin', activo: true });
+    }
+    console.log('🛡️ Usuario admin asegurado:', email);
+  } catch (e) {
+    console.warn('⚠️ Seed admin omitido:', e.message);
   }
 };
 
@@ -307,6 +329,25 @@ const getUserIdOptional = (req) => {
     return jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod').userId;
   } catch {
     return null;
+  }
+};
+
+// Middleware de administrador: exige token válido Y que el usuario sea admin.
+const adminMiddleware = async (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ success: false, message: 'Token requerido' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod');
+    await initDB();
+    if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+    const user = await User.findByPk(decoded.userId);
+    if (!user || !['admin', 'superadmin'].includes(user.tipoUsuario)) {
+      return res.status(403).json({ success: false, message: 'Acceso solo para administradores' });
+    }
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    res.status(401).json({ success: false, message: 'Token inválido' });
   }
 };
 
@@ -1025,6 +1066,165 @@ app.get('/api/pagos/:id', async (req, res) => {
       message: 'No se pudo consultar el estado del pago.',
       error: error?.message
     });
+  }
+});
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+const mapEstadoPago = (e) => e === 'aprobado' ? 'completado' : e === 'rechazado' ? 'fallido' : 'pendiente';
+
+// Mapa userId -> nombre para resolver comprador/profesor en listados.
+const nombreMapUsuarios = async () => {
+  const map = {};
+  const users = await User.findAll({ attributes: ['id', 'nombre'] });
+  users.forEach(u => { map[u.id] = u.nombre; });
+  return map;
+};
+
+// Dashboard: métricas generales + top profesores.
+app.get('/api/admin/dashboard', adminMiddleware, async (req, res) => {
+  try {
+    const inicioMes = new Date();
+    inicioMes.setDate(1); inicioMes.setHours(0, 0, 0, 0);
+
+    const [totalUsers, totalTeachers, totalClasses, totalRevenue, newUsersThisMonth] = await Promise.all([
+      User.count(),
+      User.count({ where: { tipoUsuario: 'profesor' } }),
+      Transaccion.count(),
+      Transaccion.sum('precio', { where: { estado: 'aprobado' } }),
+      User.count({ where: { createdAt: { [Sequelize.Op.gte]: inicioMes } } })
+    ]);
+
+    const profes = await User.findAll({
+      where: { tipoUsuario: 'profesor' },
+      order: [['totalClases', 'DESC']],
+      limit: 5
+    });
+    const topTeachers = profes.map(p => {
+      const j = p.toJSON();
+      return {
+        _id: String(j.id),
+        nombre: j.nombre,
+        email: j.email,
+        totalClases: j.totalClases || 0,
+        totalIngresos: Math.round((Number(j.precioPorHora) || 0) * (j.totalClases || 0)),
+        calificacion: Number(j.calificacionPromedio) || 0
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalUsers,
+          totalTeachers,
+          totalClasses,
+          totalRevenue: Number(totalRevenue) || 0,
+          newUsersThisMonth,
+          pendingDisputes: 0
+        },
+        topTeachers
+      }
+    });
+  } catch (e) {
+    console.error('Error en admin dashboard:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener el dashboard' });
+  }
+});
+
+// Lista de usuarios.
+app.get('/api/admin/users', adminMiddleware, async (req, res) => {
+  try {
+    const users = await User.findAll({ order: [['createdAt', 'DESC']] });
+    const usuarios = users.map(u => {
+      const j = u.toJSON();
+      return {
+        id: j.id,
+        nombre: j.nombre,
+        email: j.email,
+        tipoUsuario: j.tipoUsuario,
+        fechaRegistro: j.createdAt,
+        estado: j.activo === false ? 'bloqueado' : 'activo',
+        ultimoAcceso: j.updatedAt,
+        premium: !!j.premium,
+        clasesImpartidas: j.totalClases || 0,
+        clasesTomadas: 0
+      };
+    });
+    res.json({ success: true, data: { usuarios }, usuarios });
+  } catch (e) {
+    console.error('Error en admin users:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener usuarios' });
+  }
+});
+
+// Bloquear / desbloquear usuario.
+app.put('/api/admin/users/:id/estado', adminMiddleware, async (req, res) => {
+  try {
+    const u = await User.findByPk(req.params.id);
+    if (!u) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    const activo = req.body?.activo !== false && req.body?.estado !== 'bloqueado';
+    await u.update({ activo });
+    res.json({ success: true, message: activo ? 'Usuario activado' : 'Usuario bloqueado' });
+  } catch (e) {
+    console.error('Error cambiando estado de usuario:', e);
+    res.status(500).json({ success: false, message: 'Error al actualizar el usuario' });
+  }
+});
+
+// Lista de pagos (transacciones).
+app.get('/api/admin/payments', adminMiddleware, async (req, res) => {
+  try {
+    const [txs, nombres] = await Promise.all([
+      Transaccion.findAll({ order: [['createdAt', 'DESC']] }),
+      nombreMapUsuarios()
+    ]);
+    const pagos = txs.map(t => {
+      const j = t.toJSON();
+      return {
+        id: j.id,
+        estudiante: nombres[j.usuario] || 'Usuario',
+        profesor: nombres[j.profesorId] || (j.tipo === 'servicio' ? 'Servicio' : '—'),
+        clase: j.titulo,
+        monto: Number(j.precio) || 0,
+        fecha: j.createdAt,
+        estado: mapEstadoPago(j.estado),
+        metodo: 'mercadopago',
+        transactionId: j.paymentId || j.preferenceId || String(j.id)
+      };
+    });
+    res.json({ success: true, data: { pagos }, pagos });
+  } catch (e) {
+    console.error('Error en admin payments:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener pagos' });
+  }
+});
+
+// Lista de clases/reservas.
+app.get('/api/admin/clases', adminMiddleware, async (req, res) => {
+  try {
+    const [txs, nombres] = await Promise.all([
+      Transaccion.findAll({ where: { tipo: 'clase' }, order: [['createdAt', 'DESC']] }),
+      nombreMapUsuarios()
+    ]);
+    const clases = txs.map(t => {
+      const j = t.toJSON();
+      return {
+        id: j.id,
+        estudiante: nombres[j.usuario] || 'Usuario',
+        profesor: nombres[j.profesorId] || '—',
+        materia: j.titulo,
+        fecha: j.fecha || j.createdAt,
+        hora: j.hora || '—',
+        duracion: 1,
+        precio: Number(j.precio) || 0,
+        estado: j.estado === 'aprobado' ? 'confirmada' : j.estado === 'rechazado' ? 'cancelada' : 'pendiente',
+        modalidad: 'online'
+      };
+    });
+    res.json({ success: true, data: { clases }, clases });
+  } catch (e) {
+    console.error('Error en admin clases:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener clases' });
   }
 });
 
