@@ -76,7 +76,7 @@ class TwoFactorAuthService {
   // Guardar configuración 2FA en base de datos real
   static async save2FAConfig(userId, secret, backupCodes) {
     try {
-      const response = await fetch('/api/admin/2fa-real.php', {
+      const response = await fetch('/api/2fa', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ class TwoFactorAuthService {
   // Obtener configuración 2FA desde base de datos
   static async get2FAConfig() {
     try {
-      const response = await fetch('/api/admin/2fa-real.php', {
+      const response = await fetch('/api/2fa', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`
@@ -173,7 +173,7 @@ class TwoFactorAuthService {
   // Deshabilitar 2FA
   static async disable2FA() {
     try {
-      const response = await fetch('/api/admin/2fa-real.php', {
+      const response = await fetch('/api/2fa', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`

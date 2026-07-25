@@ -90,7 +90,11 @@ const initDB = async () => {
       ubicacion: { type: DataTypes.STRING(120), defaultValue: '' },
       premium: { type: DataTypes.BOOLEAN, defaultValue: false },
       avatarUrl: { type: DataTypes.STRING(400), defaultValue: '' },
-      profesorVisible: { type: DataTypes.BOOLEAN, defaultValue: true }
+      profesorVisible: { type: DataTypes.BOOLEAN, defaultValue: true },
+      // ── 2FA (TOTP) ───────────────────────────────────────────────
+      twofaSecret: { type: DataTypes.STRING(64), defaultValue: '' },
+      twofaEnabled: { type: DataTypes.BOOLEAN, defaultValue: false },
+      twofaBackupCodes: { type: DataTypes.JSON, defaultValue: [] }
     }, { tableName: 'users', timestamps: true });
 
     // Servicios ofrecidos por los profesores (cursos, asesorías, consultorías).
@@ -521,6 +525,57 @@ app.get('/api/auth/preferencias', authMiddleware, async (req, res) => {
     res.json({ success: true, data: user.preferencias || {} });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Error' });
+  }
+});
+
+// ─── 2FA (persistencia de la config por usuario) ─────────────────────────────
+// La generación/verificación TOTP ocurre en el cliente; aquí solo se guarda el
+// secreto y los códigos de respaldo asociados al usuario.
+app.get('/api/2fa', authMiddleware, async (req, res) => {
+  try {
+    await initDB();
+    if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+    const u = await User.findByPk(req.userId);
+    if (!u) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    if (!u.twofaEnabled) return res.json({ success: true, enabled: false, config: null });
+    res.json({
+      success: true,
+      enabled: true,
+      config: { secret: u.twofaSecret, backupCodes: u.twofaBackupCodes || [], createdAt: u.updatedAt }
+    });
+  } catch (e) {
+    console.error('Error obteniendo 2FA:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener la configuración 2FA' });
+  }
+});
+
+app.post('/api/2fa', authMiddleware, async (req, res) => {
+  try {
+    await initDB();
+    if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+    const u = await User.findByPk(req.userId);
+    if (!u) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    const { secret, backupCodes } = req.body || {};
+    if (!secret) return res.status(400).json({ success: false, message: 'Secreto requerido' });
+    await u.update({ twofaSecret: String(secret), twofaBackupCodes: Array.isArray(backupCodes) ? backupCodes : [], twofaEnabled: true });
+    res.json({ success: true, message: '2FA activado' });
+  } catch (e) {
+    console.error('Error guardando 2FA:', e);
+    res.status(500).json({ success: false, message: 'Error al guardar la configuración 2FA' });
+  }
+});
+
+app.delete('/api/2fa', authMiddleware, async (req, res) => {
+  try {
+    await initDB();
+    if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+    const u = await User.findByPk(req.userId);
+    if (!u) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    await u.update({ twofaSecret: '', twofaBackupCodes: [], twofaEnabled: false });
+    res.json({ success: true, message: '2FA desactivado' });
+  } catch (e) {
+    console.error('Error deshabilitando 2FA:', e);
+    res.status(500).json({ success: false, message: 'Error al desactivar 2FA' });
   }
 });
 

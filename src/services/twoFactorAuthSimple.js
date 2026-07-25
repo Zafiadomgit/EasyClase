@@ -58,7 +58,7 @@ class TwoFactorAuthServiceSimple {
 
       // Intentar guardar en base de datos
       try {
-        const response = await fetch('/api/admin/2fa-real.php', {
+        const response = await fetch('/api/2fa', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ class TwoFactorAuthServiceSimple {
     try {
       // Intentar obtener de base de datos
       try {
-        const response = await fetch('/api/admin/2fa-real.php', {
+        const response = await fetch('/api/2fa', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`
@@ -142,7 +142,7 @@ class TwoFactorAuthServiceSimple {
     try {
       // Intentar deshabilitar en base de datos
       try {
-        const response = await fetch('/api/admin/2fa-real.php', {
+        const response = await fetch('/api/2fa', {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`
