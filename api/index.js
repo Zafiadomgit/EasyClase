@@ -34,7 +34,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -167,6 +167,17 @@ const initDB = async () => {
       disponible: { type: DataTypes.BOOLEAN, defaultValue: true }
     }, { tableName: 'disponibilidades', timestamps: true, indexes: [{ fields: ['profesor'] }] });
 
+    // Reseñas de estudiantes sobre profesores.
+    Review = sequelize.define('Review', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      autor: { type: DataTypes.INTEGER, allowNull: false },       // estudiante
+      autorNombre: { type: DataTypes.STRING(100), defaultValue: '' },
+      profesorId: { type: DataTypes.INTEGER, allowNull: false },
+      calificacion: { type: DataTypes.INTEGER, defaultValue: 5 },
+      comentario: { type: DataTypes.TEXT, defaultValue: '' },
+      respuesta: { type: DataTypes.TEXT, defaultValue: '' }
+    }, { tableName: 'reviews', timestamps: true, indexes: [{ fields: ['profesorId'] }, { fields: ['autor'] }] });
+
     await sequelize.authenticate();
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
     await User.sync({ alter: true });
@@ -174,6 +185,7 @@ const initDB = async () => {
     await Transaccion.sync({ alter: true });
     await Plantilla.sync({ alter: true });
     await Disponibilidad.sync({ alter: true });
+    await Review.sync({ alter: true });
     await seedProfesores();
     await seedServicios();
     await seedAdmin();
@@ -589,10 +601,109 @@ app.get('/api/profesores/:id', async (req, res) => {
     });
     if (!profe) return res.status(404).json({ success: false, message: 'Profesor no encontrado' });
     const profesor = shapeProfesor(profe);
+    // Adjuntar reseñas reales del profesor.
+    try {
+      const reviews = await Review.findAll({ where: { profesorId: profe.id }, order: [['createdAt', 'DESC']] });
+      profesor.reseñas = reviews.map(shapeReview);
+    } catch { profesor.reseñas = []; }
     res.json({ success: true, data: { profesor }, profesor });
   } catch (e) {
     console.error('Error obteniendo profesor:', e);
     res.status(500).json({ success: false, message: 'Error al obtener el profesor' });
+  }
+});
+
+// ─── Reseñas ─────────────────────────────────────────────────────────────────
+const shapeReview = (r) => {
+  const j = r.toJSON ? r.toJSON() : r;
+  return {
+    id: j.id,
+    estudiante: j.autorNombre || 'Estudiante',
+    calificacion: j.calificacion || 5,
+    comentario: j.comentario || '',
+    respuesta: j.respuesta || '',
+    fecha: j.createdAt ? new Date(j.createdAt).toLocaleDateString('es-ES') : ''
+  };
+};
+
+// Recalcula el promedio y total de reseñas del profesor.
+const recomputarRatingProfesor = async (profesorId) => {
+  const reviews = await Review.findAll({ where: { profesorId } });
+  const total = reviews.length;
+  const prom = total ? reviews.reduce((a, r) => a + (r.calificacion || 0), 0) / total : 0;
+  await User.update(
+    { calificacionPromedio: Math.round(prom * 100) / 100, totalReviews: total },
+    { where: { id: profesorId } }
+  );
+};
+
+// Reseñas de un profesor (antes de /reviews/:id...).
+app.get('/api/reviews/profesor/:id', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const reviews = await Review.findAll({ where: { profesorId: req.params.id }, order: [['createdAt', 'DESC']] });
+    const data = reviews.map(shapeReview);
+    res.json({ success: true, data: { reviews: data }, reviews: data });
+  } catch (e) {
+    console.error('Error obteniendo reseñas:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener las reseñas' });
+  }
+});
+
+// Reseñas escritas por el estudiante autenticado.
+app.get('/api/reviews/mis-reviews', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const reviews = await Review.findAll({ where: { autor: req.userId }, order: [['createdAt', 'DESC']] });
+    const data = reviews.map(shapeReview);
+    res.json({ success: true, data: { reviews: data }, reviews: data });
+  } catch (e) {
+    console.error('Error obteniendo mis reseñas:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus reseñas' });
+  }
+});
+
+// Crear una reseña sobre un profesor.
+app.post('/api/reviews', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const b = req.body || {};
+    const profesorId = Number(b.profesorId);
+    const calificacion = Number(b.calificacion);
+    if (!Number.isFinite(profesorId)) {
+      return res.status(400).json({ success: false, message: 'Profesor inválido' });
+    }
+    if (!Number.isFinite(calificacion) || calificacion < 1 || calificacion > 5) {
+      return res.status(400).json({ success: false, message: 'La calificación debe estar entre 1 y 5' });
+    }
+    const autorUser = await User.findByPk(req.userId);
+    const nueva = await Review.create({
+      autor: req.userId,
+      autorNombre: autorUser?.nombre || 'Estudiante',
+      profesorId,
+      calificacion: Math.round(calificacion),
+      comentario: b.comentario ? String(b.comentario) : ''
+    });
+    await recomputarRatingProfesor(profesorId);
+    res.status(201).json({ success: true, message: 'Reseña publicada', data: { review: shapeReview(nueva) } });
+  } catch (e) {
+    console.error('Error creando reseña:', e);
+    res.status(500).json({ success: false, message: 'Error al publicar la reseña' });
+  }
+});
+
+// Responder a una reseña (el profesor dueño).
+app.put('/api/reviews/:id/responder', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const r = await Review.findByPk(req.params.id);
+    if (!r) return res.status(404).json({ success: false, message: 'Reseña no encontrada' });
+    if (r.profesorId !== req.userId) return res.status(403).json({ success: false, message: 'No autorizado' });
+    await r.update({ respuesta: req.body?.comentario ? String(req.body.comentario) : '' });
+    res.json({ success: true, message: 'Respuesta guardada', data: { review: shapeReview(r) } });
+  } catch (e) {
+    console.error('Error respondiendo reseña:', e);
+    res.status(500).json({ success: false, message: 'Error al responder la reseña' });
   }
 });
 

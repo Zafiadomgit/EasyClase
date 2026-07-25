@@ -8,6 +8,10 @@ const PerfilProfesor = () => {
   const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [nuevaCalificacion, setNuevaCalificacion] = useState(5)
+  const [nuevoComentario, setNuevoComentario] = useState('')
+  const [enviandoReview, setEnviandoReview] = useState(false)
+  const [reviewMsg, setReviewMsg] = useState('')
 
   useEffect(() => {
     cargarPerfilProfesor()
@@ -41,6 +45,34 @@ const PerfilProfesor = () => {
 
   const reservarServicio = (servicioId) => {
     navigate(`/reservar/${id}?servicio=${servicioId}`)
+  }
+
+  const enviarResena = async (e) => {
+    e.preventDefault()
+    const token = localStorage.getItem('token')
+    if (!token) { setReviewMsg('Debes iniciar sesión para dejar una reseña'); return }
+    try {
+      setEnviandoReview(true)
+      setReviewMsg('')
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ profesorId: id, calificacion: nuevaCalificacion, comentario: nuevoComentario })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setNuevoComentario('')
+        setNuevaCalificacion(5)
+        setReviewMsg('¡Gracias por tu reseña!')
+        await cargarPerfilProfesor()
+      } else {
+        setReviewMsg(data.message || 'No se pudo publicar la reseña')
+      }
+    } catch (err) {
+      setReviewMsg('Error al publicar la reseña')
+    } finally {
+      setEnviandoReview(false)
+    }
   }
 
   if (loading) {
@@ -222,8 +254,47 @@ const PerfilProfesor = () => {
         {/* Reseñas */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Reseñas</h2>
+
+          {/* Formulario para dejar una reseña (usuarios logueados) */}
+          {localStorage.getItem('token') && (
+            <form onSubmit={enviarResena} className="mb-6 border-b pb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <label className="text-sm font-medium text-gray-700">Tu calificación:</label>
+                <select
+                  value={nuevaCalificacion}
+                  onChange={(e) => setNuevaCalificacion(Number(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-2 py-1"
+                >
+                  {[5, 4, 3, 2, 1].map(n => (
+                    <option key={n} value={n}>{'★'.repeat(n)} ({n})</option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                value={nuevoComentario}
+                onChange={(e) => setNuevoComentario(e.target.value)}
+                rows="3"
+                placeholder="Escribí tu experiencia con este profesor..."
+                className="w-full border border-gray-300 rounded-lg p-3 mb-3"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={enviandoReview}
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {enviandoReview ? 'Publicando...' : 'Publicar reseña'}
+                </button>
+                {reviewMsg && <span className="text-sm text-gray-600">{reviewMsg}</span>}
+              </div>
+            </form>
+          )}
+
             <div className="space-y-4">
-            {profesor.reseñas.map((reseña) => (
+            {(profesor.reseñas || []).length === 0 && (
+              <p className="text-gray-500 text-sm">Este profesor todavía no tiene reseñas.</p>
+            )}
+            {(profesor.reseñas || []).map((reseña) => (
               <div key={reseña.id} className="border-b pb-4 last:border-b-0">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-900">{reseña.estudiante}</span>
