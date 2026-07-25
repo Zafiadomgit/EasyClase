@@ -112,6 +112,8 @@ const initDB = async () => {
       urlVideo: { type: DataTypes.STRING(400), defaultValue: '' },
       requisitos: { type: DataTypes.TEXT, defaultValue: '' },
       objetivos: { type: DataTypes.TEXT, defaultValue: '' },
+      // Materiales del servicio como enlaces: [{ nombre, url }]
+      archivos: { type: DataTypes.JSON, defaultValue: [] },
       proveedor: { type: DataTypes.INTEGER, allowNull: false },
       estado: { type: DataTypes.STRING(20), defaultValue: 'activo' },
       premium: { type: DataTypes.BOOLEAN, defaultValue: false },
@@ -295,6 +297,7 @@ const shapeServicio = (s) => {
     urlVideo: j.urlVideo || '',
     requisitos: j.requisitos || '',
     objetivos: j.objetivos || '',
+    archivos: Array.isArray(j.archivos) ? j.archivos : [],
     estado: j.estado || 'activo',
     premium: !!j.premium, esPremium: !!j.premium,
     calificacionPromedio: Number(j.calificacionPromedio) || 0,
@@ -850,6 +853,11 @@ const CATEGORIAS_SERVICIOS = [
 ];
 const incluirProveedor = () => [{ model: User, as: 'proveedorUser', attributes: ['id', 'nombre'] }];
 
+// Normaliza la lista de materiales (enlaces) del servicio: [{ nombre, url }].
+const sanitizeArchivos = (arr) => Array.isArray(arr)
+  ? arr.filter(a => a && a.url).map(a => ({ nombre: String(a.nombre || 'Material'), url: String(a.url) })).slice(0, 30)
+  : [];
+
 // Categorías disponibles (lista fija). Debe ir antes de /servicios/:id.
 app.get('/api/servicios/categorias', (req, res) => {
   res.json({ success: true, data: { categorias: CATEGORIAS_SERVICIOS }, categorias: CATEGORIAS_SERVICIOS });
@@ -939,6 +947,7 @@ app.post('/api/servicios', authMiddleware, async (req, res) => {
       urlVideo: b.urlVideo || '',
       requisitos: b.requisitos || '',
       objetivos: b.objetivos || '',
+      archivos: sanitizeArchivos(b.archivos),
       proveedor: req.userId,
       estado: 'activo',
       disponible: true
@@ -964,6 +973,7 @@ app.put('/api/servicios/:id', authMiddleware, async (req, res) => {
     ['titulo', 'descripcion', 'categoria', 'tipo', 'modalidad', 'urlVideo', 'requisitos', 'objetivos', 'estado'].forEach(k => {
       if (b[k] !== undefined) updates[k] = b[k];
     });
+    if (b.archivos !== undefined) updates.archivos = sanitizeArchivos(b.archivos);
     if (b.precio !== undefined) {
       const precio = Number(b.precio);
       if (Number.isFinite(precio) && precio > 0) updates.precio = precio;
@@ -1130,15 +1140,25 @@ app.get('/api/compras-servicios/mis-compras', authMiddleware, async (req, res) =
       where: { usuario: req.userId, tipo: 'servicio' },
       order: [['createdAt', 'DESC']]
     });
+    // Traer los servicios comprados para adjuntar sus materiales.
+    const servicioIds = [...new Set(txs.map(t => t.servicioId).filter(Boolean))];
+    const servicios = servicioIds.length ? await Servicio.findAll({ where: { id: servicioIds } }) : [];
+    const servMap = {};
+    servicios.forEach(s => { servMap[s.id] = s.toJSON(); });
+
     const compras = txs.map(t => {
       const j = t.toJSON();
       const estado = j.estado === 'aprobado' ? 'pagado' : j.estado === 'rechazado' ? 'reembolsado' : 'pendiente';
+      const serv = servMap[j.servicioId];
+      // Solo se entregan los materiales si el pago está aprobado.
+      const archivos = (estado === 'pagado' && serv && Array.isArray(serv.archivos)) ? serv.archivos : [];
       return {
         id: j.id,
         estado,
         precio: Number(j.precio) || 0,
         createdAt: j.createdAt,
-        servicioInfo: { titulo: j.titulo, descripcion: j.descripcion || '' }
+        servicioInfo: { titulo: j.titulo, descripcion: j.descripcion || '' },
+        archivos
       };
     });
     res.json({ success: true, data: { compras }, compras });

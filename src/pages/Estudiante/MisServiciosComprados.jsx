@@ -178,37 +178,31 @@ const MisServiciosComprados = () => {
               {/* Contenido del servicio */}
               {compra.estado === 'pagado' && (
                 <div className="p-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Archivos disponibles:</h4>
-                  <div className="space-y-2">
-                    {/* Lista de archivos de ejemplo */}
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <Video className="w-4 h-4 text-blue-600 mr-2" />
-                        <span className="text-sm text-gray-700">video_introduccion.mp4</span>
-                      </div>
-                      <button
-                        onClick={() => descargarArchivo(compra.id, 1, 'video_introduccion.mp4')}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Descargar
-                      </button>
+                  <h4 className="font-medium text-gray-900 mb-3">Materiales disponibles:</h4>
+                  {(compra.archivos && compra.archivos.length > 0) ? (
+                    <div className="space-y-2">
+                      {compra.archivos.map((archivo, idx) => (
+                        <a
+                          key={idx}
+                          href={archivo.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100"
+                        >
+                          <div className="flex items-center">
+                            <FileText className="w-4 h-4 text-blue-600 mr-2" />
+                            <span className="text-sm text-gray-700">{archivo.nombre || 'Material'}</span>
+                          </div>
+                          <span className="text-blue-600 text-sm flex items-center">
+                            <Download className="w-4 h-4 mr-1" />
+                            Abrir
+                          </span>
+                        </a>
+                      ))}
                     </div>
-                    
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <FileText className="w-4 h-4 text-red-600 mr-2" />
-                        <span className="text-sm text-gray-700">presentacion.pdf</span>
-                      </div>
-                      <button
-                        onClick={() => descargarArchivo(compra.id, 2, 'presentacion.pdf')}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Descargar
-                      </button>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">El proveedor todavía no cargó materiales.</p>
+                  )}
                 </div>
               )}
 

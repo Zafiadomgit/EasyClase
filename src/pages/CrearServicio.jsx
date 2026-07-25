@@ -28,6 +28,14 @@ const CrearServicio = () => {
     modalidad: 'virtual' // virtual para servicios online
   })
 
+  // Materiales del servicio como enlaces { nombre, url }
+  const [materiales, setMateriales] = useState([{ nombre: '', url: '' }])
+  const actualizarMaterial = (i, campo, valor) => {
+    setMateriales(prev => prev.map((m, idx) => idx === i ? { ...m, [campo]: valor } : m))
+  }
+  const agregarMaterial = () => setMateriales(prev => [...prev, { nombre: '', url: '' }])
+  const quitarMaterial = (i) => setMateriales(prev => prev.filter((_, idx) => idx !== i))
+
   const categorias = [
     'Tesis y Trabajos Académicos',
     'Desarrollo Web',
@@ -99,15 +107,23 @@ const CrearServicio = () => {
         throw new Error('El tiempo previsto debe ser un número positivo')
       }
 
-      // Validar archivos para clases pregrabadas
-      if (servicioData.tipo === 'pregrabada' && servicioData.archivos.length === 0) {
-        throw new Error('Para clases pregrabadas es obligatorio subir al menos un archivo (video o material)')
+      // Materiales válidos (con URL)
+      const materialesValidos = materiales.filter(m => m.url && m.url.trim())
+
+      // Validar materiales para cursos pregrabados
+      if (servicioData.tipo === 'pregrabada' && materialesValidos.length === 0 && !servicioData.urlVideo) {
+        throw new Error('Para cursos pregrabados agregá al menos un material (enlace) o una URL de video')
       }
 
-      // Preparar datos para envío (sin archivos por ahora)
+      // Preparar datos para envío: los materiales van como enlaces en "archivos".
+      // Si hay urlVideo, se agrega como un material más.
+      const archivos = [...materialesValidos]
+      if (servicioData.urlVideo && servicioData.urlVideo.trim()) {
+        archivos.unshift({ nombre: 'Video principal', url: servicioData.urlVideo.trim() })
+      }
       const datosParaEnviar = {
         ...servicioData,
-        archivos: undefined // No enviar archivos por ahora
+        archivos
       }
 
       console.log('🚀 Enviando datos del servicio:', datosParaEnviar)
@@ -539,6 +555,43 @@ const CrearServicio = () => {
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-400 text-white placeholder-purple-300 backdrop-blur-sm"
                 />
               </div>
+            </div>
+
+            {/* Materiales del servicio (enlaces) */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <Upload className="w-5 h-5 mr-2 text-purple-300" />
+                Materiales del servicio (enlaces)
+              </h3>
+              <p className="text-sm text-purple-200">
+                Pegá enlaces a tus materiales (Google Drive, YouTube, Dropbox, etc.). Solo los verá quien compre el servicio.
+              </p>
+              {materiales.map((m, i) => (
+                <div key={i} className="flex flex-col md:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={m.nombre}
+                    onChange={(e) => actualizarMaterial(i, 'nombre', e.target.value)}
+                    placeholder="Nombre (ej. Módulo 1 - Video)"
+                    className="md:w-1/3 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 backdrop-blur-sm"
+                  />
+                  <input
+                    type="url"
+                    value={m.url}
+                    onChange={(e) => actualizarMaterial(i, 'url', e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 backdrop-blur-sm"
+                  />
+                  {materiales.length > 1 && (
+                    <button type="button" onClick={() => quitarMaterial(i)} className="px-4 py-3 text-red-300 hover:text-red-200">
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={agregarMaterial} className="text-purple-200 hover:text-white text-sm">
+                + Agregar otro material
+              </button>
             </div>
 
             {/* Botones */}
