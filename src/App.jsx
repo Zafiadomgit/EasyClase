@@ -36,6 +36,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard'
 import AdminUsuarios from './pages/Admin/AdminUsuarios'
 import AdminClases from './pages/Admin/AdminClases'
 import AdminPagos from './pages/Admin/AdminPagos'
+import AdminRetiros from './pages/Admin/AdminRetiros'
 import AdminDisputas from './pages/Admin/AdminDisputas'
 import AdminReportes from './pages/Admin/AdminReportes'
 import AdminContenido from './pages/Admin/AdminContenido'
@@ -178,6 +179,7 @@ function App() {
                   <Route path="users" element={<AdminUsuarios />} />
                   <Route path="classes" element={<AdminClases />} />
                   <Route path="payments" element={<AdminPagos />} />
+                  <Route path="retiros" element={<AdminRetiros />} />
                   <Route path="disputes" element={<AdminDisputas />} />
                   <Route path="reports" element={<AdminReportes />} />
                   <Route path="content" element={<AdminContenido />} />

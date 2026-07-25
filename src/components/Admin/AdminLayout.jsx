@@ -24,6 +24,7 @@ const AdminLayout = () => {
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Clases', href: '/admin/classes', icon: BookOpen },
     { name: 'Pagos', href: '/admin/payments', icon: DollarSign },
+    { name: 'Retiros', href: '/admin/retiros', icon: DollarSign },
     { name: 'Disputas', href: '/admin/disputes', icon: AlertTriangle },
     { name: 'Reportes', href: '/admin/reports', icon: BarChart3 },
     { name: 'Contenido', href: '/admin/content', icon: FileText },
