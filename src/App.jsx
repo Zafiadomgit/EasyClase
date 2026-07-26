@@ -31,6 +31,7 @@ import Terminos from './pages/Legal/Terminos'
 import Privacidad from './pages/Legal/Privacidad'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
+import ProfesorRoute from './components/ProfesorRoute'
 import AdminLayout from './components/Admin/AdminLayout'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import AdminUsuarios from './pages/Admin/AdminUsuarios'
@@ -72,8 +73,8 @@ function App() {
                   <Route index element={<Home />} />
                   <Route path="/buscar" element={<BuscarClases />} />
                   <Route path="/servicios" element={<BuscarServicios />} />
-                  <Route path="/servicios/crear" element={<CrearServicio />} />
-                  <Route path="/clases/crear" element={<CrearClase />} />
+                  <Route path="/servicios/crear" element={<ProfesorRoute><CrearServicio /></ProfesorRoute>} />
+                  <Route path="/clases/crear" element={<ProfesorRoute><CrearClase /></ProfesorRoute>} />
                   <Route path="/mis-servicios-comprados" element={<MisServiciosComprados />} />
                   <Route path="/mis-reservas" element={<MisReservas />} />
                   <Route path="/pago-exitoso" element={<PagoExitoso />} />
@@ -158,9 +159,9 @@ function App() {
                   <Route
                     path="/profesor/disponibilidad"
                     element={
-                      <ProtectedRoute>
+                      <ProfesorRoute>
                         <ProfesorDisponibilidad />
-                      </ProtectedRoute>
+                      </ProfesorRoute>
                     }
                   />
                 </Route>
