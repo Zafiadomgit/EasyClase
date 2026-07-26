@@ -177,7 +177,7 @@ const Perfil = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-secondary-600">Rol:</span>
-                <span className="font-medium capitalize">{userData?.rol || 'Usuario'}</span>
+                <span className="font-medium capitalize">{userData?.tipoUsuario || 'Usuario'}</span>
               </div>
             </div>
           </div>

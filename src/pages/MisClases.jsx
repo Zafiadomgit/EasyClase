@@ -224,7 +224,7 @@ const MisClases = () => {
                     <div className="flex items-center text-secondary-600">
                       <User className="w-4 h-4 mr-2" />
                       <span>
-                        {user.rol === 'estudiante' 
+                        {user.tipoUsuario === 'estudiante'
                           ? `Prof. ${clase.profesor?.nombre || 'No especificado'}`
                           : `Est. ${clase.estudiante?.nombre || 'No especificado'}`
                         }
