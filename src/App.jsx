@@ -6,6 +6,7 @@ import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
+import RecuperarPassword from './pages/Auth/RecuperarPassword'
 import BuscarClases from './pages/BuscarClases'
 import PerfilProfesor from './pages/PerfilProfesor'
 import Perfil from './pages/Perfil'
@@ -67,6 +68,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/recuperar-password" element={<RecuperarPassword />} />
 
                 {/* Rutas públicas */}
                 <Route path="/" element={<Layout />}>

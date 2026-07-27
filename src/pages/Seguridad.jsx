@@ -85,10 +85,10 @@ const Seguridad = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
-          <Shield className="w-8 h-8 text-green-600 mr-3" />
-          <h1 className="text-3xl font-bold text-secondary-900">Seguridad</h1>
+          <Shield className="w-8 h-8 text-green-400 mr-3" />
+          <h1 className="text-3xl font-bold text-white">Seguridad</h1>
         </div>
-        <p className="text-lg text-secondary-600">
+        <p className="text-lg text-purple-200">
           Gestiona tu contraseña y configuraciones de seguridad
         </p>
       </div>

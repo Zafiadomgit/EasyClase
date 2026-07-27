@@ -184,10 +184,10 @@ const Preferencias = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
-          <Settings className="w-8 h-8 text-secondary-600 dark:text-gray-400 mr-3" />
-          <h1 className="text-3xl font-bold text-secondary-900 dark:text-gray-100">Preferencias</h1>
+          <Settings className="w-8 h-8 text-purple-200 mr-3" />
+          <h1 className="text-3xl font-bold text-white">Preferencias</h1>
         </div>
-        <p className="text-lg text-secondary-600 dark:text-gray-400">
+        <p className="text-lg text-purple-200">
           Personaliza tu experiencia y notificaciones
         </p>
       </div>
