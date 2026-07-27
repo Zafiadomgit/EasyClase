@@ -149,6 +149,40 @@ const PerfilProfesor = () => {
         </div>
       </div>
 
+        {/* Clases del Profesor */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">🎥 Clases Disponibles</h2>
+          {(profesor.clases && profesor.clases.length > 0) ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profesor.clases.map((clase) => (
+                <div key={clase.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{clase.titulo}</h3>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full whitespace-nowrap ml-2">
+                      {clase.tipo === 'grupal' ? 'Grupal' : 'Individual'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{clase.descripcion}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-gray-900">
+                      ${clase.precio?.toLocaleString()}
+                      <span className="text-sm font-normal text-gray-500">/hora</span>
+                    </span>
+                    <button
+                      onClick={() => navigate(`/reservar/${id}`)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                    >
+                      Reservar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">Este profesor todavía no publicó clases.</p>
+          )}
+        </div>
+
         {/* Servicios del Profesor */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">📚 Servicios Disponibles</h2>

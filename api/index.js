@@ -743,6 +743,11 @@ app.get('/api/profesores/:id', async (req, res) => {
       const reviews = await Review.findAll({ where: { profesorId: profe.id }, order: [['createdAt', 'DESC']] });
       profesor.reseñas = reviews.map(shapeReview);
     } catch { profesor.reseñas = []; }
+    // Adjuntar las clases (plantillas) que ofrece el profesor.
+    try {
+      const clases = await Plantilla.findAll({ where: { profesor: profe.id }, order: [['createdAt', 'DESC']] });
+      profesor.clases = clases.map(shapePlantilla);
+    } catch { profesor.clases = []; }
     res.json({ success: true, data: { profesor }, profesor });
   } catch (e) {
     console.error('Error obteniendo profesor:', e);
