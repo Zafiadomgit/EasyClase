@@ -1,0 +1,109 @@
+# Keep-alive + monitoreo de EasyClase
+#
+# Hace ping a la API de producción cada 6 horas. El endpoint /api/status
+# ejecuta una consulta real a la base de datos, lo que cuenta como actividad
+# para Supabase y evita que el plan gratuito pause el proyecto (eso ocurre
+# tras ~7 días sin actividad y deja la app entera fuera de servicio).
+#
+# Si la app no responde o la base de datos no está lista, el workflow falla
+# y abre (o actualiza) un issue en el repositorio para avisarte.
+#
+# Se puede ejecutar manualmente desde la pestaña Actions (workflow_dispatch).
+
+name: Keep-alive y monitoreo
+
+on:
+  schedule:
+    # Cada 6 horas (minuto 17 para evitar los picos de carga de GitHub en :00)
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+env:
+  APP_URL: https://easy-clase-er9o.vercel.app
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a la API y verificación de la base de datos
+        id: ping
+        run: |
+          echo "Consultando $APP_URL/api/status ..."
+          RESP=$(curl -sS --max-time 30 "$APP_URL/api/status" || echo '{}')
+          echo "$RESP" | jq . || echo "$RESP"
+
+          STATUS=$(echo "$RESP" | jq -r '.status // "FAIL"')
+          DB_READY=$(echo "$RESP" | jq -r '.dbReady // false')
+          DB_ERROR=$(echo "$RESP" | jq -r '.dbError // empty')
+
+          {
+            echo "status=$STATUS"
+            echo "db_ready=$DB_READY"
+            echo "db_error=$DB_ERROR"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$STATUS" != "OK" ]; then
+            echo "::error::La API no respondió correctamente"
+            exit 1
+          fi
+          if [ "$DB_READY" != "true" ]; then
+            echo "::error::La base de datos no está disponible: $DB_ERROR"
+            exit 1
+          fi
+          echo "✅ API y base de datos funcionando"
+
+      - name: Ping al frontend (mantiene el edge cache caliente)
+        run: |
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$APP_URL/")
+          echo "Frontend respondió con HTTP $CODE"
+          if [ "$CODE" -ge 500 ]; then
+            echo "::error::El frontend respondió $CODE"
+            exit 1
+          fi
+
+      - name: Abrir issue si la app está caída
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 EasyClase caída: el monitoreo automático detectó un problema';
+            const dbError = '${{ steps.ping.outputs.db_error }}' || 'sin detalle';
+            const body = [
+              'El workflow de keep-alive no pudo verificar la app en producción.',
+              '',
+              `- **URL**: ${process.env.APP_URL}`,
+              `- **Estado API**: ${'${{ steps.ping.outputs.status }}' || 'sin respuesta'}`,
+              `- **Base de datos lista**: ${'${{ steps.ping.outputs.db_ready }}' || 'false'}`,
+              `- **Error de DB**: ${dbError}`,
+              `- **Ejecución**: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Causa más común: el proyecto de Supabase se pausó (plan gratuito) o cambió la DATABASE_URL en Vercel.',
+              'Para reactivar Supabase: https://supabase.com/dashboard → proyecto easyclase → Restore.',
+            ].join('\n');
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'monitoreo',
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `Sigue caída.\n\n${body}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['monitoreo'],
+              });
+            }
