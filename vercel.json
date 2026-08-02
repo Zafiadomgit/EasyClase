@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "crons": [
+    {
+      "path": "/api/status",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "builds": [
     {
       "src": "package.json",
