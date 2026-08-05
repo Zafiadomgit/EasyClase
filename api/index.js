@@ -1293,6 +1293,30 @@ app.get('/api/pagos/medios-disponibles', async (req, res) => {
       return res.status(502).json({ success: false, message: `Mercado Pago respondió ${r.status}` });
     }
     const metodos = await r.json();
+
+    // Datos de la cuenta que recibe el dinero. Sirven para descartar dos causas
+    // habituales de que el botón "Pagar" quede deshabilitado: intentar pagarse
+    // a uno mismo (Mercado Pago no lo permite) y mezclar credenciales de
+    // producción con datos de prueba. El email se enmascara y el token nunca
+    // se expone.
+    let cuentaVendedora = null;
+    try {
+      const ru = await fetch('https://api.mercadopago.com/users/me', {
+        headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` }
+      });
+      if (ru.ok) {
+        const u = await ru.json();
+        const email = String(u.email || '');
+        cuentaVendedora = {
+          id: u.id,
+          nickname: u.nickname,
+          pais: u.site_id,
+          emailEnmascarado: email ? `${email.slice(0, 2)}***@${email.split('@')[1] || ''}` : '',
+          // Los tokens de prueba empiezan por TEST-; los productivos por APP_USR-.
+          credencial: MP_ACCESS_TOKEN.startsWith('TEST-') ? 'prueba' : 'produccion'
+        };
+      }
+    } catch { cuentaVendedora = null; }
     const lista = (Array.isArray(metodos) ? metodos : []).map(m => ({
       id: m.id,
       nombre: m.name,
@@ -1308,6 +1332,7 @@ app.get('/api/pagos/medios-disponibles', async (req, res) => {
     res.json({
       success: true,
       data: {
+        cuentaVendedora,
         totalMedios: lista.length,
         tarjetaHabilitada: tarjetas.some(m => m.estado === 'active'),
         // El mínimo a cobrar para que aparezca al menos una tarjeta.
