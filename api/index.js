@@ -30,6 +30,14 @@ const getMercadoPago = () => {
 // URL pública del frontend para construir las back_urls y el webhook.
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://easy-clase-er9o.vercel.app').replace(/\/$/, '');
 
+// Monto mínimo cobrable, en COP. Mercado Pago define un mínimo por medio de
+// pago y oculta del checkout los que no lo alcanzan: Visa/Mastercard (crédito
+// y débito), Amex y Diners exigen $1.000. Por debajo de eso el comprador solo
+// ve "saldo en cuenta" y quien no tenga cuenta de Mercado Pago no puede pagar.
+// Se puede subir con MONTO_MINIMO_COBRO (por ejemplo a 1600 para incluir PSE).
+// Consultar los mínimos vigentes en GET /api/pagos/medios-disponibles.
+const MONTO_MINIMO_COBRO = Number(process.env.MONTO_MINIMO_COBRO) || 1000;
+
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json());
 
@@ -1108,8 +1116,13 @@ app.post('/api/plantillas', authMiddleware, async (req, res) => {
     if (!b.titulo || !b.descripcion || !b.materia || !b.categoria) {
       return res.status(400).json({ success: false, message: 'Título, descripción, materia y categoría son obligatorios' });
     }
-    if (!Number.isFinite(precio) || precio < 10) {
-      return res.status(400).json({ success: false, message: 'El precio debe ser como mínimo $10' });
+    // El precio por hora es la base del cobro, así que debe alcanzar el mínimo
+    // que exige Mercado Pago para que el alumno pueda pagar con tarjeta.
+    if (!Number.isFinite(precio) || precio < MONTO_MINIMO_COBRO) {
+      return res.status(400).json({
+        success: false,
+        message: `El precio debe ser como mínimo $${MONTO_MINIMO_COBRO.toLocaleString('es-CO')} COP`
+      });
     }
     const tipo = b.tipo === 'grupal' ? 'grupal' : 'individual';
     const nueva = await Plantilla.create({
@@ -1337,6 +1350,16 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
       });
     }
     const quantity = Number.isFinite(Number(cantidad)) && Number(cantidad) > 0 ? Math.floor(Number(cantidad)) : 1;
+
+    // Si el total no alcanza el mínimo, Mercado Pago ocultaría las tarjetas y
+    // el comprador solo podría pagar con saldo en cuenta. Se corta antes de
+    // crear la preferencia para no llevarlo a un checkout sin salida.
+    if (unitPrice * quantity < MONTO_MINIMO_COBRO) {
+      return res.status(400).json({
+        success: false,
+        message: `El total debe ser de al menos $${MONTO_MINIMO_COBRO.toLocaleString('es-CO')} COP para poder pagar con tarjeta.`
+      });
+    }
 
     const preferenceBody = {
       items: [

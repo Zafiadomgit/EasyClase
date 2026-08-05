@@ -10,6 +10,10 @@ const aMinutos = (hhmm) => {
   return (Number(h) || 0) * 60 + (Number(m) || 0)
 }
 
+// Mínimo que exige Mercado Pago para que el checkout ofrezca tarjeta. Debe
+// coincidir con MONTO_MINIMO_COBRO del backend, que es quien lo valida.
+const MONTO_MINIMO_COBRO = 1000
+
 const aHora = (minutos) =>
   `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`
 
@@ -185,20 +189,27 @@ const ReservarClase = () => {
     try {
       setReservando(true)
 
-      // Calcular el precio por hora según el tipo elegido.
+      // Calcular el precio por hora según el tipo elegido. La clase grupal se
+      // cobra al 70% del valor de la individual.
       let precioPorHora = 0
       if (servicio) {
-        precioPorHora = servicio.precio || 10
+        precioPorHora = Number(servicio.precio) || 0
       } else {
-        precioPorHora = tipoAgenda === 'individual'
-          ? clase?.profesor?.precioHora
-          : Math.round((clase?.profesor?.precioHora || 10) * 0.7)
+        const base = Number(clase?.profesor?.precioHora) || 0
+        precioPorHora = tipoAgenda === 'individual' ? base : Math.round(base * 0.7)
       }
-      // Precio mínimo de $10 para pruebas de sandbox.
-      precioPorHora = Math.max(precioPorHora, 10)
 
       const duracionHoras = cantidadHoras
       const precioTotal = precioPorHora * duracionHoras
+
+      // No se fuerza un mínimo aquí: subir el importe en silencio cobraría de
+      // más. Si el total no alcanza el mínimo de Mercado Pago, el checkout
+      // ocultaría las tarjetas, así que se avisa y no se continúa.
+      if (precioTotal < MONTO_MINIMO_COBRO) {
+        alert(`El total ($${precioTotal.toLocaleString('es-CO')}) es menor al mínimo de $${MONTO_MINIMO_COBRO.toLocaleString('es-CO')} COP que exige el pago con tarjeta. Elige más horas o contacta al profesor.`)
+        setReservando(false)
+        return
+      }
 
       const reservaData = {
         claseId: id,
