@@ -796,6 +796,15 @@ app.get('/api/profesores/:id', async (req, res) => {
       profesor.clases = clases.map(shapePlantilla);
       aplicarPrecioDesdeClases(profesor);
     } catch { profesor.clases = []; }
+    // Adjuntar la disponibilidad semanal para que la reserva solo ofrezca las
+    // horas que el profesor realmente habilitó.
+    try {
+      const horarios = await Disponibilidad.findAll({
+        where: { profesor: profe.id, disponible: true },
+        order: [['horaInicio', 'ASC']]
+      });
+      profesor.horarios = horarios.map(shapeHorario);
+    } catch { profesor.horarios = []; }
     res.json({ success: true, data: { profesor }, profesor });
   } catch (e) {
     console.error('Error obteniendo profesor:', e);

@@ -1,5 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+
+// getDay() devuelve 0=domingo; los días se guardan en minúsculas y sin tilde,
+// igual que en el panel de disponibilidad del profesor.
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
+
+const aMinutos = (hhmm) => {
+  const [h, m] = String(hhmm || '').split(':').map(Number)
+  return (Number(h) || 0) * 60 + (Number(m) || 0)
+}
+
+const aHora = (minutos) =>
+  `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`
 
 const ReservarClase = () => {
   const { id } = useParams()
@@ -17,27 +29,37 @@ const ReservarClase = () => {
   const [cantidadHoras, setCantidadHoras] = useState(1) // Cantidad de horas que quiere comprar
   const [reservando, setReservando] = useState(false)
 
-  // Generar opciones de hora solo en punto y :30
-  const generarOpcionesHora = () => {
-    const opciones = []
-    for (let hora = 6; hora <= 22; hora++) {
-      // Hora en punto
-      opciones.push({
-        value: `${hora.toString().padStart(2, '0')}:00`,
-        label: `${hora.toString().padStart(2, '0')}:00`
-      })
-      // Hora y media (solo hasta 21:30)
-      if (hora < 22) {
-        opciones.push({
-          value: `${hora.toString().padStart(2, '0')}:30`,
-          label: `${hora.toString().padStart(2, '0')}:30`
-        })
-      }
-    }
-    return opciones
-  }
+  // Las horas ofrecidas salen de la disponibilidad que el profesor configuró
+  // para ese día de la semana, no de una lista fija de 06:00 a 22:00.
+  const opcionesHora = useMemo(() => {
+    if (!fechaSeleccionada) return []
+    const horarios = clase?.profesor?.horarios || []
+    // 'YYYY-MM-DD' se parsearía como UTC y podría correr el día según la zona
+    // horaria, así que se construye la fecha en horario local.
+    const [anio, mes, dia] = fechaSeleccionada.split('-').map(Number)
+    const diaSemana = DIAS_SEMANA[new Date(anio, mes - 1, dia).getDay()]
 
-  const opcionesHora = generarOpcionesHora()
+    const slots = new Set()
+    horarios
+      .filter(h => h.disponible !== false && h.dia === diaSemana)
+      .forEach(h => {
+        const inicio = aMinutos(h.horaInicio)
+        const fin = aMinutos(h.horaFin)
+        // Se ofrecen inicios cada 30 min que quepan completos en la franja.
+        for (let t = inicio; t + 30 <= fin; t += 30) {
+          slots.add(aHora(t))
+        }
+      })
+
+    return [...slots].sort().map(v => ({ value: v, label: v }))
+  }, [fechaSeleccionada, clase])
+
+  // Si al cambiar de fecha la hora elegida ya no está disponible, se limpia.
+  useEffect(() => {
+    if (horaSeleccionada && !opcionesHora.some(o => o.value === horaSeleccionada)) {
+      setHoraSeleccionada('')
+    }
+  }, [opcionesHora, horaSeleccionada])
 
   // Estado del horario seleccionado
   const [estadoHorario, setEstadoHorario] = useState(null) // null, 'disponible', 'individual', 'grupal'
@@ -365,6 +387,11 @@ const ReservarClase = () => {
                           required
                         />
                       </div>
+                      {fechaSeleccionada && opcionesHora.length === 0 && (
+                        <p className="mt-3 text-sm text-purple-200">
+                          El profesor no atiende ese día. Prueba con otra fecha.
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -375,10 +402,17 @@ const ReservarClase = () => {
                         <select
                           value={horaSeleccionada}
                           onChange={(e) => setHoraSeleccionada(e.target.value)}
-                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-2xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm appearance-none cursor-pointer"
+                          disabled={!fechaSeleccionada || opcionesHora.length === 0}
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-2xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                           required
                         >
-                          <option value="" className="text-gray-800">Selecciona una hora</option>
+                          <option value="" className="text-gray-800">
+                            {!fechaSeleccionada
+                              ? 'Primero elige una fecha'
+                              : opcionesHora.length === 0
+                                ? 'Sin horarios disponibles este día'
+                                : 'Selecciona una hora'}
+                          </option>
                           {opcionesHora.map(opcion => (
                             <option key={opcion.value} value={opcion.value} className="text-gray-800">
                               {opcion.label}
