@@ -1264,6 +1264,52 @@ app.get('/api/reservas/mis-reservas', authMiddleware, async (req, res) => {
 
 // ─── Pagos (Checkout Pro) ────────────────────────────────────────────────────
 
+// Diagnóstico: medios de pago habilitados para la cuenta vendedora, con el
+// monto mínimo que exige cada uno. Sirve para saber por qué el checkout no
+// ofrece tarjeta: si el importe del cobro es menor que min_allowed_amount,
+// Mercado Pago oculta ese medio de pago. No expone el access token.
+app.get('/api/pagos/medios-disponibles', async (req, res) => {
+  try {
+    if (!MP_ACCESS_TOKEN) {
+      return res.status(503).json({ success: false, message: 'Falta la variable de entorno MP_ACCESS_TOKEN.' });
+    }
+    const r = await fetch('https://api.mercadopago.com/v1/payment_methods', {
+      headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` }
+    });
+    if (!r.ok) {
+      return res.status(502).json({ success: false, message: `Mercado Pago respondió ${r.status}` });
+    }
+    const metodos = await r.json();
+    const lista = (Array.isArray(metodos) ? metodos : []).map(m => ({
+      id: m.id,
+      nombre: m.name,
+      tipo: m.payment_type_id,
+      estado: m.status,
+      montoMinimo: m.min_allowed_amount,
+      montoMaximo: m.max_allowed_amount
+    }));
+    // Agrupado por tipo para leerlo de un vistazo.
+    const porTipo = {};
+    lista.forEach(m => { (porTipo[m.tipo] = porTipo[m.tipo] || []).push(m); });
+    const tarjetas = lista.filter(m => ['credit_card', 'debit_card'].includes(m.tipo));
+    res.json({
+      success: true,
+      data: {
+        totalMedios: lista.length,
+        tarjetaHabilitada: tarjetas.some(m => m.estado === 'active'),
+        // El mínimo a cobrar para que aparezca al menos una tarjeta.
+        montoMinimoTarjeta: tarjetas.length
+          ? Math.min(...tarjetas.filter(m => m.estado === 'active').map(m => Number(m.montoMinimo) || 0))
+          : null,
+        porTipo
+      }
+    });
+  } catch (e) {
+    console.error('Error consultando medios de pago:', e);
+    res.status(500).json({ success: false, message: 'Error al consultar los medios de pago' });
+  }
+});
+
 // Crear una preferencia de pago.
 // Recibe los datos del ítem a cobrar y devuelve el `init_point` al que se debe
 // redirigir al comprador para completar el pago en Mercado Pago.
