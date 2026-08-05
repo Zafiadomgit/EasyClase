@@ -23,7 +23,6 @@ const AdminSistema = lazy(() => import('./pages/Admin/AdminSistema'))
 const AdminUsuarios = lazy(() => import('./pages/Admin/AdminUsuarios'))
 const BuscarClases = lazy(() => import('./pages/BuscarClases'))
 const BuscarServicios = lazy(() => import('./pages/BuscarServicios'))
-const Chat = lazy(() => import('./pages/Chat'))
 const ComoFunciona = lazy(() => import('./pages/ComoFunciona'))
 const CrearClase = lazy(() => import('./pages/CrearClase'))
 const CrearServicio = lazy(() => import('./pages/CrearServicio'))
@@ -46,6 +45,7 @@ const Premium = lazy(() => import('./pages/Premium'))
 const Privacidad = lazy(() => import('./pages/Legal/Privacidad'))
 const ProfesorDisponibilidad = lazy(() => import('./pages/Professor/ProfesorDisponibilidad'))
 const RecuperarPassword = lazy(() => import('./pages/Auth/RecuperarPassword'))
+const RestablecerPassword = lazy(() => import('./pages/Auth/RestablecerPassword'))
 const Register = lazy(() => import('./pages/Auth/Register'))
 const ReservarClase = lazy(() => import('./pages/ReservarClase'))
 const Seguridad = lazy(() => import('./pages/Seguridad'))
@@ -79,6 +79,7 @@ function App() {
                 <Route path="/registro" element={<Register />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/recuperar-password" element={<RecuperarPassword />} />
+                <Route path="/restablecer-password" element={<RestablecerPassword />} />
 
                 {/* Rutas públicas */}
                 <Route path="/" element={<Layout />}>
@@ -136,14 +137,6 @@ function App() {
                     }
                   />
 
-                  <Route
-                    path="/chat"
-                    element={
-                      <ProtectedRoute>
-                        <Chat />
-                      </ProtectedRoute>
-                    }
-                  />
                   <Route
                     path="/seguridad"
                     element={

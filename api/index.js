@@ -268,9 +268,10 @@ const initDB = async () => {
     }
     // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
     // profesores existan.
-    await seedProfesores();
-    await seedServicios();
+    // Los seeds de profesores y servicios de demostración se retiraron: creaban
+    // usuarios falsos que los estudiantes veían como reales en la búsqueda.
     await seedAdmin();
+    await limpiarDatosDemo();
     dbReady = true;
     console.log('✅ Supabase PostgreSQL conectado');
   } catch (e) {
@@ -280,47 +281,24 @@ const initDB = async () => {
   }
 };
 
-// Seed idempotente de profesores demo (para que buscar/perfil tengan datos)
-const seedProfesores = async () => {
+// Elimina de una vez los datos de demostración que dejaron los seeds
+// anteriores: cinco profesores inventados y sus servicios. Se identifican por
+// el dominio de correo que se les asignó, así que no toca cuentas reales.
+const limpiarDatosDemo = async () => {
   try {
-    const count = await User.count({ where: { tipoUsuario: 'profesor' } });
-    if (count > 0) return;
-    const hashed = await bcrypt.hash('demo1234', 10);
-    const demo = [
-      { nombre: 'Laura Gómez', categoria: 'Programación', especialidades: ['JavaScript', 'React', 'Node.js'], precioPorHora: 45000, bio: 'Ingeniera de software con 6 años enseñando desarrollo web full-stack.', calificacionPromedio: 4.9, totalReviews: 128, totalClases: 340, estudiantesAyudados: 210, modalidad: 'Online', ubicacion: 'Bogotá', premium: true },
-      { nombre: 'Carlos Ramírez', categoria: 'Excel & Office', especialidades: ['Excel', 'Tablas dinámicas', 'VBA'], precioPorHora: 30000, bio: 'Analista de datos. Te ayudo a dominar Excel desde cero hasta macros.', calificacionPromedio: 4.7, totalReviews: 86, totalClases: 190, estudiantesAyudados: 150, modalidad: 'Online', ubicacion: 'Medellín', premium: false },
-      { nombre: 'Ana Martínez', categoria: 'Idiomas', especialidades: ['Inglés', 'Francés'], precioPorHora: 38000, bio: 'Profesora certificada de idiomas, enfoque conversacional y práctico.', calificacionPromedio: 4.8, totalReviews: 154, totalClases: 420, estudiantesAyudados: 300, modalidad: 'Online', ubicacion: 'Cali', premium: true },
-      { nombre: 'Diego Torres', categoria: 'Diseño Gráfico', especialidades: ['Photoshop', 'Illustrator', 'Figma'], precioPorHora: 40000, bio: 'Diseñador UI/UX. Aprende diseño con proyectos reales.', calificacionPromedio: 4.6, totalReviews: 63, totalClases: 120, estudiantesAyudados: 95, modalidad: 'Online', ubicacion: 'Bogotá', premium: false },
-      { nombre: 'Valentina Ríos', categoria: 'Apoyo Académico', especialidades: ['Matemáticas', 'Física', 'Química'], precioPorHora: 28000, bio: 'Estudiante de ingeniería, refuerzo escolar y universitario.', calificacionPromedio: 4.9, totalReviews: 97, totalClases: 260, estudiantesAyudados: 180, modalidad: 'Online', ubicacion: 'Barranquilla', premium: false }
-    ];
-    for (const d of demo) {
-      await User.create({ ...d, email: `${d.nombre.toLowerCase().replace(/[^a-z]/g, '')}@demo.easyclase.com`, password: hashed, tipoUsuario: 'profesor', activo: true, profesorVisible: true });
-    }
-    console.log('🌱 Profesores demo creados');
+    const demo = await User.findAll({
+      where: { email: { [Sequelize.Op.like]: '%@demo.easyclase.com' } },
+      attributes: ['id']
+    });
+    if (demo.length === 0) return;
+    const ids = demo.map(u => u.id);
+    await Servicio.destroy({ where: { proveedor: ids } });
+    await Plantilla.destroy({ where: { profesor: ids } });
+    await Disponibilidad.destroy({ where: { profesor: ids } });
+    await User.destroy({ where: { id: ids } });
+    console.log(`🧹 Eliminados ${ids.length} perfiles de demostración`);
   } catch (e) {
-    console.warn('⚠️ Seed profesores omitido:', e.message);
-  }
-};
-
-// Seed idempotente de servicios demo, asociados a profesores existentes, para
-// que la página de servicios muestre contenido desde el arranque.
-const seedServicios = async () => {
-  try {
-    const count = await Servicio.count();
-    if (count > 0) return;
-    const profes = await User.findAll({ where: { tipoUsuario: 'profesor' }, limit: 3 });
-    if (profes.length === 0) return;
-    const demo = [
-      { titulo: 'Curso completo de Excel Avanzado', descripcion: 'Domina tablas dinámicas, fórmulas y macros con proyectos reales.', categoria: 'Contabilidad y Finanzas', tipo: 'pregrabada', precio: 60000, tiempoPrevistoValor: 8, tiempoPrevistoUnidad: 'horas', premium: true, calificacionPromedio: 4.8, totalReviews: 42, totalVentas: 120 },
-      { titulo: 'Landing page profesional en React', descripcion: 'Construí y desplegá una landing moderna desde cero.', categoria: 'Desarrollo Web', tipo: 'asesoria', precio: 90000, tiempoPrevistoValor: 2, tiempoPrevistoUnidad: 'semanas', premium: false, calificacionPromedio: 4.9, totalReviews: 30, totalVentas: 65 },
-      { titulo: 'Asesoría de tesis y trabajos académicos', descripcion: 'Acompañamiento metodológico y de redacción para tu tesis.', categoria: 'Tesis y Trabajos Académicos', tipo: 'consultoria', precio: 45000, tiempoPrevistoValor: 3, tiempoPrevistoUnidad: 'días', premium: false, calificacionPromedio: 4.7, totalReviews: 51, totalVentas: 88 }
-    ];
-    for (let i = 0; i < demo.length; i++) {
-      await Servicio.create({ ...demo[i], proveedor: profes[i % profes.length].id, estado: 'activo', disponible: true });
-    }
-    console.log('🌱 Servicios demo creados');
-  } catch (e) {
-    console.warn('⚠️ Seed servicios omitido:', e.message);
+    console.warn('⚠️ Limpieza de datos demo omitida:', e.message);
   }
 };
 
@@ -613,6 +591,100 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (error) {
     console.error('Register error:', error);
     return res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// RECUPERAR CONTRASEÑA
+// El enlace lleva un token firmado con vigencia de 1 hora; no hace falta
+// guardarlo en la base. Se incluye un fragmento del hash actual para que el
+// enlace deje de servir en cuanto la contraseña cambie (así no se puede
+// reutilizar un correo viejo).
+const tokenRecuperacion = (user) =>
+  jwt.sign(
+    { userId: user.id, proposito: 'recuperar', h: String(user.password || '').slice(-10) },
+    JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+app.post('/api/auth/recuperar', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    // Se responde siempre igual, exista o no la cuenta: revelar si un correo
+    // está registrado permitiría enumerar usuarios.
+    const respuestaNeutra = {
+      success: true,
+      message: 'Si el correo está registrado, te enviamos las instrucciones para restablecer tu contraseña.'
+    };
+    if (!email) return res.json(respuestaNeutra);
+
+    await initDB();
+    if (!dbReady || !User || !JWT_SECRET) return res.json(respuestaNeutra);
+
+    const user = await User.findOne({ where: { email, activo: true } });
+    if (user) {
+      const enlace = `${FRONTEND_URL}/restablecer-password?token=${encodeURIComponent(tokenRecuperacion(user))}`;
+      await enviarCorreo({
+        para: user.email,
+        asunto: 'Restablece tu contraseña de EasyClase',
+        titulo: `Hola, ${user.nombre || ''}`.trim(),
+        cuerpo: `Recibimos una solicitud para restablecer tu contraseña. El enlace es válido durante una hora.
+                 <br><br>Si no fuiste tú, puedes ignorar este correo: tu contraseña no cambiará.`,
+        boton: { texto: 'Restablecer contraseña', url: enlace }
+      });
+    }
+    return res.json(respuestaNeutra);
+  } catch (e) {
+    console.error('Error en recuperación de contraseña:', e);
+    return res.json({
+      success: true,
+      message: 'Si el correo está registrado, te enviamos las instrucciones para restablecer tu contraseña.'
+    });
+  }
+});
+
+app.post('/api/auth/restablecer', async (req, res) => {
+  try {
+    const { token, password } = req.body || {};
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token y contraseña son requeridos' });
+    }
+    if (String(password).length < 8) {
+      return res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 8 caracteres' });
+    }
+    if (!JWT_SECRET) {
+      return res.status(503).json({ success: false, message: 'Servidor mal configurado' });
+    }
+
+    let datos;
+    try {
+      datos = jwt.verify(String(token), JWT_SECRET);
+    } catch {
+      return res.status(400).json({ success: false, message: 'El enlace expiró o no es válido. Solicita uno nuevo.' });
+    }
+    if (datos.proposito !== 'recuperar') {
+      return res.status(400).json({ success: false, message: 'Enlace no válido' });
+    }
+
+    await initDB();
+    if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
+
+    const user = await User.findByPk(datos.userId);
+    if (!user || String(user.password || '').slice(-10) !== datos.h) {
+      return res.status(400).json({ success: false, message: 'Este enlace ya fue usado. Solicita uno nuevo.' });
+    }
+
+    await user.update({ password: await bcrypt.hash(String(password), 12) });
+    await enviarCorreo({
+      para: user.email,
+      asunto: 'Tu contraseña de EasyClase fue cambiada',
+      titulo: 'Contraseña actualizada',
+      cuerpo: 'Tu contraseña se cambió correctamente. Si no fuiste tú, responde a este correo de inmediato.'
+    });
+
+    res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
+  } catch (e) {
+    console.error('Error restableciendo contraseña:', e);
+    res.status(500).json({ success: false, message: 'Error al restablecer la contraseña' });
   }
 });
 
@@ -1403,6 +1475,57 @@ app.get('/api/reservas/mis-reservas', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── Correo transaccional ────────────────────────────────────────────────────
+// Se envía con Resend por HTTP, sin añadir dependencias. Si no hay API key
+// configurada, el envío se omite en silencio: nunca debe romper el flujo que lo
+// origina (un pago no puede fallar porque el correo no salga).
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_REMITENTE = process.env.EMAIL_REMITENTE || 'EasyClase <onboarding@resend.dev>';
+
+const plantillaCorreo = (titulo, cuerpo, boton) => `
+<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f6f5fb;padding:32px 16px">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+    <div style="background:linear-gradient(135deg,#7c3aed,#2563eb);padding:24px 28px">
+      <h1 style="margin:0;color:#fff;font-size:20px">EasyClase</h1>
+    </div>
+    <div style="padding:28px">
+      <h2 style="margin:0 0 12px;font-size:18px;color:#111827">${titulo}</h2>
+      <div style="color:#4b5563;font-size:15px;line-height:1.6">${cuerpo}</div>
+      ${boton ? `<p style="margin:24px 0 0"><a href="${boton.url}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600">${boton.texto}</a></p>` : ''}
+    </div>
+    <div style="padding:16px 28px;background:#faf9fd;color:#9ca3af;font-size:12px">
+      Este correo se envió automáticamente desde EasyClase.
+    </div>
+  </div>
+</div>`;
+
+const enviarCorreo = async ({ para, asunto, titulo, cuerpo, boton }) => {
+  if (!RESEND_API_KEY || !para) return false;
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: EMAIL_REMITENTE,
+        to: [para],
+        subject: asunto,
+        html: plantillaCorreo(titulo, cuerpo, boton)
+      })
+    });
+    if (!r.ok) {
+      console.warn('⚠️ Resend respondió', r.status, await r.text());
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('⚠️ No se pudo enviar el correo:', e.message);
+    return false;
+  }
+};
+
 // ─── Notificaciones ──────────────────────────────────────────────────────────
 const shapeNotificacion = (n) => {
   const j = n.toJSON ? n.toJSON() : n;
@@ -1423,6 +1546,26 @@ const shapeNotificacion = (n) => {
 const crearNotificacion = async (usuario, datos) => {
   try {
     if (!Notificacion || !usuario) return null;
+
+    // Las notificaciones importantes salen también por correo: si el usuario no
+    // entra a la web, dentro de la aplicación no se entera de nada.
+    if (datos.correo) {
+      try {
+        const u = await User.findByPk(usuario, { attributes: ['email', 'nombre'] });
+        if (u?.email) {
+          await enviarCorreo({
+            para: u.email,
+            asunto: datos.titulo,
+            titulo: datos.titulo,
+            cuerpo: datos.mensaje || '',
+            boton: datos.url ? { texto: 'Ver en EasyClase', url: `${FRONTEND_URL}${datos.url}` } : null
+          });
+        }
+      } catch (e) {
+        console.warn('⚠️ No se pudo enviar el correo de la notificación:', e.message);
+      }
+    }
+
     return await Notificacion.create({
       usuario,
       titulo: datos.titulo,
@@ -1651,6 +1794,7 @@ app.put('/api/clases/:id/aceptar', authMiddleware, async (req, res) => {
     const cuando = [t.fecha, t.hora].filter(Boolean).join(' a las ');
     await crearNotificacion(t.usuario, {
       titulo: 'Tu clase fue confirmada',
+      correo: true,
       mensaje: `El profesor confirmó "${t.titulo}"${cuando ? ` del ${cuando}` : ''}.`,
       tipo: 'reserva',
       icono: 'check',
@@ -1698,6 +1842,7 @@ app.put('/api/clases/:id/rechazar', authMiddleware, async (req, res) => {
 
     await crearNotificacion(t.usuario, {
       titulo: 'Tu clase fue rechazada',
+      correo: true,
       mensaje: `El profesor no pudo aceptar "${t.titulo}". Motivo: ${motivo}. Se abonaron $${importe.toLocaleString('es-CO')} a tu saldo para que tomes otra clase.`,
       tipo: 'reserva',
       icono: 'alert',
@@ -1751,6 +1896,7 @@ const notificarReservaPagada = async (tx) => {
   if (j.usuario) {
     await crearNotificacion(j.usuario, {
       titulo: 'Pago confirmado',
+      correo: true,
       mensaje: esClase
         ? `Tu clase "${j.titulo}"${cuando ? ` del ${cuando}` : ''} quedó confirmada.`
         : `Tu compra de "${j.titulo}" quedó confirmada.`,
@@ -1769,6 +1915,7 @@ const notificarReservaPagada = async (tx) => {
     } catch { /* se usa el genérico */ }
     await crearNotificacion(j.profesorId, {
       titulo: 'Te reservaron una clase',
+      correo: true,
       mensaje: `${alumno} reservó y pagó "${j.titulo}"${cuando ? ` para el ${cuando}` : ''}.`,
       tipo: 'reserva',
       icono: 'calendar',

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 // import * as Sentry from '@sentry/react'
-import NotificationTriggers from '../../components/NotificationTriggers'
 import {
   Calendar,
   Clock,
@@ -26,26 +25,10 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { profesorService } from '../../services/api'
 import claseServiceLocal from '../../services/claseService'
-import notificationService from '../../services/notificationService'
 import { formatPrecio } from '../../utils/currencyUtils'
 import VideoCallRoom from '../../components/VideoCall/VideoCallRoom'
 import ReservasPendientes from '../Professor/ReservasPendientes'
 import MisClases from '../Professor/MisClases'
-
-// Componente de prueba para Sentry
-const ErrorButton = () => {
-  return (
-    <button
-      onClick={() => {
-        throw new Error('¡Prueba de Sentry - Error generado intencionalmente!')
-      }}
-      className="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
-    >
-      <Bug className="w-4 h-4 mr-2" />
-      Probar Error Sentry
-    </button>
-  )
-}
 
 // Mínimo para solicitar un retiro. Debe coincidir con el del backend, que es
 // quien lo valida.
@@ -56,50 +39,6 @@ const Dashboard = () => {
   const { showClassAdded } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
-
-  // Función para crear notificaciones de prueba
-  const crearNotificacionesPrueba = () => {
-    if (!user?.id) return
-
-    // Notificación de pago exitoso
-    notificationService.createPaymentSuccessNotification(user.id, {
-      id: 'test_1',
-      tema: 'Programación React',
-      fecha: '2024-01-15',
-      hora: '14:00'
-    })
-
-    // Notificación de nueva reserva (para profesores)
-    if (isProfesor) {
-      notificationService.createNewReservationNotification(user.id, {
-        id: 'test_2',
-        estudianteId: 'estudiante_123',
-        estudianteNombre: 'María García',
-        tema: 'Matemáticas Avanzadas',
-        fecha: '2024-01-16',
-        hora: '10:00'
-      })
-    }
-
-    // Notificación de nuevo mensaje
-    notificationService.createNewMessageNotification(user.id, {
-      id: 'test_3',
-      senderId: 'profesor_456',
-      senderName: 'Dr. Carlos López',
-      preview: 'Hola, ¿cómo va tu progreso con el proyecto?',
-      chatId: 'chat_123_456'
-    })
-
-    // Notificación de clase próxima
-    notificationService.createUpcomingClassNotification(user.id, {
-      id: 'test_4',
-      tema: 'Inglés Conversacional',
-      fecha: '2024-01-15',
-      hora: '16:00'
-    })
-
-    alert('Notificaciones de prueba creadas. Revisa la campanita! 🎉')
-  }
 
   const [clases, setClases] = useState([])
   const [loading, setLoading] = useState(true)
@@ -174,81 +113,8 @@ const Dashboard = () => {
     }
   }
 
-  // Datos de ejemplo para estudiante
-  const studentData = {
-    proximasClases: [
-      {
-        id: 1,
-        profesor: 'Carlos Mendoza',
-        materia: 'Python Básico',
-        fecha: '2024-01-20',
-        hora: '10:00 AM',
-        duracion: '2 horas',
-        modalidad: 'Online',
-        estado: 'confirmada'
-      },
-      {
-        id: 2,
-        profesor: 'María García',
-        materia: 'Excel Avanzado',
-        fecha: '2024-01-22',
-        hora: '2:00 PM',
-        duracion: '1 hora',
-        modalidad: 'Online',
-        estado: 'pendiente'
-      }
-    ],
-    historialClases: [
-      {
-        profesor: 'Ana Rodríguez',
-        materia: 'Inglés Conversacional',
-        fecha: '2024-01-15',
-        calificacion: 5,
-        comentario: 'Excelente clase, muy didáctica'
-      }
-    ],
-    estadisticas: {
-      clasesTomadas: 12,
-      horasTotales: 18,
-      gastoTotal: 450000,
-      profesoresFavoritos: 3
-    }
-  }
-
-  // Datos de ejemplo para profesor
-  const teacherData = {
-    proximasClases: [
-      {
-        id: 1,
-        estudiante: 'Juan Pérez',
-        materia: 'Python Básico',
-        fecha: '2024-01-20',
-        hora: '10:00 AM',
-        duracion: '2 horas',
-        modalidad: 'Online',
-        estado: 'confirmada'
-      }
-    ],
-    solicitudesPendientes: [
-      {
-        estudiante: 'Laura Martínez',
-        materia: 'Django Framework',
-        fechaSolicitud: '2024-01-18',
-        fechaPropuesta: '2024-01-25',
-        hora: '3:00 PM'
-      }
-    ],
-    estadisticas: {
-      clasesImpartidas: 342,
-      estudiantesActivos: 89,
-      ingresosMes: 2100000,
-      calificacionPromedio: 4.9
-    }
-  }
-
   // Determinar el tipo de usuario
   const userType = user?.tipoUsuario || 'estudiante'
-  const data = userType === 'estudiante' ? studentData : teacherData
 
   const formatPrecio = (precio) => {
     return new Intl.NumberFormat('es-CO', {
@@ -853,7 +719,6 @@ const Dashboard = () => {
       </div>
 
       {/* Componente de prueba para notificaciones (solo en desarrollo) */}
-      <NotificationTriggers />
     </div>
   )
 }
