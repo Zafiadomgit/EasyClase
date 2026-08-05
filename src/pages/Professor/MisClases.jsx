@@ -7,6 +7,7 @@ const MisClases = ({ embebido = false }) => {
   const [loading, setLoading] = useState(true)
   const [eliminando, setEliminando] = useState(null)
   const [aviso, setAviso] = useState('')
+  const [fallo, setFallo] = useState('')
 
   useEffect(() => {
     cargarClases()
@@ -19,16 +20,20 @@ const MisClases = ({ embebido = false }) => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setClases(data.success ? (data.data?.plantillas || data.plantillas || []) : [])
+      const data = await response.json().catch(() => ({}))
+
+      if (response.ok && data.success) {
+        setFallo('')
+        setClases(data.data?.plantillas || data.plantillas || [])
       } else {
-        console.error('Error cargando clases:', response.status)
-        setClases([])
+        // Un fallo del servidor no debe verse como "no tienes clases": eso hace
+        // creer que se borraron cuando en realidad no se pudieron leer.
+        console.error('Error cargando clases:', response.status, data.message)
+        setFallo(data.message || 'No pudimos cargar tus clases. Vuelve a intentarlo en un momento.')
       }
     } catch (error) {
       console.error('Error cargando clases:', error)
-      setClases([])
+      setFallo('No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -135,7 +140,17 @@ const MisClases = ({ embebido = false }) => {
           </div>
         )}
 
-        {clases.length === 0 ? (
+        {fallo ? (
+          <div className="bg-red-500/10 border border-red-400/40 rounded-2xl p-6 text-center">
+            <p className="text-red-100 mb-4">{fallo}</p>
+            <button
+              onClick={cargarClases}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-white/10 border border-white/30 hover:bg-white/20 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : clases.length === 0 ? (
           <div className={`bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 text-center ${embebido ? 'p-8' : 'p-12 max-w-2xl mx-auto'}`}>
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/20 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-purple-300" />

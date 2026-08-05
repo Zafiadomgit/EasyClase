@@ -221,10 +221,10 @@ const Header = () => {
               </button>
 
               {isCategoriesOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 py-4 z-50">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-800">Todas las Categorías</h3>
-                    <p className="text-xs text-gray-600">Encuentra tu profesor ideal</p>
+                <div className="absolute top-full left-0 mt-2 w-80 bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 py-4 z-50">
+                  <div className="px-4 py-2 border-b border-white/15">
+                    <h3 className="text-sm font-semibold text-white">Todas las Categorías</h3>
+                    <p className="text-xs text-purple-300">Encuentra tu profesor ideal</p>
                   </div>
 
                   <div className="py-2">
@@ -232,7 +232,7 @@ const Header = () => {
                       <button
                         key={categoria.name}
                         onClick={() => handleCategoryClick(categoria.name)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors rounded-xl mx-2"
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -240,15 +240,15 @@ const Header = () => {
                           </div>
                           <div className="text-left">
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium text-gray-800">{categoria.name}</span>
+                              <span className="text-sm font-medium text-white">{categoria.name}</span>
                               {categoria.popular && (
-                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center">
+                                <span className="px-2 py-1 bg-amber-500/20 text-amber-200 text-xs font-medium rounded-full flex items-center">
                                   <Star className="w-3 h-3 mr-1" />
                                   Popular
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-gray-600">{categoria.profesores} profesores</span>
+                            <span className="text-xs text-purple-300">{categoria.profesores} profesores</span>
                           </div>
                         </div>
                         <ChevronDown className="w-4 h-4 text-gray-500 rotate-[-90deg]" />
@@ -310,10 +310,10 @@ const Header = () => {
                   </button>
 
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border border-white/30">
+                    <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-50 border border-white/20">
                       <Link
                         to="/dashboard"
-                        className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                        className="block px-4 py-3 text-sm text-purple-100 hover:bg-white/10 hover:text-white transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Mi Dashboard
@@ -322,7 +322,7 @@ const Header = () => {
                       {user?.tipoUsuario === 'profesor' && (
                         <Link
                           to="/profesor/disponibilidad"
-                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                          className="block px-4 py-3 text-sm text-purple-100 hover:bg-white/10 hover:text-white transition-colors rounded-xl mx-2"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           📅 Configurar Disponibilidad
@@ -330,7 +330,7 @@ const Header = () => {
                       )}
                       <Link
                         to="/perfil"
-                        className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                        className="block px-4 py-3 text-sm text-purple-100 hover:bg-white/10 hover:text-white transition-colors rounded-xl mx-2"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Mi Perfil
@@ -340,7 +340,7 @@ const Header = () => {
                       {user?.email === 'admin@easyclase.com' && (
                         <Link
                           to="/admin/super"
-                          className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium"
+                          className="block px-4 py-2 text-sm text-red-300 hover:bg-red-500/10 font-medium"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <div className="flex items-center">
@@ -355,7 +355,7 @@ const Header = () => {
                       {user?.tipoUsuario === 'profesor' && (
                         <Link
                           to="/mis-clases"
-                          className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                          className="block px-4 py-3 text-sm text-purple-100 hover:bg-white/10 hover:text-white transition-colors rounded-xl mx-2"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Mis Clases
@@ -366,7 +366,7 @@ const Header = () => {
                         <>
                           <Link
                             to="/mis-reservas"
-                            className="block px-4 py-3 text-sm text-gray-800 hover:bg-purple-100 transition-colors rounded-xl mx-2"
+                            className="block px-4 py-3 text-sm text-purple-100 hover:bg-white/10 hover:text-white transition-colors rounded-xl mx-2"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             Mis Reservas
@@ -377,7 +377,7 @@ const Header = () => {
                       {/* Opción Premium para Profesores */}
                       {user?.tipoUsuario === 'profesor' && (
                         <>
-                          <hr className="my-1" />
+                          <hr className="my-1 border-white/15" />
                           <Link
                             to="/premium"
                             className="block px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 font-medium"
@@ -390,22 +390,22 @@ const Header = () => {
 
                       {(user?.tipoUsuario === 'admin' || ['admin', 'superadmin'].includes(user?.rol)) && (
                         <>
-                          <hr className="my-1" />
+                          <hr className="my-1 border-white/15" />
                           <Link
                             to="/admin"
-                            className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
+                            className="block px-4 py-2 text-sm text-red-300 hover:bg-red-500/10 font-medium"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             🛡️ Panel Admin
                           </Link>
                         </>
                       )}
-                      <hr className="my-1" />
+                      <hr className="my-1 border-white/15" />
 
 
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center transition-colors rounded-xl mx-2"
+                        className="w-full text-left px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 flex items-center transition-colors rounded-xl mx-2"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Cerrar Sesión
