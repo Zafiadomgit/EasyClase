@@ -22,7 +22,7 @@ permissions:
   issues: write
 
 env:
-  APP_URL: https://easy-clase-er9o.vercel.app
+  APP_URL: https://easyclase.com
 
 jobs:
   ping:

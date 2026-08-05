@@ -27,8 +27,10 @@ const getMercadoPago = () => {
   return { preference: mpPreference, payment: mpPayment };
 };
 
-// URL pública del frontend para construir las back_urls y el webhook.
-const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://easy-clase-er9o.vercel.app').replace(/\/$/, '');
+// URL pública del sitio. Se usa para las back_urls y el webhook de Mercado
+// Pago, y para los enlaces de los correos (recuperar contraseña incluido), así
+// que debe apuntar siempre al dominio que ve el usuario.
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://easyclase.com').replace(/\/$/, '');
 
 // Monto mínimo cobrable, en COP. Mercado Pago define un mínimo por medio de
 // pago y oculta del checkout los que no lo alcanzan: Visa/Mastercard (crédito
