@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Clock, Users, BookOpen, Code, Calculator, Globe, MapPin, Filter, ChevronDown, ChevronUp, Briefcase, Zap, Target, Eye, TrendingUp, Crown, Percent, CheckCircle } from 'lucide-react'
 import CategoriesModal from '../components/Modal/CategoriesModal'
-import TestimonialsCarousel from '../components/Testimonials/TestimonialsCarousel'
 // import BlurText from '../components/BlurText' // Temporalmente deshabilitado para build
 import { useScrollReveal, useScrollRevealStagger } from '../hooks/useScrollReveal'
 import {
@@ -314,18 +313,20 @@ const Home = () => {
               </div>
 
               {/* Stats */}
+              {/* Sin cifras de usuarios: la plataforma acaba de abrir y
+                  anunciar números inventados es engañar al que llega. */}
               <div className="flex flex-wrap justify-center gap-8 text-center">
                 <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-blue-400">500+</span>
-                  <span className="text-purple-200 text-sm font-medium">Profesores Activos</span>
+                  <span className="text-3xl font-bold text-blue-400">Pago seguro</span>
+                  <span className="text-purple-200 text-sm font-medium">A través de Mercado Pago</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-blue-400">2,000+</span>
-                  <span className="text-purple-200 text-sm font-medium">Estudiantes</span>
+                  <span className="text-3xl font-bold text-blue-400">Clases en vivo</span>
+                  <span className="text-purple-200 text-sm font-medium">Videollamada incluida</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-blue-400">15,000+</span>
-                  <span className="text-purple-200 text-sm font-medium">Clases Completadas</span>
+                  <span className="text-3xl font-bold text-blue-400">Sin permanencia</span>
+                  <span className="text-purple-200 text-sm font-medium">Pagas solo la clase que tomas</span>
                 </div>
               </div>
             </div>
@@ -666,13 +667,6 @@ const Home = () => {
 
 
 
-        {/* Testimonios con Carrusel */}
-        <section className="py-20 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <TestimonialsCarousel />
-          </div>
-        </section>
-
         {/* FAQ Section */}
         <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -766,11 +760,11 @@ const Home = () => {
               </div>
               <div className="flex items-center text-white/80 text-sm">
                 <Users className="w-4 h-4 mr-2" />
-                <span>Más de 2,000 estudiantes</span>
+                <span>Profesores verificados</span>
               </div>
               <div className="flex items-center text-white/80 text-sm">
                 <Star className="w-4 h-4 mr-2 fill-current" />
-                <span>4.9/5 calificación promedio</span>
+                <span>Reseñas de estudiantes reales</span>
               </div>
             </div>
           </div>

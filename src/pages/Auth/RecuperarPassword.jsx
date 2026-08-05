@@ -7,16 +7,24 @@ const RecuperarPassword = () => {
   const [enviado, setEnviado] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  // Envía de verdad el correo de recuperación. El backend responde siempre lo
+  // mismo exista o no la cuenta, para no revelar qué correos están registrados.
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email.trim()) return
     setLoading(true)
-    // Nota: el envío real de email requiere un servicio SMTP configurado.
-    // Por ahora se muestra el mensaje estándar (no revela si el correo existe).
-    setTimeout(() => {
+    try {
+      await fetch('/api/auth/recuperar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() })
+      })
+    } catch (error) {
+      console.error('Error solicitando recuperación:', error)
+    } finally {
       setEnviado(true)
       setLoading(false)
-    }, 500)
+    }
   }
 
   return (
