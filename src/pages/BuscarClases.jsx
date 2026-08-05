@@ -4,6 +4,18 @@ import { Search, Filter, Star, MapPin, Clock, DollarSign, Crown, ChevronLeft, Ch
 import { profesorService } from '../services/api'
 import { formatPrecio, formatPrecioPorHora } from '../utils/currencyUtils'
 
+// Precio a mostrar para un profesor: su tarifa de perfil o, si no la fijó, el
+// precio más bajo de las clases que publicó (el backend ya lo calcula, esto
+// cubre respuestas antiguas en caché).
+const precioProfesor = (profesor) => {
+  const propio = Number(profesor?.precioPorHora) || 0
+  if (propio > 0) return propio
+  const precios = (profesor?.clases || [])
+    .map(c => Number(c.precio))
+    .filter(p => Number.isFinite(p) && p > 0)
+  return precios.length ? Math.min(...precios) : 0
+}
+
 const BuscarClases = () => {
   const [profesores, setProfesores] = useState([])
   const [profesoresFiltrados, setProfesoresFiltrados] = useState([])
@@ -385,10 +397,14 @@ const BuscarClases = () => {
                       </div>
                     </div>
                     
-                    {/* Precio destacado */}
+                    {/* Precio destacado. Si el profesor no fijó tarifa en su
+                        perfil, se muestra el precio más bajo de sus clases. */}
                     <div className="text-right">
+                      {profesor.precioDesdeClases && (
+                        <div className="text-xs text-purple-300 mb-1">desde</div>
+                      )}
                       <div className="text-3xl font-bold text-white mb-1">
-                        {formatPrecio(profesor.precioPorHora || 0)}
+                        {formatPrecio(precioProfesor(profesor))}
                       </div>
                       <div className="text-sm text-purple-200">por hora</div>
                     </div>
@@ -428,6 +444,11 @@ const BuscarClases = () => {
                                 <Clock className="w-3 h-3 mr-1" />
                                 {clase.titulo}
                                 {clase.materia ? ` · ${clase.materia}` : ''}
+                                {Number(clase.precio) > 0 && (
+                                  <span className="ml-2 font-semibold text-white">
+                                    {formatPrecio(Number(clase.precio))}/h
+                                  </span>
+                                )}
                               </span>
                             ))}
                           </div>

@@ -335,6 +335,23 @@ const shapeProfesor = (u) => {
   };
 };
 
+// Un profesor que se registra y publica clases nunca fija el precioPorHora de
+// su perfil (queda en 0), porque el precio real lo define en cada clase. Sin
+// esto la búsqueda mostraría "$0/hora" y la reserva cobraría el mínimo de
+// sandbox. Se toma el precio más bajo de sus clases como precio "desde".
+const aplicarPrecioDesdeClases = (profesor) => {
+  if (Number(profesor.precioPorHora) > 0) return profesor;
+  const precios = (profesor.clases || [])
+    .map(c => Number(c.precio))
+    .filter(p => Number.isFinite(p) && p > 0);
+  if (!precios.length) return profesor;
+  const desde = Math.min(...precios);
+  profesor.precioPorHora = desde;
+  profesor.precioHora = desde;
+  profesor.precioDesdeClases = true; // permite mostrar "desde $X" en la UI
+  return profesor;
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const generateToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET || 'dev_secret_change_in_prod', { expiresIn: '7d' });
@@ -623,7 +640,7 @@ app.get('/api/profesores', async (req, res) => {
       plantillas.forEach(pl => {
         (porProfesor[pl.profesor] = porProfesor[pl.profesor] || []).push(shapePlantilla(pl));
       });
-      data.forEach(p => { p.clases = porProfesor[p.id] || []; });
+      data.forEach(p => { p.clases = porProfesor[p.id] || []; aplicarPrecioDesdeClases(p); });
     } catch { data.forEach(p => { p.clases = p.clases || []; }); }
 
     // El filtro por categoría considera la categoría del perfil, las
@@ -777,6 +794,7 @@ app.get('/api/profesores/:id', async (req, res) => {
     try {
       const clases = await Plantilla.findAll({ where: { profesor: profe.id }, order: [['createdAt', 'DESC']] });
       profesor.clases = clases.map(shapePlantilla);
+      aplicarPrecioDesdeClases(profesor);
     } catch { profesor.clases = []; }
     res.json({ success: true, data: { profesor }, profesor });
   } catch (e) {
