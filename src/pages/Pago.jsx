@@ -14,6 +14,8 @@ const Pago = () => {
     monto: 0
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [saldo, setSaldo] = useState(0)
+  const [usarSaldo, setUsarSaldo] = useState(false)
 
   // Cargar datos de la reserva desde localStorage
   useEffect(() => {
@@ -56,6 +58,28 @@ const Pago = () => {
     setStep(2)
   }
 
+  // Saldo a favor del estudiante (de una clase rechazada). Solo se ofrece si
+  // cubre el total: un pago parcial obligaría a descontarlo antes de que
+  // Mercado Pago confirme, y un checkout abandonado lo dejaría sin saldo ni clase.
+  useEffect(() => {
+    const cargarSaldo = async () => {
+      try {
+        const r = await fetch('/api/saldo', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const d = await r.json()
+        if (d.success) setSaldo(Number(d.data?.disponible) || 0)
+      } catch {
+        setSaldo(0)
+      }
+    }
+    cargarSaldo()
+  }, [])
+
+  const formatSaldo = (v) => new Intl.NumberFormat('es-CO', {
+    style: 'currency', currency: 'COP', minimumFractionDigits: 0
+  }).format(Number(v) || 0)
+
   const handlePayment = async () => {
     setIsLoading(true)
     try {
@@ -81,6 +105,7 @@ const Pago = () => {
           hora: reservaData.hora,
           // Necesaria para bloquear todas las franjas que ocupa la clase.
           duracion: reservaData.duracionHoras || 1,
+          usarSaldo,
           referencia: `${referencia}_${Date.now()}`
         })
       })
@@ -88,7 +113,11 @@ const Pago = () => {
       const data = await response.json()
       const initPoint = data?.data?.init_point || data?.data?.sandbox_init_point
 
-      if (data.success && initPoint) {
+      if (data.success && data.data?.pagadoConSaldo) {
+        // Pagada íntegramente con saldo: no hay que pasar por Mercado Pago.
+        localStorage.removeItem('reservaPendiente')
+        navigate('/pago-exitoso', { state: { pagadoConSaldo: true } })
+      } else if (data.success && initPoint) {
         // Redirigir al checkout de Mercado Pago.
         window.location.href = initPoint
       } else if (response.status === 409) {
@@ -474,6 +503,39 @@ const Pago = () => {
                 </div>
               </div>
             )}
+
+                  {/* Saldo a favor: solo se ofrece si cubre el total */}
+                  {saldo > 0 && (
+                    <div className={`mb-6 rounded-2xl border p-5 ${
+                      saldo >= Number(formData.monto)
+                        ? 'border-green-400/40 bg-green-500/10'
+                        : 'border-white/20 bg-white/5'
+                    }`}>
+                      {saldo >= Number(formData.monto) ? (
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={usarSaldo}
+                            onChange={(e) => setUsarSaldo(e.target.checked)}
+                            className="mt-1 w-5 h-5 rounded accent-green-500"
+                          />
+                          <span>
+                            <span className="block font-semibold text-white">
+                              Pagar con mi saldo ({formatSaldo(saldo)})
+                            </span>
+                            <span className="block text-sm text-green-100/80 mt-1">
+                              Cubre el total de esta clase. No pasarás por Mercado Pago.
+                            </span>
+                          </span>
+                        </label>
+                      ) : (
+                        <p className="text-sm text-purple-200">
+                          Tienes <strong className="text-white">{formatSaldo(saldo)}</strong> de saldo a favor,
+                          pero no alcanza para el total de esta clase. Puedes usarlo en una clase de menor precio.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Botones de acción */}
                   <div className="flex flex-col sm:flex-row gap-6">
