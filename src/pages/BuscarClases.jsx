@@ -45,21 +45,32 @@ const BuscarClases = () => {
   const filtrarProfesores = (profesores) => {
     let filtrados = [...profesores]
 
-    // Filtro por búsqueda de texto
+    // Filtro por búsqueda de texto: además del perfil del profesor, se busca
+    // en las clases que ofrece (título, materia, categoría y descripción).
     if (queryParam) {
       const query = queryParam.toLowerCase()
-      filtrados = filtrados.filter(profesor => 
-        profesor.nombre.toLowerCase().includes(query) ||
-        profesor.especialidades.some(esp => esp.toLowerCase().includes(query)) ||
-        profesor.descripcion.toLowerCase().includes(query)
+      filtrados = filtrados.filter(profesor =>
+        (profesor.nombre || '').toLowerCase().includes(query) ||
+        (profesor.especialidades || []).some(esp => String(esp).toLowerCase().includes(query)) ||
+        (profesor.descripcion || '').toLowerCase().includes(query) ||
+        (profesor.categoria || '').toLowerCase().includes(query) ||
+        (profesor.clases || []).some(clase =>
+          (clase.titulo || '').toLowerCase().includes(query) ||
+          (clase.materia || '').toLowerCase().includes(query) ||
+          (clase.categoria || '').toLowerCase().includes(query) ||
+          (clase.descripcion || '').toLowerCase().includes(query)
+        )
       )
     }
 
-    // Filtro por categoría
+    // Filtro por categoría: perfil, especialidades o clases del profesor
     if (categoriaParam) {
-      filtrados = filtrados.filter(profesor => 
+      filtrados = filtrados.filter(profesor =>
         profesor.categoria === categoriaParam ||
-        profesor.especialidades.includes(categoriaParam)
+        (profesor.especialidades || []).includes(categoriaParam) ||
+        (profesor.clases || []).some(clase =>
+          clase.categoria === categoriaParam || clase.materia === categoriaParam
+        )
       )
     }
 
@@ -391,7 +402,7 @@ const BuscarClases = () => {
                     <div className="flex-1">
                       {/* Especialidades */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {profesor.especialidades.map((especialidad, idx) => (
+                        {(profesor.especialidades || []).map((especialidad, idx) => (
                           <span
                             key={idx}
                             className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-200 border border-purple-400/50 hover:from-purple-500/30 hover:to-blue-500/30 transition-all duration-300"
@@ -401,6 +412,27 @@ const BuscarClases = () => {
                           </span>
                         ))}
                       </div>
+
+                      {/* Clases que ofrece el profesor */}
+                      {(profesor.clases || []).length > 0 && (
+                        <div className="mb-4">
+                          <div className="text-xs font-semibold text-purple-300 uppercase tracking-wide mb-2">
+                            Clases que ofrece
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {profesor.clases.map((clase) => (
+                              <span
+                                key={clase.id}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-200 border border-blue-400/50"
+                              >
+                                <Clock className="w-3 h-3 mr-1" />
+                                {clase.titulo}
+                                {clase.materia ? ` · ${clase.materia}` : ''}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Modalidad y ubicación */}
                       <div className="flex flex-wrap items-center gap-6 mb-4 text-sm">

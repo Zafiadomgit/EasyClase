@@ -609,19 +609,49 @@ app.get('/api/profesores', async (req, res) => {
   try {
     if (!(await requireDB(res))) return;
     const { categoria, q } = req.query;
-    const where = { tipoUsuario: 'profesor', activo: true, profesorVisible: true };
-    if (categoria) where.categoria = categoria;
     const profes = await User.findAll({
-      where,
+      where: { tipoUsuario: 'profesor', activo: true, profesorVisible: true },
       order: [['premium', 'DESC'], ['calificacionPromedio', 'DESC']]
     });
     let data = profes.map(shapeProfesor);
+
+    // Adjuntar las clases (plantillas) de cada profesor para que la búsqueda
+    // de estudiantes también encuentre profesores por las clases que ofrecen.
+    try {
+      const plantillas = await Plantilla.findAll({ where: { profesor: data.map(p => p.id) } });
+      const porProfesor = {};
+      plantillas.forEach(pl => {
+        (porProfesor[pl.profesor] = porProfesor[pl.profesor] || []).push(shapePlantilla(pl));
+      });
+      data.forEach(p => { p.clases = porProfesor[p.id] || []; });
+    } catch { data.forEach(p => { p.clases = p.clases || []; }); }
+
+    // El filtro por categoría considera la categoría del perfil, las
+    // especialidades y también la categoría/materia de sus clases.
+    if (categoria) {
+      const c = String(categoria).toLowerCase();
+      data = data.filter(p =>
+        (p.categoria || '').toLowerCase() === c ||
+        (p.especialidades || []).some(e => String(e).toLowerCase() === c) ||
+        (p.clases || []).some(cl =>
+          (cl.categoria || '').toLowerCase() === c ||
+          (cl.materia || '').toLowerCase() === c
+        )
+      );
+    }
     if (q) {
       const s = String(q).toLowerCase();
       data = data.filter(p =>
         p.nombre.toLowerCase().includes(s) ||
         (p.especialidades || []).some(e => String(e).toLowerCase().includes(s)) ||
-        p.bio.toLowerCase().includes(s)
+        p.bio.toLowerCase().includes(s) ||
+        (p.categoria || '').toLowerCase().includes(s) ||
+        (p.clases || []).some(cl =>
+          (cl.titulo || '').toLowerCase().includes(s) ||
+          (cl.materia || '').toLowerCase().includes(s) ||
+          (cl.categoria || '').toLowerCase().includes(s) ||
+          (cl.descripcion || '').toLowerCase().includes(s)
+        )
       );
     }
     res.json({ success: true, data: { profesores: data }, profesores: data });
