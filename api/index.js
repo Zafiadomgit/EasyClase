@@ -822,11 +822,15 @@ app.post('/api/profesores/retirar', authMiddleware, async (req, res) => {
     const { comision, disponible } = await calcularBalance(prof);
     if (!Number.isFinite(monto) || monto <= 0) return res.status(400).json({ success: false, message: 'Monto inválido' });
     if (monto > disponible) return res.status(400).json({ success: false, message: 'El monto supera tu balance disponible' });
+    // La comisión ya se descontó al calcular el balance disponible
+    // (disponible = bruto × (1 - comisión)), así que el monto solicitado es
+    // exactamente lo que el profesor debe recibir. Volver a aplicarla aquí le
+    // cobraba la comisión dos veces.
     const retiro = await Retiro.create({
       profesor: prof.id,
       monto,
-      comision: Math.round(monto * comision),
-      montoNeto: Math.round(monto * (1 - comision)),
+      comision: 0,
+      montoNeto: monto,
       estado: 'pendiente',
       datosPago: req.body?.datosPago && typeof req.body.datosPago === 'object' ? req.body.datosPago : {}
     });
