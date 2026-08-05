@@ -84,7 +84,7 @@ const AdminRetiros = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Profesor', 'Monto', 'Comisión', 'Neto', 'Estado', 'Fecha', 'Acciones'].map(h => (
+                {['Profesor', 'A pagar', 'Estado', 'Fecha', 'Acciones'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{h}</th>
                 ))}
               </tr>
@@ -93,9 +93,10 @@ const AdminRetiros = () => {
               {retiros.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900">{r.profesorNombre}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{formatPrecio(r.monto)}</td>
-                  <td className="px-4 py-3 text-sm text-red-600">-{formatPrecio(r.comision)}</td>
-                  <td className="px-4 py-3 text-sm text-green-600">{formatPrecio(r.montoNeto)}</td>
+                  {/* La comisión se descuenta al calcular el balance del
+                      profesor, no en el retiro: este monto es lo que hay que
+                      transferirle tal cual. */}
+                  <td className="px-4 py-3 text-sm font-semibold text-gray-900">{formatPrecio(r.monto)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${color(r.estado)}`}>{r.estado}</span>
                   </td>
