@@ -16,7 +16,9 @@ import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 // que es impredecible.
 const JITSI_SCRIPT_ID = 'jitsi-external-api'
 
-const cargarJitsi = (dominio) => new Promise((resolve, reject) => {
+// La URL del script la decide el backend: cambia según el proveedor
+// configurado (meet.jit.si público o 8x8.vc con cuenta JaaS).
+const cargarJitsi = (urlScript) => new Promise((resolve, reject) => {
   if (window.JitsiMeetExternalAPI) return resolve()
   const existente = document.getElementById(JITSI_SCRIPT_ID)
   if (existente) {
@@ -26,7 +28,7 @@ const cargarJitsi = (dominio) => new Promise((resolve, reject) => {
   }
   const script = document.createElement('script')
   script.id = JITSI_SCRIPT_ID
-  script.src = `https://${dominio}/external_api.js`
+  script.src = urlScript
   script.async = true
   script.onload = () => resolve()
   script.onerror = () => reject(new Error('No se pudo cargar la videollamada'))
@@ -66,8 +68,8 @@ const VideoCallRoom = ({ claseId: claseIdProp, onLeave }) => {
           return
         }
 
-        const { sala, dominio, nombreUsuario, titulo, terminaEn } = datos.data
-        await cargarJitsi(dominio)
+        const { sala, dominio, script, nombreUsuario, titulo, terminaEn } = datos.data
+        await cargarJitsi(script || `https://${dominio}/external_api.js`)
         if (cancelado || !contenedorRef.current) return
 
         const api = new window.JitsiMeetExternalAPI(dominio, {

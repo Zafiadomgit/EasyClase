@@ -8,17 +8,34 @@ import {
   TrendingUp, 
   Star,
   Crown,
-  Calendar
+  Calendar,
+  Video
 } from 'lucide-react'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null)
+  const [usoVideo, setUsoVideo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     fetchDashboardStats()
+    fetchUsoVideollamadas()
   }, [])
+
+  // Consumo de videollamadas del mes, para anticipar cuándo habría que pasar a
+  // un proveedor de pago en vez de enterarse el día que deje de funcionar.
+  const fetchUsoVideollamadas = async () => {
+    try {
+      const respuesta = await fetch('/api/admin/videollamadas/uso', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      })
+      const datos = await respuesta.json()
+      if (datos.success) setUsoVideo(datos.data)
+    } catch (e) {
+      console.error('Error obteniendo uso de videollamadas:', e)
+    }
+  }
 
   const fetchDashboardStats = async () => {
     try {
@@ -89,6 +106,61 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Consumo de videollamadas */}
+      {usoVideo && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className={`rounded-lg border p-5 ${
+            usoVideo.nivel === 'superado' ? 'bg-red-50 border-red-200'
+              : usoVideo.nivel === 'critico' ? 'bg-amber-50 border-amber-200'
+              : usoVideo.nivel === 'atencion' ? 'bg-blue-50 border-blue-200'
+              : 'bg-white border-secondary-200'
+          }`}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center">
+                <Video className="w-5 h-5 text-secondary-700 mr-2" />
+                <h2 className="font-semibold text-secondary-900">Videollamadas este mes</h2>
+              </div>
+              <span className="text-sm text-secondary-600">{usoVideo.mes}</span>
+            </div>
+
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-3xl font-bold text-secondary-900">{usoVideo.usuariosActivos}</span>
+              <span className="text-secondary-600">
+                usuarios activos · {usoVideo.sesiones} entradas a sala
+              </span>
+            </div>
+
+            <div className="w-full bg-secondary-200 rounded-full h-2 mb-2">
+              <div
+                className={`h-2 rounded-full ${
+                  usoVideo.nivel === 'superado' || usoVideo.nivel === 'critico' ? 'bg-red-500'
+                    : usoVideo.nivel === 'atencion' ? 'bg-amber-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(100, usoVideo.porcentaje)}%` }}
+              ></div>
+            </div>
+
+            <p className="text-sm text-secondary-600">
+              {usoVideo.porcentaje}% de {usoVideo.limite} usuarios/mes
+              {usoVideo.limiteFacturable ? ' del plan gratuito' : ' (umbral de referencia)'}.
+              {' '}Proveedor: {usoVideo.proveedor}.
+            </p>
+
+            {usoVideo.nivel !== 'ok' && (
+              <p className="text-sm font-medium mt-2 text-secondary-900">
+                {usoVideo.limiteFacturable
+                  ? (usoVideo.nivel === 'superado'
+                      ? 'Superaste el plan gratuito: revisa la facturación de JaaS, el siguiente plan cuesta 99 USD/mes por 300 usuarios.'
+                      : usoVideo.nivel === 'critico'
+                        ? 'Estás cerca del tope del plan gratuito. Prepara el paso al plan de pago.'
+                        : 'Vas por la mitad del plan gratuito. Sigue el ritmo mes a mes.')
+                  : 'La instancia pública no cobra por usuarios, pero tampoco garantiza servicio. A este volumen conviene evaluar un proveedor con soporte.'}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Estadísticas principales */}
