@@ -42,7 +42,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, Notificacion, AccesoVideollamada, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, Notificacion, AccesoVideollamada, MovimientoSaldo, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -154,7 +154,13 @@ const initDB = async () => {
       hora: { type: DataTypes.STRING(20), defaultValue: '' },
       // Duración en horas de la clase reservada. Necesaria para saber qué
       // franjas quedan ocupadas y no permitir que otro alumno las tome.
-      duracion: { type: DataTypes.INTEGER, defaultValue: 1 }
+      duracion: { type: DataTypes.INTEGER, defaultValue: 1 },
+      // Decisión del profesor sobre la reserva, independiente del estado del
+      // pago: una clase puede estar pagada y aún así ser rechazada.
+      estadoProfesor: { type: DataTypes.STRING(20), defaultValue: 'pendiente' }, // pendiente|aceptada|rechazada
+      motivoRechazo: { type: DataTypes.TEXT, defaultValue: '' },
+      // Parte del precio cubierta con saldo de la billetera del estudiante.
+      pagadoConSaldo: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 }
     }, { tableName: 'transacciones', timestamps: true, indexes: [{ fields: ['referencia'] }, { fields: ['usuario'] }, { fields: ['profesorId'] }] });
 
     // Notificaciones por usuario. Antes vivían en el localStorage del navegador,
@@ -182,6 +188,22 @@ const initDB = async () => {
       claseId: { type: DataTypes.INTEGER, allowNull: true },
       mes: { type: DataTypes.STRING(7), allowNull: false } // 'YYYY-MM'
     }, { tableName: 'accesos_videollamada', timestamps: true, indexes: [{ fields: ['mes'] }, { fields: ['usuario'] }] });
+
+    // Billetera del estudiante. Se lleva como movimientos y no como un número
+    // suelto: así queda el rastro de por qué se abonó o gastó cada peso, que es
+    // lo que permite responder una reclamación.
+    //
+    // Este saldo NO es retirable por diseño: nace de una clase que el
+    // estudiante ya pagó y el profesor rechazó, así que solo sirve para tomar
+    // otra clase. No existe ningún endpoint que lo convierta en dinero.
+    MovimientoSaldo = sequelize.define('MovimientoSaldo', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      usuario: { type: DataTypes.INTEGER, allowNull: false },
+      tipo: { type: DataTypes.STRING(10), allowNull: false }, // credito|debito
+      monto: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+      concepto: { type: DataTypes.STRING(200), defaultValue: '' },
+      transaccionId: { type: DataTypes.INTEGER, allowNull: true }
+    }, { tableName: 'movimientos_saldo', timestamps: true, indexes: [{ fields: ['usuario'] }] });
 
     // Plantillas de clase creadas por un profesor (clases en vivo ofrecidas).
     Plantilla = sequelize.define('Plantilla', {
@@ -245,7 +267,8 @@ const initDB = async () => {
       Review.sync({ alter: true }),
       Retiro.sync({ alter: true }),
       Notificacion.sync({ alter: true }),
-      AccesoVideollamada.sync({ alter: true })
+      AccesoVideollamada.sync({ alter: true }),
+      MovimientoSaldo.sync({ alter: true })
     ]);
     // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
     // profesores existan.
@@ -791,7 +814,9 @@ const MONTO_MINIMO_RETIRO = Number(process.env.MONTO_MINIMO_RETIRO) || 50000;
 
 // Calcula el balance disponible para retiro de un profesor.
 const calcularBalance = async (prof) => {
-  const claseGross = (await Transaccion.sum('precio', { where: { profesorId: prof.id, tipo: 'clase', estado: 'aprobado' } })) || 0;
+  // Las clases rechazadas por el profesor no son ingreso suyo: ese importe se
+  // le devolvió al estudiante como saldo.
+  const claseGross = (await Transaccion.sum('precio', { where: { profesorId: prof.id, tipo: 'clase', estado: 'aprobado', estadoProfesor: ['pendiente', 'aceptada'] } })) || 0;
   const misServicios = await Servicio.findAll({ where: { proveedor: prof.id }, attributes: ['id'] });
   const ids = misServicios.map(s => s.id);
   const servicioGross = ids.length ? ((await Transaccion.sum('precio', { where: { servicioId: ids, tipo: 'servicio', estado: 'aprobado' } })) || 0) : 0;
@@ -1460,6 +1485,9 @@ const shapeReserva = (t, contraparte) => {
     duracion: j.duracion || 1,
     precio: Number(j.precio) || 0,
     estado,
+    estadoProfesor: j.estadoProfesor || 'pendiente',
+    motivoRechazo: j.motivoRechazo || '',
+    pagadoConSaldo: Number(j.pagadoConSaldo) || 0,
     profesorId: j.profesorId || null,
     estudianteId: j.usuario || null,
     profesor: contraparte?.profesor || '',
@@ -1513,11 +1541,163 @@ app.get('/api/clases/profesor/mis-clases', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── Billetera del estudiante ────────────────────────────────────────────────
+const saldoDisponible = async (usuario) => {
+  const creditos = (await MovimientoSaldo.sum('monto', { where: { usuario, tipo: 'credito' } })) || 0;
+  const debitos = (await MovimientoSaldo.sum('monto', { where: { usuario, tipo: 'debito' } })) || 0;
+  return Math.max(0, Math.round(Number(creditos) - Number(debitos)));
+};
+
+app.get('/api/saldo', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const [disponible, movimientos] = await Promise.all([
+      saldoDisponible(req.userId),
+      MovimientoSaldo.findAll({ where: { usuario: req.userId }, order: [['createdAt', 'DESC']], limit: 20 })
+    ]);
+    res.json({
+      success: true,
+      data: {
+        disponible,
+        // Se deja explícito para que la interfaz no ofrezca retirarlo.
+        retirable: false,
+        movimientos: movimientos.map(m => {
+          const j = m.toJSON();
+          return {
+            id: j.id,
+            tipo: j.tipo,
+            monto: Number(j.monto) || 0,
+            concepto: j.concepto || '',
+            fecha: j.createdAt
+          };
+        })
+      }
+    });
+  } catch (e) {
+    console.error('Error obteniendo el saldo:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tu saldo' });
+  }
+});
+
+// ─── Solicitudes de clase (decisión del profesor) ────────────────────────────
+
+// Clases pagadas que esperan que el profesor las acepte o rechace.
+app.get('/api/clases/profesor/solicitudes', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const txs = await Transaccion.findAll({
+      where: { profesorId: req.userId, tipo: 'clase', estado: 'aprobado', estadoProfesor: 'pendiente' },
+      order: [['createdAt', 'ASC']]
+    });
+    const alumnos = await nombresDeUsuarios(txs.map(t => t.usuario));
+    const solicitudes = txs.map(t => shapeReserva(t, { estudiante: alumnos[t.usuario] || 'Estudiante' }));
+    res.json({ success: true, data: { solicitudes }, solicitudes });
+  } catch (e) {
+    console.error('Error obteniendo solicitudes:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener las solicitudes' });
+  }
+});
+
+// Carga una solicitud comprobando que pertenece al profesor y sigue pendiente.
+const solicitudDelProfesor = async (id, profesorId, res) => {
+  const t = await Transaccion.findByPk(id);
+  if (!t || t.tipo !== 'clase') {
+    res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    return null;
+  }
+  if (t.profesorId !== profesorId) {
+    res.status(403).json({ success: false, message: 'No autorizado' });
+    return null;
+  }
+  if (t.estadoProfesor !== 'pendiente') {
+    res.status(409).json({ success: false, message: `Esta solicitud ya fue ${t.estadoProfesor}` });
+    return null;
+  }
+  return t;
+};
+
+app.put('/api/clases/:id/aceptar', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const t = await solicitudDelProfesor(req.params.id, req.userId, res);
+    if (!t) return;
+
+    await t.update({ estadoProfesor: 'aceptada' });
+
+    const cuando = [t.fecha, t.hora].filter(Boolean).join(' a las ');
+    await crearNotificacion(t.usuario, {
+      titulo: 'Tu clase fue confirmada',
+      mensaje: `El profesor confirmó "${t.titulo}"${cuando ? ` del ${cuando}` : ''}.`,
+      tipo: 'reserva',
+      icono: 'check',
+      color: 'green',
+      url: '/mis-clases'
+    });
+
+    res.json({ success: true, message: 'Solicitud aceptada' });
+  } catch (e) {
+    console.error('Error aceptando la solicitud:', e);
+    res.status(500).json({ success: false, message: 'Error al aceptar la solicitud' });
+  }
+});
+
+app.put('/api/clases/:id/rechazar', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+
+    // El motivo es obligatorio: el estudiante ya pagó y merece una explicación.
+    const motivo = String(req.body?.motivo || '').trim();
+    if (motivo.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Explica en al menos 10 caracteres por qué rechazas la clase.'
+      });
+    }
+
+    const t = await solicitudDelProfesor(req.params.id, req.userId, res);
+    if (!t) return;
+
+    await t.update({ estadoProfesor: 'rechazada', motivoRechazo: motivo });
+
+    // El importe vuelve al estudiante como saldo, no como devolución de dinero:
+    // así se queda dentro de la plataforma para tomar otra clase.
+    const importe = Number(t.precio) || 0;
+    if (t.usuario && importe > 0) {
+      await MovimientoSaldo.create({
+        usuario: t.usuario,
+        tipo: 'credito',
+        monto: importe,
+        concepto: `Clase rechazada: ${t.titulo}`,
+        transaccionId: t.id
+      });
+    }
+
+    await crearNotificacion(t.usuario, {
+      titulo: 'Tu clase fue rechazada',
+      mensaje: `El profesor no pudo aceptar "${t.titulo}". Motivo: ${motivo}. Se abonaron $${importe.toLocaleString('es-CO')} a tu saldo para que tomes otra clase.`,
+      tipo: 'reserva',
+      icono: 'alert',
+      color: 'yellow',
+      url: '/mis-clases'
+    });
+
+    res.json({ success: true, message: 'Solicitud rechazada y saldo devuelto al estudiante' });
+  } catch (e) {
+    console.error('Error rechazando la solicitud:', e);
+    res.status(500).json({ success: false, message: 'Error al rechazar la solicitud' });
+  }
+});
+
 // Horas ya ocupadas de un profesor en una fecha. Se consulta al reservar para
 // no ofrecer una franja que otro alumno ya pagó.
 const horasOcupadas = async (profesorId, fecha) => {
   const txs = await Transaccion.findAll({
-    where: { profesorId, fecha, tipo: 'clase', estado: ['aprobado', 'pendiente'] },
+    where: {
+      profesorId, fecha, tipo: 'clase',
+      estado: ['aprobado', 'pendiente'],
+      // Una clase rechazada por el profesor deja el horario libre otra vez.
+      estadoProfesor: ['pendiente', 'aceptada']
+    },
     attributes: ['hora', 'duracion', 'estado', 'createdAt']
   });
   const ocupadas = new Set();
@@ -1917,6 +2097,61 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
       }
     }
 
+    // ── Pago con saldo de la billetera ───────────────────────────────────────
+    // Solo se admite cubrir el total: el saldo se descuenta en el momento y la
+    // compra queda cerrada. Un pago parcial obligaría a descontar antes de que
+    // Mercado Pago confirme, y un checkout abandonado dejaría al estudiante sin
+    // saldo y sin clase.
+    const usuarioId = getUserIdOptional(req);
+    const total = unitPrice * quantity;
+    if (b.usarSaldo && usuarioId) {
+      await initDB();
+      if (dbReady) {
+        const saldo = await saldoDisponible(usuarioId);
+        if (saldo < total) {
+          return res.status(400).json({
+            success: false,
+            message: `Tu saldo ($${saldo.toLocaleString('es-CO')}) no cubre el total ($${total.toLocaleString('es-CO')}). Puedes pagar la diferencia con tarjeta sin usar el saldo.`,
+            saldoDisponible: saldo
+          });
+        }
+
+        const nueva = await Transaccion.create({
+          usuario: usuarioId,
+          tipo: b.tipo === 'clase' ? 'clase' : 'servicio',
+          referencia: referencia ? String(referencia) : `saldo_${Date.now()}`,
+          titulo: String(titulo),
+          descripcion: descripcion ? String(descripcion) : '',
+          categoria: b.categoria ? String(b.categoria) : '',
+          precio: total,
+          estado: 'aprobado',
+          paymentId: 'saldo',
+          servicioId: Number.isFinite(Number(b.servicioId)) ? Number(b.servicioId) : null,
+          profesorId: Number.isFinite(profesorIdNum) ? profesorIdNum : null,
+          fecha: b.fecha ? String(b.fecha) : '',
+          hora: b.hora ? String(b.hora) : '',
+          duracion: duracionHoras,
+          pagadoConSaldo: total
+        });
+
+        await MovimientoSaldo.create({
+          usuario: usuarioId,
+          tipo: 'debito',
+          monto: total,
+          concepto: `Clase pagada con saldo: ${titulo}`,
+          transaccionId: nueva.id
+        });
+
+        await notificarReservaPagada(nueva);
+
+        return res.status(201).json({
+          success: true,
+          message: 'Clase pagada con tu saldo',
+          data: { pagadoConSaldo: true, transaccionId: nueva.id, saldoRestante: await saldoDisponible(usuarioId) }
+        });
+      }
+    }
+
     const preferenceBody = {
       items: [
         {
@@ -1960,7 +2195,7 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
       await initDB();
       if (Transaccion) {
         await Transaccion.create({
-          usuario: getUserIdOptional(req),
+          usuario: usuarioId,
           tipo: b.tipo === 'clase' ? 'clase' : 'servicio',
           referencia: referencia ? String(referencia) : String(result.id),
           titulo: String(titulo),

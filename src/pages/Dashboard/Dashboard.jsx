@@ -108,6 +108,7 @@ const Dashboard = () => {
   const [selectedClaseId, setSelectedClaseId] = useState(null)
   const [mensajeExito, setMensajeExito] = useState('')
   const [balanceDisponible, setBalanceDisponible] = useState(0)
+  const [saldo, setSaldo] = useState(null)
   const [loadingRetiro, setLoadingRetiro] = useState(false)
   const [showRetiroModal, setShowRetiroModal] = useState(false)
   const [montoRetiro, setMontoRetiro] = useState(0)
@@ -141,6 +142,20 @@ const Dashboard = () => {
         setClases(datos.success ? (datos.data?.clases || datos.clases || []) : [])
       } catch (clasesError) {
         setClases([])
+      }
+
+      // Saldo de la billetera del estudiante (lo que se le devolvió al
+      // rechazarle una clase). No es retirable: solo sirve para otra clase.
+      if (isEstudiante()) {
+        try {
+          const r = await fetch('/api/saldo', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          })
+          const d = await r.json()
+          setSaldo(d.success ? d.data : null)
+        } catch (saldoError) {
+          setSaldo(null)
+        }
       }
 
       // Obtener balance si es profesor
@@ -588,39 +603,38 @@ const Dashboard = () => {
                     <Bell className="w-5 h-5 mr-2" />
                     Solicitudes Pendientes
                   </h2>
-
-                  {data.solicitudesPendientes.length > 0 ? (
-                    <div className="space-y-4">
-                      {data.solicitudesPendientes.map((solicitud, index) => (
-                        <div key={index} className="border border-white/20 rounded-lg p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold text-white">{solicitud.materia}</h3>
-                              <p className="text-purple-200 text-sm">Estudiante: {solicitud.estudiante}</p>
-                              <p className="text-purple-200 text-sm">
-                                Solicitud: {solicitud.fechaSolicitud} • Propuesta: {solicitud.fechaPropuesta} a las {solicitud.hora}
-                              </p>
-                            </div>
-                            <div className="flex space-x-2">
-                              <button className="btn-primary text-sm px-3 py-1">Aceptar</button>
-                              <button className="btn-secondary text-sm px-3 py-1">Rechazar</button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-purple-300">
-                      <Bell className="w-12 h-12 mx-auto mb-4 text-purple-300/60" />
-                      <p>No tienes solicitudes pendientes</p>
-                    </div>
-                  )}
+                  {/* Solicitudes reales: clases ya pagadas que esperan tu
+                      confirmación. Antes aquí había ejemplos inventados. */}
+                  <ReservasPendientes onCambio={cargarDatos} />
                 </div>
               )}
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Billetera: saldo a favor del estudiante, no retirable */}
+              {isEstudiante() && saldo && saldo.disponible > 0 && (
+                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-xl rounded-2xl border border-green-400/40 p-6 shadow-2xl">
+                  <h2 className="text-sm font-semibold text-green-200 flex items-center mb-2">
+                    <DollarSign className="w-4 h-4 mr-1.5" />
+                    Tu saldo a favor
+                  </h2>
+                  <p className="text-3xl font-bold text-white mb-2">
+                    {formatPrecio(saldo.disponible)}
+                  </p>
+                  <p className="text-xs text-green-100/80 leading-relaxed mb-4">
+                    Se abona cuando un profesor rechaza una clase que ya pagaste.
+                    Puedes usarlo para reservar otra clase; no es retirable.
+                  </p>
+                  <button
+                    onClick={() => navigate('/buscar')}
+                    className="w-full bg-white/15 border border-white/30 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-white/25 transition-colors"
+                  >
+                    Usarlo en una clase
+                  </button>
+                </div>
+              )}
+
               {/* Acciones rápidas */}
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
                 <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
