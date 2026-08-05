@@ -258,18 +258,14 @@ const initDB = async () => {
     // alter:true añade columnas nuevas (perfil profesor) a la tabla existente.
     // Se sincronizan en paralelo: en serie eran ocho viajes de ida y vuelta
     // encadenados a la base en cada arranque en frío de la función.
-    await Promise.all([
-      User.sync({ alter: true }),
-      Servicio.sync({ alter: true }),
-      Transaccion.sync({ alter: true }),
-      Plantilla.sync({ alter: true }),
-      Disponibilidad.sync({ alter: true }),
-      Review.sync({ alter: true }),
-      Retiro.sync({ alter: true }),
-      Notificacion.sync({ alter: true }),
-      AccesoVideollamada.sync({ alter: true }),
-      MovimientoSaldo.sync({ alter: true })
-    ]);
+    // En serie a propósito. Se probó en paralelo para acelerar el arranque en
+    // frío y fue un error: son 10 sincronizaciones sobre un pool de 2
+    // conexiones con 10 s de espera, así que la mayoría expiraba, la conexión
+    // quedaba marcada como no lista y todos los endpoints respondían 503.
+    for (const modelo of [User, Servicio, Transaccion, Plantilla, Disponibilidad,
+                          Review, Retiro, Notificacion, AccesoVideollamada, MovimientoSaldo]) {
+      await modelo.sync({ alter: true });
+    }
     // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
     // profesores existan.
     await seedProfesores();
