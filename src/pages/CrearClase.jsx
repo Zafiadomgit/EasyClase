@@ -80,8 +80,10 @@ const CrearClase = () => {
         throw new Error('Por favor ingresa un precio válido')
       }
 
-      if (claseData.precio < 10) {
-        throw new Error('El precio debe ser mínimo $10 COP')
+      // Por debajo de este monto Mercado Pago oculta las tarjetas del checkout
+      // y el alumno solo podría pagar con saldo en cuenta.
+      if (claseData.precio < 1000) {
+        throw new Error('El precio debe ser mínimo $1.000 COP para que el alumno pueda pagar con tarjeta')
       }
 
       // Crear la plantilla de clase
