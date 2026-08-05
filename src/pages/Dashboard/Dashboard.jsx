@@ -47,6 +47,10 @@ const ErrorButton = () => {
   )
 }
 
+// Mínimo para solicitar un retiro. Debe coincidir con el del backend, que es
+// quien lo valida.
+const MONTO_MINIMO_RETIRO = 50000
+
 const Dashboard = () => {
   const { user, isProfesor, isEstudiante } = useAuth()
   const { showClassAdded } = useNotifications()
@@ -239,6 +243,8 @@ const Dashboard = () => {
     }).format(precio)
   }
 
+  const puedeRetirar = balanceDisponible >= MONTO_MINIMO_RETIRO
+
   const unirseAClase = (claseId) => {
     setSelectedClaseId(claseId)
     setShowVideoCall(true)
@@ -324,7 +330,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-secondary-600">Cargando dashboard...</p>
+            <p className="text-purple-200">Cargando dashboard...</p>
           </div>
         </div>
       </div>
@@ -388,55 +394,53 @@ const Dashboard = () => {
           <div className={`grid grid-cols-1 md:grid-cols-2 ${isProfesor() ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6 mb-8`}>
             {isEstudiante() ? (
               <>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
-                  <p className="text-secondary-600">Clases Tomadas</p>
+                  <p className="text-2xl font-bold text-white">{estadisticas.totalClases}</p>
+                  <p className="text-purple-200">Clases Tomadas</p>
                 </div>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <Clock className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.horasTotales}</p>
-                  <p className="text-secondary-600">Horas de Estudio</p>
+                  <p className="text-2xl font-bold text-white">{estadisticas.horasTotales}</p>
+                  <p className="text-purple-200">Horas de Estudio</p>
                 </div>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
-                  <p className="text-secondary-600">Tu Progreso</p>
+                  <p className="text-2xl font-bold text-white">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
+                  <p className="text-purple-200">Tu Progreso</p>
                 </div>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <Calendar className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{proximasClases.length}</p>
-                  <p className="text-secondary-600">Próximas Clases</p>
+                  <p className="text-2xl font-bold text-white">{proximasClases.length}</p>
+                  <p className="text-purple-200">Próximas Clases</p>
                 </div>
               </>
             ) : (
               <>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <BookOpen className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{estadisticas.totalClases}</p>
-                  <p className="text-secondary-600">Clases Impartidas</p>
+                  <p className="text-2xl font-bold text-white">{estadisticas.totalClases}</p>
+                  <p className="text-purple-200">Clases Impartidas</p>
                 </div>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <Users className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{new Set(clasesCompletadas.map(c => c.estudiante)).size}</p>
-                  <p className="text-secondary-600">Estudiantes Únicos</p>
+                  <p className="text-2xl font-bold text-white">{new Set(clasesCompletadas.map(c => c.estudiante)).size}</p>
+                  <p className="text-purple-200">Estudiantes Únicos</p>
                 </div>
-                <div className="card text-center relative">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center relative">
                   <TrendingUp className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{formatPrecio(estadisticas.ingresoTotal)}</p>
-                  <p className="text-secondary-600">Ingresos Totales</p>
-                  {balanceDisponible > 0 && (
-                    <div className="mt-2 text-xs text-secondary-500">
-                      <p>Disponible: {formatPrecio(balanceDisponible)}</p>
-                      <p>Comisión: 20%</p>
-                    </div>
-                  )}
+                  <p className="text-2xl font-bold text-white">{formatPrecio(estadisticas.ingresoTotal)}</p>
+                  <p className="text-purple-200">Ingresos Totales</p>
+                  <div className="mt-2 text-xs text-purple-300">
+                    <p>Disponible: {formatPrecio(balanceDisponible)}</p>
+                    <p>Comisión: 20%</p>
+                  </div>
                   {isProfesor() && (
                     <button
-                      onClick={() => handleRetirarDinero(estadisticas.ingresoTotal || balanceDisponible)}
-                      disabled={loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)}
-                      className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${loadingRetiro || (estadisticas.ingresoTotal === 0 && balanceDisponible === 0)
-                        ? 'bg-gray-400 cursor-not-allowed'
+                      onClick={() => handleRetirarDinero(balanceDisponible)}
+                      disabled={loadingRetiro || !puedeRetirar}
+                      className={`mt-3 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center justify-center mx-auto ${loadingRetiro || !puedeRetirar
+                        ? 'bg-white/20 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700'
                         }`}
                     >
@@ -448,16 +452,22 @@ const Dashboard = () => {
                       ) : (
                         <>
                           <DollarSign className="w-4 h-4 mr-2" />
-                          {estadisticas.ingresoTotal === 0 && balanceDisponible === 0 ? 'Sin fondos disponibles' : 'Retirar Dinero'}
+                          {puedeRetirar ? 'Retirar dinero' : 'Retirar dinero'}
                         </>
                       )}
                     </button>
                   )}
+                  {isProfesor() && !puedeRetirar && (
+                    <p className="mt-2 text-xs text-purple-300">
+                      Mínimo {formatPrecio(MONTO_MINIMO_RETIRO)} para retirar
+                      {balanceDisponible > 0 && ` · te faltan ${formatPrecio(MONTO_MINIMO_RETIRO - balanceDisponible)}`}
+                    </p>
+                  )}
                 </div>
-                <div className="card text-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl text-center">
                   <Star className="w-8 h-8 text-primary-600 mx-auto mb-3" />
-                  <p className="text-2xl font-bold text-secondary-900">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
-                  <p className="text-secondary-600">Calificación Promedio</p>
+                  <p className="text-2xl font-bold text-white">{(user?.calificacionPromedio && typeof user.calificacionPromedio === 'number') ? user.calificacionPromedio.toFixed(1) : '0.0'}</p>
+                  <p className="text-purple-200">Calificación Promedio</p>
                 </div>
               </>
             )}
@@ -467,8 +477,8 @@ const Dashboard = () => {
             {/* Columna principal */}
             <div className="lg:col-span-2 space-y-8">
               {/* Próximas clases */}
-              <div className="card">
-                <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
                   <Calendar className="w-5 h-5 mr-2" />
                   Próximas Clases
                 </h2>
@@ -476,14 +486,14 @@ const Dashboard = () => {
                 {clases.length > 0 ? (
                   <div className="space-y-4">
                     {clases.map((clase) => (
-                      <div key={clase.id} className="border border-secondary-200 rounded-lg p-4 hover:bg-secondary-50 transition-colors">
+                      <div key={clase.id} className="border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-colors">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className="font-semibold text-secondary-900">{clase.tema}</h3>
-                            <p className="text-secondary-600 text-sm">
-                              {isEstudiante() ? `Profesor: ${clase.profesorNombre || 'N/A'}` : `Estudiante: ${clase.estudiante?.nombre || 'N/A'}`}
+                            <h3 className="font-semibold text-white">{clase.titulo}</h3>
+                            <p className="text-purple-200 text-sm">
+                              {isEstudiante() ? `Profesor: ${clase.profesor || 'Profesor'}` : `Estudiante: ${clase.estudiante || 'Estudiante'}`}
                             </p>
-                            <div className="flex items-center space-x-4 mt-2 text-sm text-secondary-600">
+                            <div className="flex items-center space-x-4 mt-2 text-sm text-purple-200">
                               <span className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 {new Date(clase.fecha + 'T00:00:00').toLocaleDateString('es-ES')}
@@ -493,8 +503,8 @@ const Dashboard = () => {
                                 {clase.hora} ({clase.duracion}h)
                               </span>
                             </div>
-                            <p className="text-secondary-500 text-sm mt-1">
-                              {formatPrecio(clase.total)} • {clase.metodoPago}
+                            <p className="text-purple-300 text-sm mt-1">
+                              {formatPrecio(clase.precio)}
                             </p>
                           </div>
                           <div className="text-right">
@@ -533,8 +543,8 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-secondary-500">
-                    <Calendar className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                  <div className="text-center py-8 text-purple-300">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 text-purple-300/60" />
                     <p>No tienes clases programadas próximamente</p>
                     <div className="space-y-3 mt-4">
                       <button
@@ -550,14 +560,14 @@ const Dashboard = () => {
 
               {/* Gestión de clases: solo para profesores */}
               {userType === 'profesor' && (
-                <div className="card">
-                  <div className="border-b border-secondary-200 mb-6">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                  <div className="border-b border-white/20 mb-6">
                     <nav className="flex space-x-8">
                       <button
                         onClick={() => setActiveSection('clases')}
                         className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'clases' || activeSection === 'servicios'
                           ? 'border-primary-500 text-primary-600'
-                          : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                          : 'border-transparent text-purple-300 hover:text-purple-100 hover:border-white/30'
                           }`}
                       >
                         <Video className="w-4 h-4 mr-2 inline" />
@@ -567,14 +577,14 @@ const Dashboard = () => {
                   </div>
 
                   {/* Contenido de las pestañas */}
-                  <MisClases />
+                  <MisClases embebido />
                 </div>
               )}
 
               {/* Solicitudes pendientes (solo para profesores) */}
               {userType === 'profesor' && (
-                <div className="card">
-                  <h2 className="text-xl font-semibold text-secondary-900 mb-6 flex items-center">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                  <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
                     <Bell className="w-5 h-5 mr-2" />
                     Solicitudes Pendientes
                   </h2>
@@ -582,12 +592,12 @@ const Dashboard = () => {
                   {data.solicitudesPendientes.length > 0 ? (
                     <div className="space-y-4">
                       {data.solicitudesPendientes.map((solicitud, index) => (
-                        <div key={index} className="border border-secondary-200 rounded-lg p-4">
+                        <div key={index} className="border border-white/20 rounded-lg p-4">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-semibold text-secondary-900">{solicitud.materia}</h3>
-                              <p className="text-secondary-600 text-sm">Estudiante: {solicitud.estudiante}</p>
-                              <p className="text-secondary-600 text-sm">
+                              <h3 className="font-semibold text-white">{solicitud.materia}</h3>
+                              <p className="text-purple-200 text-sm">Estudiante: {solicitud.estudiante}</p>
+                              <p className="text-purple-200 text-sm">
                                 Solicitud: {solicitud.fechaSolicitud} • Propuesta: {solicitud.fechaPropuesta} a las {solicitud.hora}
                               </p>
                             </div>
@@ -600,8 +610,8 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-secondary-500">
-                      <Bell className="w-12 h-12 mx-auto mb-4 text-secondary-300" />
+                    <div className="text-center py-8 text-purple-300">
+                      <Bell className="w-12 h-12 mx-auto mb-4 text-purple-300/60" />
                       <p>No tienes solicitudes pendientes</p>
                     </div>
                   )}
@@ -612,8 +622,8 @@ const Dashboard = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Acciones rápidas */}
-              <div className="card">
-                <h3 className="text-lg font-semibold text-secondary-900 mb-4">Acciones Rápidas</h3>
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
                 <div className="space-y-3">
                   {userType === 'estudiante' ? (
                     <>
@@ -633,7 +643,7 @@ const Dashboard = () => {
                       </button>
                       <button
                         onClick={() => {/* Confirmar servicios pendientes */ }}
-                        className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                        className="w-full border border-white/30 text-white hover:bg-white/10 font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Confirmar Clases
@@ -643,14 +653,14 @@ const Dashboard = () => {
                     <>
                       <button
                         onClick={() => setShowReservasPendientes(true)}
-                        className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg"
                       >
                         <Calendar className="w-4 h-4 mr-2" />
                         Aceptar Reservas
                       </button>
                       <button
                         onClick={() => {/* Confirmar completado */ }}
-                        className="w-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
+                        className="w-full border border-white/30 text-white hover:bg-white/10 font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Confirmar Completado
@@ -661,8 +671,8 @@ const Dashboard = () => {
               </div>
 
               {/* Historial reciente */}
-              <div className="card">
-                <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   {userType === 'estudiante' ? 'Últimas Clases' : 'Actividad Reciente'}
                 </h3>
 
@@ -670,28 +680,28 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     {historialReal.map((clase) => (
                       <div key={clase.id} className="text-sm">
-                        <p className="font-medium text-secondary-900">{clase.titulo}</p>
-                        <p className="text-secondary-600">
+                        <p className="font-medium text-white">{clase.titulo}</p>
+                        <p className="text-purple-200">
                           {userType === 'estudiante'
                             ? `Prof. ${clase.profesor || 'Profesor'}`
                             : clase.estudiante || 'Estudiante'}
                         </p>
-                        <p className="text-secondary-500 text-xs mt-1">
+                        <p className="text-purple-300 text-xs mt-1">
                           {clase.fecha}{clase.hora ? ` · ${clase.hora}` : ''}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-secondary-500">
+                  <div className="text-center py-4 text-purple-300">
                     <p className="text-sm">No hay actividad reciente</p>
                   </div>
                 )}
               </div>
 
               {/* Progreso o métricas */}
-              <div className="card">
-                <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   {userType === 'estudiante' ? 'Tu Progreso' : 'Rendimiento'}
                 </h3>
 
@@ -699,26 +709,26 @@ const Dashboard = () => {
                     4.9/5.0) que se mostraban idénticas a todos los usuarios. */}
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">
+                    <span className="text-purple-200">
                       {userType === 'estudiante' ? 'Clases tomadas' : 'Clases dictadas'}
                     </span>
-                    <span className="text-secondary-900 font-medium">{estadisticas.totalClases}</span>
+                    <span className="text-white font-medium">{estadisticas.totalClases}</span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">Horas acumuladas</span>
-                    <span className="text-secondary-900 font-medium">{estadisticas.horasTotales}</span>
+                    <span className="text-purple-200">Horas acumuladas</span>
+                    <span className="text-white font-medium">{estadisticas.horasTotales}</span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">Próximas clases</span>
-                    <span className="text-secondary-900 font-medium">{proximasClases.length}</span>
+                    <span className="text-purple-200">Próximas clases</span>
+                    <span className="text-white font-medium">{proximasClases.length}</span>
                   </div>
 
                   {userType !== 'estudiante' && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-secondary-600">Calificación</span>
-                      <span className="text-secondary-900 font-medium">
+                      <span className="text-purple-200">Calificación</span>
+                      <span className="text-white font-medium">
                         {Number(user?.calificacionPromedio) > 0
                           ? `${Number(user.calificacionPromedio).toFixed(1)}/5.0`
                           : 'Sin reseñas aún'}
@@ -740,8 +750,10 @@ const Dashboard = () => {
 
           {/* Modal de Confirmación de Retiro */}
           {showRetiroModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              {/* Panel sólido, no translúcido: sobre vidrio el texto quedaba
+                  con muy poco contraste y no se leía. */}
+              <div className="bg-slate-900 border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
                 {/* El panel es de vidrio oscuro, así que el texto va en claro.
                     Antes usaba los grises pensados para tarjeta blanca y no se
                     leía. */}

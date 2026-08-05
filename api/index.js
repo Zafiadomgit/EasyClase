@@ -785,6 +785,10 @@ app.get('/api/profesores/categorias', async (req, res) => {
 // Comisión de la plataforma según si el profesor es premium.
 const comisionProfesor = (u) => (u?.premium ? 0.15 : 0.20);
 
+// Monto mínimo para solicitar un retiro, en COP. Evita solicitudes muy
+// pequeñas, que hay que procesar a mano y cuestan más de lo que mueven.
+const MONTO_MINIMO_RETIRO = Number(process.env.MONTO_MINIMO_RETIRO) || 50000;
+
 // Calcula el balance disponible para retiro de un profesor.
 const calcularBalance = async (prof) => {
   const claseGross = (await Transaccion.sum('precio', { where: { profesorId: prof.id, tipo: 'clase', estado: 'aprobado' } })) || 0;
@@ -805,7 +809,7 @@ app.get('/api/profesores/balance', authMiddleware, async (req, res) => {
     const prof = await User.findByPk(req.userId);
     if (!prof) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     const { comision, disponible, bruto } = await calcularBalance(prof);
-    res.json({ success: true, data: { balanceDisponible: disponible, comision, montoMinimoRetiro: 50000, totalGanado: Math.round(bruto) } });
+    res.json({ success: true, data: { balanceDisponible: disponible, comision, montoMinimoRetiro: MONTO_MINIMO_RETIRO, totalGanado: Math.round(bruto) } });
   } catch (e) {
     console.error('Error calculando balance:', e);
     res.status(500).json({ success: false, message: 'Error al obtener el balance' });
@@ -821,6 +825,12 @@ app.post('/api/profesores/retirar', authMiddleware, async (req, res) => {
     const monto = Number(req.body?.monto);
     const { comision, disponible } = await calcularBalance(prof);
     if (!Number.isFinite(monto) || monto <= 0) return res.status(400).json({ success: false, message: 'Monto inválido' });
+    if (monto < MONTO_MINIMO_RETIRO) {
+      return res.status(400).json({
+        success: false,
+        message: `El retiro mínimo es de $${MONTO_MINIMO_RETIRO.toLocaleString('es-CO')} COP.`
+      });
+    }
     if (monto > disponible) return res.status(400).json({ success: false, message: 'El monto supera tu balance disponible' });
     // La comisión ya se descontó al calcular el balance disponible
     // (disponible = bruto × (1 - comisión)), así que el monto solicitado es
