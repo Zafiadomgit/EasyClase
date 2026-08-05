@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Calendar, Clock, Users, Trash2, BookOpen, Layers } from 'lucide-react'
 
-const MisClases = () => {
+const MisClases = ({ embebido = false }) => {
   const [clases, setClases] = useState([])
   const [loading, setLoading] = useState(true)
   const [eliminando, setEliminando] = useState(null)
@@ -79,21 +79,31 @@ const MisClases = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Halos decorativos, como en el resto de la aplicación */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+    <div className={embebido
+      ? ''
+      : 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden'}>
+      {!embebido && (
+        <>
+          {/* Halos decorativos, como en el resto de la aplicación */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        </>
+      )}
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className={embebido ? '' : 'relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'}>
         {/* Encabezado con acciones alineadas */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+        <div className={`flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 ${embebido ? 'mb-6' : 'mb-10'}`}>
           <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
-              Mis Clases
-            </h1>
-            <p className="text-lg text-purple-200">
-              Gestiona las clases que ofreces a tus estudiantes
-            </p>
+            {!embebido && (
+              <>
+                <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
+                  Mis Clases
+                </h1>
+                <p className="text-lg text-purple-200">
+                  Gestiona las clases que ofreces a tus estudiantes
+                </p>
+              </>
+            )}
             {clases.length > 0 && (
               <p className="text-sm text-purple-300 mt-2">
                 {clases.length} {clases.length === 1 ? 'clase publicada' : 'clases publicadas'}
@@ -126,7 +136,7 @@ const MisClases = () => {
         )}
 
         {clases.length === 0 ? (
-          <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-12 text-center max-w-2xl mx-auto">
+          <div className={`bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 text-center ${embebido ? 'p-8' : 'p-12 max-w-2xl mx-auto'}`}>
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/20 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-purple-300" />
             </div>
@@ -144,7 +154,7 @@ const MisClases = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 gap-6 ${embebido ? 'md:grid-cols-2' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
             {clases.map((clase) => (
               <div
                 key={clase.id}
