@@ -1,447 +1,166 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  Phone, 
-  PhoneOff, 
-  Monitor, 
-  MonitorOff,
-  MessageCircle,
-  X,
-  Send,
-  Maximize2,
-  Users,
-  Settings
-} from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
-import useVideoCall from '../../hooks/useVideoCall'
-import AnnotationCanvas from './AnnotationCanvas'
-import VideoCallAuthService from '../../services/videoCallAuth'
+import React, { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 
-const VideoCallRoom = () => {
-  const { id: claseId } = useParams()
+// Sala de clase en vivo sobre Jitsi Meet.
+//
+// La implementación anterior dependía de simple-peer (comentado con un TODO) y
+// de un servidor socket.io que no existe y que además Vercel no puede alojar,
+// porque sus funciones no mantienen conexiones abiertas. Jitsi aporta el
+// servidor de señalización, los TURN y toda la interfaz (audio, video,
+// compartir pantalla, chat), sin coste ni infraestructura propia.
+//
+// Quién puede entrar lo decide el backend: /api/clases/:id/videollamada valida
+// que el usuario sea el alumno o el profesor de esa clase, que esté pagada y
+// que estemos dentro del horario, y solo entonces entrega el nombre de la sala,
+// que es impredecible.
+const JITSI_SCRIPT_ID = 'jitsi-external-api'
+
+const cargarJitsi = (dominio) => new Promise((resolve, reject) => {
+  if (window.JitsiMeetExternalAPI) return resolve()
+  const existente = document.getElementById(JITSI_SCRIPT_ID)
+  if (existente) {
+    existente.addEventListener('load', () => resolve())
+    existente.addEventListener('error', () => reject(new Error('No se pudo cargar la videollamada')))
+    return
+  }
+  const script = document.createElement('script')
+  script.id = JITSI_SCRIPT_ID
+  script.src = `https://${dominio}/external_api.js`
+  script.async = true
+  script.onload = () => resolve()
+  script.onerror = () => reject(new Error('No se pudo cargar la videollamada'))
+  document.body.appendChild(script)
+})
+
+const VideoCallRoom = ({ claseId: claseIdProp, onLeave }) => {
+  const { id: claseIdRuta } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
-  const { clase, duracion, fechaInicio, fechaFin } = location.state || {}
-  const { user } = useAuth()
-  const [showChat, setShowChat] = useState(false)
-  const [chatMessage, setChatMessage] = useState('')
-  const [showAnnotations, setShowAnnotations] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [accessValidated, setAccessValidated] = useState(false)
-  const [accessError, setAccessError] = useState(null)
+  const claseId = claseIdProp || claseIdRuta
 
-  const {
-    localStream,
-    remoteStream,
-    isConnected,
-    isVideoEnabled,
-    isAudioEnabled,
-    isScreenSharing,
-    screenSharePermission,
-    isCallActive,
-    error,
-    chatMessages,
-    localVideoRef,
-    remoteVideoRef,
-    startCall,
-    endCall,
-    toggleVideo,
-    toggleAudio,
-    requestScreenShare,
-    stopScreenShare,
-    sendChatMessage
-  } = useVideoCall(claseId, user?.id, user?.tipoUsuario, duracion)
+  const [estado, setEstado] = useState('cargando') // cargando | error | en-llamada
+  const [mensaje, setMensaje] = useState('')
+  const contenedorRef = useRef(null)
+  const apiRef = useRef(null)
 
-  // Validar acceso al montar el componente
   useEffect(() => {
-    if (!user || !claseId) {
-      setAccessError('Usuario no autenticado o ID de clase inválido')
-      return
+    let cancelado = false
+    let temporizadorFin = null
+
+    const salir = () => {
+      if (onLeave) onLeave()
+      else navigate('/mis-clases')
     }
-    
-    // Verificar si el usuario puede acceder a esta videollamada
-    const accessCheck = VideoCallAuthService.canAccessVideoCall(claseId, user.id, user.tipoUsuario)
-    
-    if (!accessCheck.canAccess) {
-      setAccessError('No tienes permisos para acceder a esta videollamada')
-      return
-    }
-    
-    // Verificar si es el momento correcto para unirse
-    const timeCheck = VideoCallAuthService.canJoinNow(accessCheck.clase)
-    
-    if (!timeCheck.canJoin) {
-      setAccessError(timeCheck.reason)
-      return
-    }
-    
-    setAccessValidated(true)
-  }, [user, claseId])
-  
-  useEffect(() => {
-    if (accessValidated) {
-      // Auto-iniciar la llamada cuando se valida el acceso
-      startCall()
-      
-      return () => {
-        endCall()
+
+    const iniciar = async () => {
+      try {
+        const respuesta = await fetch(`/api/clases/${claseId}/videollamada`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const datos = await respuesta.json()
+
+        if (!respuesta.ok || !datos.success) {
+          if (cancelado) return
+          setMensaje(datos.message || 'No se pudo abrir la videollamada')
+          setEstado('error')
+          return
+        }
+
+        const { sala, dominio, nombreUsuario, titulo, terminaEn } = datos.data
+        await cargarJitsi(dominio)
+        if (cancelado || !contenedorRef.current) return
+
+        const api = new window.JitsiMeetExternalAPI(dominio, {
+          roomName: sala,
+          parentNode: contenedorRef.current,
+          userInfo: { displayName: nombreUsuario },
+          configOverwrite: {
+            prejoinPageEnabled: false,
+            disableDeepLinking: true,
+            startWithAudioMuted: false,
+            startWithVideoMuted: false
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_BRAND_WATERMARK: false,
+            MOBILE_APP_PROMO: false,
+            TOOLBAR_BUTTONS: [
+              'microphone', 'camera', 'desktop', 'chat', 'raisehand',
+              'tileview', 'fullscreen', 'settings', 'hangup'
+            ]
+          }
+        })
+
+        apiRef.current = api
+        api.executeCommand('subject', titulo || 'Clase EasyClase')
+        api.addEventListener('readyToClose', salir)
+
+        // La sala se cierra sola cuando termina el horario de la clase.
+        if (Number(terminaEn) > 0) {
+          temporizadorFin = setTimeout(() => {
+            try { api.executeCommand('hangup') } catch { /* ya cerrada */ }
+            salir()
+          }, Number(terminaEn))
+        }
+
+        if (!cancelado) setEstado('en-llamada')
+      } catch (error) {
+        console.error('Error iniciando la videollamada:', error)
+        if (cancelado) return
+        setMensaje(error.message || 'No se pudo iniciar la videollamada')
+        setEstado('error')
       }
     }
-  }, [accessValidated])
 
-  const handleSendMessage = () => {
-    if (chatMessage.trim()) {
-      sendChatMessage(chatMessage)
-      setChatMessage('')
+    if (claseId) iniciar()
+
+    return () => {
+      cancelado = true
+      if (temporizadorFin) clearTimeout(temporizadorFin)
+      if (apiRef.current) {
+        try { apiRef.current.dispose() } catch { /* ya liberada */ }
+        apiRef.current = null
+      }
     }
-  }
+  }, [claseId])
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
-    }
-  }
-
-  const canUseAnnotations = user?.premium || user?.tipoUsuario === 'admin'
-
-  // Mostrar error de acceso si no se puede acceder
-  if (accessError) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 text-center">
-          <div className="text-red-500 mb-4">
-            <PhoneOff className="w-16 h-16 mx-auto" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Acceso Denegado</h3>
-          <p className="text-gray-600 mb-6">{accessError}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-          >
-            Volver al Dashboard
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // Mostrar loading mientras se valida el acceso
-  if (!accessValidated) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Validando Acceso</h3>
-          <p className="text-gray-600">Verificando permisos para la videollamada...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 max-w-md text-center">
-          <div className="text-red-500 mb-4">
-            <PhoneOff className="w-16 h-16 mx-auto" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Error en la Videollamada</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-          >
-            Volver al Dashboard
-          </button>
-        </div>
-      </div>
-    )
+  const salirManual = () => {
+    if (onLeave) onLeave()
+    else navigate('/mis-clases')
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900 flex flex-col z-50">
-      {/* Header */}
-      <div className="bg-gray-800 p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-white font-semibold">Clase Virtual</h2>
-          <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-gray-300 text-sm">
-              {isConnected ? 'Conectado' : 'Conectando...'}
-            </span>
-          </div>
-          <div className="flex items-center space-x-1 text-gray-300">
-            <Users className="w-4 h-4" />
-            <span className="text-sm">{isConnected ? '2' : '1'} participantes</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={toggleFullscreen}
-            className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-gray-700"
-            title="Pantalla completa"
-          >
-            <Maximize2 className="w-5 h-5" />
-          </button>
-          
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-gray-700 relative"
-            title="Chat"
-          >
-            <MessageCircle className="w-5 h-5" />
-            {chatMessages.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {chatMessages.length}
-              </span>
-            )}
-          </button>
-          
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-gray-700"
-            title="Salir"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Video Area */}
-      <div className="flex-1 flex">
-        {/* Video Principal */}
-        <div className="flex-1 relative bg-black">
-          {/* Video Remoto (Principal) */}
-          {remoteStream ? (
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center text-gray-400">
-                <Users className="w-24 h-24 mx-auto mb-4" />
-                <p className="text-xl">Esperando al otro participante...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Video Local (Picture-in-Picture) */}
-          <div className="absolute top-4 right-4 w-64 h-48 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600">
-            {localStream ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
+    <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col">
+      {estado !== 'en-llamada' && (
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center max-w-md">
+            {estado === 'cargando' ? (
+              <>
+                <Loader2 className="w-12 h-12 text-blue-400 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-200">Conectando con la clase...</p>
+              </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <Video className="w-8 h-8" />
-              </div>
+              <>
+                <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                <p className="text-gray-100 text-lg mb-6">{mensaje}</p>
+                <button
+                  onClick={salirManual}
+                  className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver a mis clases
+                </button>
+              </>
             )}
-            
-            {/* Overlay para video local */}
-            <div className="absolute bottom-2 left-2 flex items-center space-x-1">
-              <span className="text-white text-sm font-medium">Tú</span>
-              {!isVideoEnabled && (
-                <VideoOff className="w-4 h-4 text-red-400" />
-              )}
-              {!isAudioEnabled && (
-                <MicOff className="w-4 h-4 text-red-400" />
-              )}
-            </div>
           </div>
-
-          {/* Canvas de Anotaciones (Premium) */}
-          {showAnnotations && canUseAnnotations && isScreenSharing && (
-            <AnnotationCanvas
-              className="absolute inset-0 pointer-events-auto"
-              onClose={() => setShowAnnotations(false)}
-            />
-          )}
-
-          {/* Indicador de Compartir Pantalla */}
-          {isScreenSharing && (
-            <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-lg flex items-center space-x-2">
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">Compartiendo Pantalla</span>
-            </div>
-          )}
-
-          {/* Botón de Anotaciones Premium */}
-          {canUseAnnotations && isScreenSharing && (
-            <button
-              onClick={() => setShowAnnotations(!showAnnotations)}
-              className="absolute top-20 left-4 bg-amber-600 text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-amber-700"
-              title="Anotaciones Colaborativas (Premium)"
-            >
-              <span className="text-sm">✏️ Anotar</span>
-              {user?.premium && <span className="text-xs bg-amber-800 px-1 rounded">PREMIUM</span>}
-            </button>
-          )}
         </div>
+      )}
 
-        {/* Panel de Chat */}
-        {showChat && (
-          <div className="w-80 bg-gray-800 flex flex-col">
-            {/* Header del Chat */}
-            <div className="p-4 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <h3 className="text-white font-medium">Chat de la Clase</h3>
-                <button
-                  onClick={() => setShowChat(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Mensajes */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    msg.userId === user?.id ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      msg.userId === user?.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-700 text-gray-100'
-                    }`}
-                  >
-                    <div className="text-xs opacity-75 mb-1">
-                      {msg.userType === 'profesor' ? '👨‍🏫' : '👩‍🎓'} 
-                      {msg.userId === user?.id ? 'Tú' : (msg.userType === 'profesor' ? 'Profesor' : 'Estudiante')}
-                    </div>
-                    <p className="text-sm">{msg.message}</p>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input de Chat */}
-            <div className="p-4 border-t border-gray-700">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Escribe un mensaje..."
-                  className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!chatMessage.trim()}
-                  className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Controls Footer */}
-      <div className="bg-gray-800 p-4">
-        <div className="flex items-center justify-center space-x-4">
-          {/* Control de Video */}
-          <button
-            onClick={toggleVideo}
-            className={`p-3 rounded-full ${
-              isVideoEnabled 
-                ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                : 'bg-red-600 text-white hover:bg-red-700'
-            }`}
-            title={isVideoEnabled ? 'Desactivar cámara' : 'Activar cámara'}
-          >
-            {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-          </button>
-
-          {/* Control de Audio */}
-          <button
-            onClick={toggleAudio}
-            className={`p-3 rounded-full ${
-              isAudioEnabled 
-                ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                : 'bg-red-600 text-white hover:bg-red-700'
-            }`}
-            title={isAudioEnabled ? 'Silenciar' : 'Activar micrófono'}
-          >
-            {isAudioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
-          </button>
-
-          {/* Compartir Pantalla */}
-          <button
-            onClick={isScreenSharing ? stopScreenShare : requestScreenShare}
-            className={`p-3 rounded-full ${
-              isScreenSharing 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-gray-700 text-white hover:bg-gray-600'
-            }`}
-            title={isScreenSharing ? 'Parar compartir pantalla' : 'Compartir pantalla'}
-          >
-            {isScreenSharing ? <MonitorOff className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
-          </button>
-
-          {/* Terminar Llamada */}
-          <button
-            onClick={() => {
-              endCall()
-              navigate('/dashboard')
-            }}
-            className="p-3 rounded-full bg-red-600 text-white hover:bg-red-700"
-            title="Terminar llamada"
-          >
-            <PhoneOff className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Status Info */}
-        <div className="text-center mt-3 text-gray-400 text-sm">
-          {!isConnected && 'Estableciendo conexión...'}
-          {isConnected && !isCallActive && 'Conexión establecida'}
-          {isCallActive && (
-            <div className="flex items-center justify-center space-x-4">
-              <span>Llamada activa</span>
-              {isScreenSharing && (
-                <span className="text-blue-400">📺 Pantalla compartida</span>
-              )}
-              {canUseAnnotations && isScreenSharing && (
-                <span className="text-amber-400">✏️ Anotaciones disponibles</span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Jitsi se monta aquí y ocupa toda la pantalla al conectar. */}
+      <div
+        ref={contenedorRef}
+        className={estado === 'en-llamada' ? 'flex-1' : 'hidden'}
+      />
     </div>
   )
 }

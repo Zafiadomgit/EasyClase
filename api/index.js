@@ -222,15 +222,21 @@ const initDB = async () => {
     }, { tableName: 'retiros', timestamps: true, indexes: [{ fields: ['profesor'] }, { fields: ['estado'] }] });
 
     await sequelize.authenticate();
-    // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
-    await User.sync({ alter: true });
-    await Servicio.sync({ alter: true });
-    await Transaccion.sync({ alter: true });
-    await Plantilla.sync({ alter: true });
-    await Disponibilidad.sync({ alter: true });
-    await Review.sync({ alter: true });
-    await Retiro.sync({ alter: true });
-    await Notificacion.sync({ alter: true });
+    // alter:true añade columnas nuevas (perfil profesor) a la tabla existente.
+    // Se sincronizan en paralelo: en serie eran ocho viajes de ida y vuelta
+    // encadenados a la base en cada arranque en frío de la función.
+    await Promise.all([
+      User.sync({ alter: true }),
+      Servicio.sync({ alter: true }),
+      Transaccion.sync({ alter: true }),
+      Plantilla.sync({ alter: true }),
+      Disponibilidad.sync({ alter: true }),
+      Review.sync({ alter: true }),
+      Retiro.sync({ alter: true }),
+      Notificacion.sync({ alter: true })
+    ]);
+    // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
+    // profesores existan.
     await seedProfesores();
     await seedServicios();
     await seedAdmin();
@@ -295,12 +301,29 @@ const seedAdmin = async () => {
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
     if (!email || !password) return; // sin credenciales configuradas no se crea admin
-    const hashed = await bcrypt.hash(password, 10);
     const existing = await User.findOne({ where: { email } });
+
+    // Antes se calculaba el hash de bcrypt en cada arranque en frío, incluso
+    // cuando la contraseña no había cambiado; es una operación deliberadamente
+    // costosa. Ahora solo se rehashea si hace falta.
     if (existing) {
-      await existing.update({ tipoUsuario: 'admin', password: hashed, activo: true });
+      const alDia = existing.tipoUsuario === 'admin'
+        && existing.activo
+        && await bcrypt.compare(password, existing.password || '');
+      if (alDia) return;
+      await existing.update({
+        tipoUsuario: 'admin',
+        password: await bcrypt.hash(password, 10),
+        activo: true
+      });
     } else {
-      await User.create({ nombre: 'Administrador', email, password: hashed, tipoUsuario: 'admin', activo: true });
+      await User.create({
+        nombre: 'Administrador',
+        email,
+        password: await bcrypt.hash(password, 10),
+        tipoUsuario: 'admin',
+        activo: true
+      });
     }
     console.log('🛡️ Usuario admin asegurado:', email);
   } catch (e) {
@@ -638,6 +661,14 @@ app.delete('/api/2fa', authMiddleware, async (req, res) => {
   }
 });
 
+// Cachea una respuesta pública en el CDN de Vercel. El navegador la revalida,
+// pero el CDN la sirve durante `segundos` y puede seguir entregando la versión
+// anterior mientras refresca por detrás, así que los listados dejan de golpear
+// la base en cada visita.
+const cachePublico = (res, segundos = 60) => {
+  res.set('Cache-Control', `public, max-age=0, s-maxage=${segundos}, stale-while-revalidate=300`);
+};
+
 // ─── Profesores ──────────────────────────────────────────────────────────────
 const requireDB = async (res) => {
   await initDB();
@@ -698,6 +729,7 @@ app.get('/api/profesores', async (req, res) => {
         )
       );
     }
+    cachePublico(res, 60);
     res.json({ success: true, data: { profesores: data }, profesores: data });
   } catch (e) {
     console.error('Error buscando profesores:', e);
@@ -715,6 +747,7 @@ app.get('/api/profesores/destacados', async (req, res) => {
       limit: 8
     });
     const data = profes.map(shapeProfesor);
+    cachePublico(res, 60);
     res.json({ success: true, data: { profesores: data }, profesores: data });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Error al obtener destacados' });
@@ -990,6 +1023,7 @@ app.get('/api/servicios', async (req, res) => {
         x.categoria.toLowerCase().includes(s)
       );
     }
+    cachePublico(res, 60);
     res.json({ success: true, data: { servicios: data }, servicios: data });
   } catch (e) {
     console.error('Error buscando servicios:', e);
@@ -1552,6 +1586,84 @@ app.get('/api/clases/:id', authMiddleware, async (req, res) => {
   } catch (e) {
     console.error('Error obteniendo el detalle de la clase:', e);
     res.status(500).json({ success: false, message: 'Error al obtener la clase' });
+  }
+});
+
+// ─── Videollamada ────────────────────────────────────────────────────────────
+// La sala se aloja en Jitsi Meet, que no requiere servidor propio ni cuenta.
+// Como cualquiera con el nombre de la sala podría entrar, el nombre se deriva
+// con HMAC de un secreto del servidor: es impredecible y solo se le entrega a
+// las dos personas autorizadas, dentro de la ventana horaria de la clase.
+const SALA_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_prod';
+
+const nombreSala = (claseId) =>
+  'easyclase-' + crypto.createHmac('sha256', SALA_SECRET).update(`clase:${claseId}`).digest('hex').slice(0, 24);
+
+// Ventana de acceso: desde 10 minutos antes hasta que termina la clase (con 15
+// minutos de gracia). Se calcula en el servidor porque el navegador es
+// manipulable y esto es lo que protege el acceso a la sala.
+const ventanaClase = (tx) => {
+  const [anio, mes, dia] = String(tx.fecha || '').split('-').map(Number);
+  const [hh, mm] = String(tx.hora || '').split(':').map(Number);
+  if (!Number.isFinite(anio) || !Number.isFinite(hh)) return null;
+  // Las horas se guardan en hora local de Colombia (UTC-5), sin cambio horario.
+  const inicioUTC = Date.UTC(anio, (mes || 1) - 1, dia || 1, hh + 5, mm || 0);
+  const duracion = (Number(tx.duracion) || 1) * 60 * 60 * 1000;
+  return {
+    abre: inicioUTC - 10 * 60 * 1000,
+    cierra: inicioUTC + duracion + 15 * 60 * 1000
+  };
+};
+
+app.get('/api/clases/:id/videollamada', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const t = await Transaccion.findByPk(req.params.id);
+    if (!t || t.tipo !== 'clase') {
+      return res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    }
+    if (t.usuario !== req.userId && t.profesorId !== req.userId) {
+      return res.status(403).json({ success: false, message: 'No tienes acceso a esta clase' });
+    }
+    if (t.estado !== 'aprobado') {
+      return res.status(402).json({ success: false, message: 'La clase todavía no está pagada' });
+    }
+
+    const ventana = ventanaClase(t);
+    if (!ventana) {
+      return res.status(400).json({ success: false, message: 'La clase no tiene fecha y hora válidas' });
+    }
+    const ahora = Date.now();
+    if (ahora < ventana.abre) {
+      const minutos = Math.ceil((ventana.abre - ahora) / 60000);
+      return res.status(425).json({
+        success: false,
+        message: minutos > 60
+          ? `La videollamada se abre 10 minutos antes de la clase.`
+          : `La videollamada se abre en ${minutos} minuto(s).`,
+        disponibleEn: minutos
+      });
+    }
+    if (ahora > ventana.cierra) {
+      return res.status(410).json({ success: false, message: 'Esta clase ya terminó' });
+    }
+
+    const usuario = await User.findByPk(req.userId, { attributes: ['nombre'] });
+    res.json({
+      success: true,
+      data: {
+        sala: nombreSala(t.id),
+        dominio: 'meet.jit.si',
+        nombreUsuario: usuario?.nombre || 'Participante',
+        esProfesor: t.profesorId === req.userId,
+        titulo: t.titulo,
+        // Milisegundos que quedan, para cerrar la sala al terminar la clase.
+        terminaEn: ventana.cierra - ahora
+      }
+    });
+  } catch (e) {
+    console.error('Error autorizando videollamada:', e);
+    res.status(500).json({ success: false, message: 'Error al abrir la videollamada' });
   }
 });
 

@@ -1,54 +1,59 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
-import Login from './pages/Auth/Login'
-import Register from './pages/Auth/Register'
-import RecuperarPassword from './pages/Auth/RecuperarPassword'
-import BuscarClases from './pages/BuscarClases'
-import PerfilProfesor from './pages/PerfilProfesor'
-import Perfil from './pages/Perfil'
-import MisClases from './pages/MisClases'
-import Seguridad from './pages/Seguridad'
-import Preferencias from './pages/Preferencias'
-import Dashboard from './pages/Dashboard/Dashboard'
-import SerProfesor from './pages/SerProfesor'
-import ReservarClase from './pages/ReservarClase'
-import BuscarServicios from './pages/BuscarServicios'
-import CrearServicio from './pages/CrearServicio'
-import CrearClase from './pages/CrearClase'
-import MisServiciosComprados from './pages/Estudiante/MisServiciosComprados'
-import MisReservas from './pages/Estudiante/MisReservas'
-import PagoExitoso from './pages/PagoExitoso'
-import PagoFallido from './pages/PagoFallido'
-import PagoPendiente from './pages/PagoPendiente'
-import OnboardingProfesor from './pages/Professor/OnboardingProfesor'
-import OnboardingPage from './pages/OnboardingPage'
-import Pago from './pages/Pago'
-import ComoFunciona from './pages/ComoFunciona'
-import Terminos from './pages/Legal/Terminos'
-import Privacidad from './pages/Legal/Privacidad'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import ProfesorRoute from './components/ProfesorRoute'
 import AdminLayout from './components/Admin/AdminLayout'
-import AdminDashboard from './pages/Admin/AdminDashboard'
-import AdminUsuarios from './pages/Admin/AdminUsuarios'
-import AdminClases from './pages/Admin/AdminClases'
-import AdminPagos from './pages/Admin/AdminPagos'
-import AdminRetiros from './pages/Admin/AdminRetiros'
-import AdminDisputas from './pages/Admin/AdminDisputas'
-import AdminReportes from './pages/Admin/AdminReportes'
-import AdminContenido from './pages/Admin/AdminContenido'
-import AdminSistema from './pages/Admin/AdminSistema'
-import SuperAdminPanel from './pages/Admin/SuperAdminPanelSimple'
-import ProfesorDisponibilidad from './pages/Professor/ProfesorDisponibilidad'
-import Premium from './pages/Premium'
-import DetalleClase from './pages/DetalleClase'
-import Chat from './pages/Chat'
-import VideoCallRoom from './components/VideoCall/VideoCallRoom'
+
+// Carga diferida por ruta: antes el navegador descargaba la aplicación
+// entera (incluido todo el panel de administración) para mostrar la
+// portada. Cada pantalla llega ahora en su propio archivo, cuando se visita.
+const AdminClases = lazy(() => import('./pages/Admin/AdminClases'))
+const AdminContenido = lazy(() => import('./pages/Admin/AdminContenido'))
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'))
+const AdminDisputas = lazy(() => import('./pages/Admin/AdminDisputas'))
+const AdminPagos = lazy(() => import('./pages/Admin/AdminPagos'))
+const AdminReportes = lazy(() => import('./pages/Admin/AdminReportes'))
+const AdminRetiros = lazy(() => import('./pages/Admin/AdminRetiros'))
+const AdminSistema = lazy(() => import('./pages/Admin/AdminSistema'))
+const AdminUsuarios = lazy(() => import('./pages/Admin/AdminUsuarios'))
+const BuscarClases = lazy(() => import('./pages/BuscarClases'))
+const BuscarServicios = lazy(() => import('./pages/BuscarServicios'))
+const Chat = lazy(() => import('./pages/Chat'))
+const ComoFunciona = lazy(() => import('./pages/ComoFunciona'))
+const CrearClase = lazy(() => import('./pages/CrearClase'))
+const CrearServicio = lazy(() => import('./pages/CrearServicio'))
+const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'))
+const DetalleClase = lazy(() => import('./pages/DetalleClase'))
+const Login = lazy(() => import('./pages/Auth/Login'))
+const MisClases = lazy(() => import('./pages/MisClases'))
+const MisReservas = lazy(() => import('./pages/Estudiante/MisReservas'))
+const MisServiciosComprados = lazy(() => import('./pages/Estudiante/MisServiciosComprados'))
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
+const OnboardingProfesor = lazy(() => import('./pages/Professor/OnboardingProfesor'))
+const Pago = lazy(() => import('./pages/Pago'))
+const PagoExitoso = lazy(() => import('./pages/PagoExitoso'))
+const PagoFallido = lazy(() => import('./pages/PagoFallido'))
+const PagoPendiente = lazy(() => import('./pages/PagoPendiente'))
+const Perfil = lazy(() => import('./pages/Perfil'))
+const PerfilProfesor = lazy(() => import('./pages/PerfilProfesor'))
+const Preferencias = lazy(() => import('./pages/Preferencias'))
+const Premium = lazy(() => import('./pages/Premium'))
+const Privacidad = lazy(() => import('./pages/Legal/Privacidad'))
+const ProfesorDisponibilidad = lazy(() => import('./pages/Professor/ProfesorDisponibilidad'))
+const RecuperarPassword = lazy(() => import('./pages/Auth/RecuperarPassword'))
+const Register = lazy(() => import('./pages/Auth/Register'))
+const ReservarClase = lazy(() => import('./pages/ReservarClase'))
+const Seguridad = lazy(() => import('./pages/Seguridad'))
+const SerProfesor = lazy(() => import('./pages/SerProfesor'))
+const SuperAdminPanel = lazy(() => import('./pages/Admin/SuperAdminPanelSimple'))
+const Terminos = lazy(() => import('./pages/Legal/Terminos'))
+const VideoCallRoom = lazy(() => import('./components/VideoCall/VideoCallRoom'))
+
 import './App.css'
 
 function App() {
@@ -62,6 +67,11 @@ function App() {
               <div className="w-full h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
             </div>
             <div className="relative z-10">
+              <Suspense fallback={
+                <div className="min-h-[60vh] flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400"></div>
+                </div>
+              }>
               <Routes>
                 {/* Rutas independientes (sin Layout) */}
                 <Route path="/onboarding" element={<OnboardingPage />} />
@@ -189,6 +199,7 @@ function App() {
                   <Route path="system" element={<AdminSistema />} />
                 </Route>
               </Routes>
+              </Suspense>
             </div>
           </div>
         </Router>
