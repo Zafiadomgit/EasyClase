@@ -25,6 +25,42 @@ class NotificationService {
   }
 
   /**
+   * Notificaciones guardadas en el servidor. Son las que cruzan de una cuenta a
+   * otra (pago confirmado, clase reservada), imposibles de lograr solo con
+   * localStorage porque cada navegador ve únicamente su propio almacenamiento.
+   * @returns {Promise<Array>}
+   */
+  async getServerNotifications() {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return []
+      const response = await fetch('/api/notificaciones', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) return []
+      const data = await response.json()
+      const lista = data?.data?.notificaciones || data?.notificaciones || []
+      return lista.map(n => ({ ...n, origen: 'servidor' }))
+    } catch (error) {
+      console.error('Error obteniendo notificaciones del servidor:', error)
+      return []
+    }
+  }
+
+  /**
+   * Combina las del servidor con las locales (recordatorios de este navegador),
+   * ordenadas de más reciente a más antigua.
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<Array>}
+   */
+  async getAllNotifications(userId) {
+    const [servidor, locales] = [await this.getServerNotifications(), this.getNotifications(userId)]
+    return [...servidor, ...locales]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 20)
+  }
+
+  /**
    * Agrega una nueva notificación
    * @param {string} userId - ID del usuario
    * @param {Object} notification - Datos de la notificación
@@ -62,6 +98,50 @@ class NotificationService {
    * @param {string} userId - ID del usuario
    * @param {string} notificationId - ID de la notificación
    */
+  /**
+   * Marca como leída en el servidor. Las notificaciones del servidor tienen id
+   * entero; las locales usan Date.now() + Math.random(), que es decimal.
+   * @param {number} notificationId
+   */
+  async markServerAsRead(notificationId) {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token || !Number.isInteger(notificationId)) return
+      await fetch(`/api/notificaciones/${notificationId}/leer`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Error marcando notificación en el servidor:', error)
+    }
+  }
+
+  async markAllServerAsRead() {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      await fetch('/api/notificaciones/leer-todas', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Error marcando notificaciones en el servidor:', error)
+    }
+  }
+
+  async clearServerNotifications() {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      await fetch('/api/notificaciones', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Error eliminando notificaciones del servidor:', error)
+    }
+  }
+
   markAsRead(userId, notificationId) {
     try {
       const notifications = this.getNotifications(userId)

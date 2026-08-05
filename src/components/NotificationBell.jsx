@@ -55,7 +55,8 @@ const NotificationBell = () => {
     
     if (window.confirm('¿Estás seguro de que quieres eliminar todas las notificaciones?')) {
       // Importar el servicio de notificaciones
-      import('../services/notificationService').then(({ default: notificationService }) => {
+      import('../services/notificationService').then(async ({ default: notificationService }) => {
+        await notificationService.clearServerNotifications()
         notificationService.clearAllNotifications(user.id)
         loadPersistentNotifications(user.id)
       })

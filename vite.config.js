@@ -29,15 +29,22 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        // Las librerías cambian mucho menos que el código de la aplicación:
+        // separarlas deja que el navegador las reutilice de su caché entre
+        // despliegues, en vez de volver a descargarlas con cada cambio.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          iconos: ['lucide-react']
+        }
       }
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 700,
     copyPublicDir: true,
-    minify: false
+    // Estaba en false, así que producción servía el código sin minificar.
+    minify: 'esbuild'
   },
   optimizeDeps: {
-    include: ['speakeasy', 'qrcode']
+    include: ['qrcode']
   },
   define: {
     global: 'globalThis'

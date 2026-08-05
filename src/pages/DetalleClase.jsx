@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Calendar, Clock, DollarSign, User, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 
+// Esta pantalla muestra el detalle de una clase ya reservada, que es lo que
+// enlaza el panel. Antes pedía un perfil de profesor a un archivo .php que no
+// existe en esta API, así que siempre mostraba "Error al cargar el detalle".
 const DetalleClase = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -9,26 +13,41 @@ const DetalleClase = () => {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const cargarDetalleClase = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/clases/${id}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const data = await response.json()
+        const detalle = data.data?.clase || data.clase
+
+        if (data.success && detalle) {
+          setClase(detalle)
+        } else {
+          setError(data.message || 'No se pudo cargar el detalle de la clase')
+        }
+      } catch (err) {
+        console.error('Error:', err)
+        setError('No se pudo cargar el detalle de la clase')
+      } finally {
+        setLoading(false)
+      }
+    }
     cargarDetalleClase()
   }, [id])
 
-  const cargarDetalleClase = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/clases/reservar.php?id=${id}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setClase(data.data.clase)
-      } else {
-        setError('Error al cargar el detalle de la clase')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      setError('Error al cargar el detalle de la clase')
-    } finally {
-      setLoading(false)
-    }
+  const formatPrecio = (precio) =>
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }).format(Number(precio) || 0)
+
+  const estadoVisual = {
+    confirmada: { texto: 'Confirmada', clase: 'bg-green-100 text-green-800', Icono: CheckCircle },
+    pendiente: { texto: 'Pago pendiente', clase: 'bg-yellow-100 text-yellow-800', Icono: AlertCircle },
+    cancelada: { texto: 'Cancelada', clase: 'bg-red-100 text-red-800', Icono: XCircle }
   }
 
   if (loading) {
@@ -48,93 +67,92 @@ const DetalleClase = () => {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Clase no encontrada'}</p>
           <button
-            onClick={() => navigate('/buscar')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            onClick={() => navigate('/mis-clases')}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
           >
-            Volver a buscar
+            Volver a mis clases
           </button>
         </div>
       </div>
     )
   }
 
+  const estado = estadoVisual[clase.estado] || estadoVisual.pendiente
+  const { Icono } = estado
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Detalle de la Clase</h1>
-          
-          {/* Información del profesor */}
-          <div className="border rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Profesor</h2>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xl font-bold text-blue-600">
-                  {clase.profesor.nombre.split(' ').map(n => n[0]).join('')}
-                </span>
-              </div>
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{clase.titulo}</h1>
+              {clase.materia && <p className="text-gray-600 mt-1">{clase.materia}</p>}
+            </div>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${estado.clase}`}>
+              <Icono className="w-4 h-4 mr-1" />
+              {estado.texto}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div className="border rounded-lg p-4 flex items-center">
+              <Calendar className="w-5 h-5 text-blue-600 mr-3" />
               <div>
-                <h3 className="text-lg font-medium text-gray-900">{clase.profesor.nombre}</h3>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span className="flex items-center">
-                    ⭐ {clase.profesor.calificacionPromedio} ({clase.profesor.totalResenas} reseñas)
-                  </span>
-                  <span>${clase.profesor.precioHora.toLocaleString()}/hora</span>
-                  {clase.profesor.esPremium && (
-                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      Premium
-                    </span>
-                  )}
-                </div>
+                <p className="text-xs text-gray-500">Fecha</p>
+                <p className="font-medium text-gray-900">{clase.fecha || 'Por definir'}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 mt-4">
-              {clase.profesor.especialidades.map((especialidad, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                >
-                  {especialidad}
-                </span>
-              ))}
+
+            <div className="border rounded-lg p-4 flex items-center">
+              <Clock className="w-5 h-5 text-blue-600 mr-3" />
+              <div>
+                <p className="text-xs text-gray-500">Hora y duración</p>
+                <p className="font-medium text-gray-900">
+                  {clase.hora || '--'} · {clase.duracion || 1}h
+                </p>
+              </div>
+            </div>
+
+            <div className="border rounded-lg p-4 flex items-center">
+              <User className="w-5 h-5 text-blue-600 mr-3" />
+              <div>
+                <p className="text-xs text-gray-500">Profesor</p>
+                <p className="font-medium text-gray-900">{clase.profesor || 'Profesor'}</p>
+              </div>
+            </div>
+
+            <div className="border rounded-lg p-4 flex items-center">
+              <DollarSign className="w-5 h-5 text-blue-600 mr-3" />
+              <div>
+                <p className="text-xs text-gray-500">Total pagado</p>
+                <p className="font-medium text-gray-900">{formatPrecio(clase.precio)}</p>
+              </div>
             </div>
           </div>
 
-          {/* Disponibilidad */}
-          <div className="border rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Horarios Disponibles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(clase.disponibilidad).map(([dia, horarios]) => (
-                <div key={dia} className="border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 capitalize mb-2">{dia}</h3>
-                  <div className="space-y-1">
-                    {horarios.map((horario, index) => (
-                      <span
-                        key={index}
-                        className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2 mb-1"
-                      >
-                        {horario}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          {clase.descripcion && (
+            <div className="border rounded-lg p-4 mb-6">
+              <h2 className="font-semibold text-gray-900 mb-2">Descripción</h2>
+              <p className="text-gray-700 text-sm">{clase.descripcion}</p>
             </div>
-          </div>
+          )}
 
-          <div className="flex space-x-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={() => navigate(`/profesor/${id}`)}
-              className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium"
+              onClick={() => navigate('/mis-clases')}
+              className="flex-1 bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium"
             >
-              Ver Perfil Completo
+              Volver a mis clases
             </button>
-            <button
-              onClick={() => navigate(`/reservar/${id}`)}
-              className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
-            >
-              Reservar Clase
-            </button>
+            {clase.profesorId && (
+              <button
+                onClick={() => navigate(`/profesor/${clase.profesorId}`)}
+                className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Ver perfil del profesor
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -42,7 +42,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, Notificacion, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -151,8 +151,26 @@ const initDB = async () => {
       servicioId: { type: DataTypes.INTEGER, allowNull: true },
       profesorId: { type: DataTypes.INTEGER, allowNull: true },
       fecha: { type: DataTypes.STRING(20), defaultValue: '' },
-      hora: { type: DataTypes.STRING(20), defaultValue: '' }
-    }, { tableName: 'transacciones', timestamps: true, indexes: [{ fields: ['referencia'] }, { fields: ['usuario'] }] });
+      hora: { type: DataTypes.STRING(20), defaultValue: '' },
+      // Duración en horas de la clase reservada. Necesaria para saber qué
+      // franjas quedan ocupadas y no permitir que otro alumno las tome.
+      duracion: { type: DataTypes.INTEGER, defaultValue: 1 }
+    }, { tableName: 'transacciones', timestamps: true, indexes: [{ fields: ['referencia'] }, { fields: ['usuario'] }, { fields: ['profesorId'] }] });
+
+    // Notificaciones por usuario. Antes vivían en el localStorage del navegador,
+    // así que nunca cruzaban de una cuenta a otra: el profesor no podía ver un
+    // aviso generado en el navegador del alumno.
+    Notificacion = sequelize.define('Notificacion', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      usuario: { type: DataTypes.INTEGER, allowNull: false },
+      titulo: { type: DataTypes.STRING(150), allowNull: false },
+      mensaje: { type: DataTypes.TEXT, defaultValue: '' },
+      tipo: { type: DataTypes.STRING(40), defaultValue: 'general' },
+      icono: { type: DataTypes.STRING(40), defaultValue: 'bell' },
+      color: { type: DataTypes.STRING(20), defaultValue: 'blue' },
+      url: { type: DataTypes.STRING(200), defaultValue: '' },
+      leida: { type: DataTypes.BOOLEAN, defaultValue: false }
+    }, { tableName: 'notificaciones', timestamps: true, indexes: [{ fields: ['usuario'] }] });
 
     // Plantillas de clase creadas por un profesor (clases en vivo ofrecidas).
     Plantilla = sequelize.define('Plantilla', {
@@ -204,14 +222,21 @@ const initDB = async () => {
     }, { tableName: 'retiros', timestamps: true, indexes: [{ fields: ['profesor'] }, { fields: ['estado'] }] });
 
     await sequelize.authenticate();
-    // alter:true añade columnas nuevas (perfil profesor) a la tabla existente
-    await User.sync({ alter: true });
-    await Servicio.sync({ alter: true });
-    await Transaccion.sync({ alter: true });
-    await Plantilla.sync({ alter: true });
-    await Disponibilidad.sync({ alter: true });
-    await Review.sync({ alter: true });
-    await Retiro.sync({ alter: true });
+    // alter:true añade columnas nuevas (perfil profesor) a la tabla existente.
+    // Se sincronizan en paralelo: en serie eran ocho viajes de ida y vuelta
+    // encadenados a la base en cada arranque en frío de la función.
+    await Promise.all([
+      User.sync({ alter: true }),
+      Servicio.sync({ alter: true }),
+      Transaccion.sync({ alter: true }),
+      Plantilla.sync({ alter: true }),
+      Disponibilidad.sync({ alter: true }),
+      Review.sync({ alter: true }),
+      Retiro.sync({ alter: true }),
+      Notificacion.sync({ alter: true })
+    ]);
+    // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
+    // profesores existan.
     await seedProfesores();
     await seedServicios();
     await seedAdmin();
@@ -276,12 +301,29 @@ const seedAdmin = async () => {
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
     if (!email || !password) return; // sin credenciales configuradas no se crea admin
-    const hashed = await bcrypt.hash(password, 10);
     const existing = await User.findOne({ where: { email } });
+
+    // Antes se calculaba el hash de bcrypt en cada arranque en frío, incluso
+    // cuando la contraseña no había cambiado; es una operación deliberadamente
+    // costosa. Ahora solo se rehashea si hace falta.
     if (existing) {
-      await existing.update({ tipoUsuario: 'admin', password: hashed, activo: true });
+      const alDia = existing.tipoUsuario === 'admin'
+        && existing.activo
+        && await bcrypt.compare(password, existing.password || '');
+      if (alDia) return;
+      await existing.update({
+        tipoUsuario: 'admin',
+        password: await bcrypt.hash(password, 10),
+        activo: true
+      });
     } else {
-      await User.create({ nombre: 'Administrador', email, password: hashed, tipoUsuario: 'admin', activo: true });
+      await User.create({
+        nombre: 'Administrador',
+        email,
+        password: await bcrypt.hash(password, 10),
+        tipoUsuario: 'admin',
+        activo: true
+      });
     }
     console.log('🛡️ Usuario admin asegurado:', email);
   } catch (e) {
@@ -619,6 +661,14 @@ app.delete('/api/2fa', authMiddleware, async (req, res) => {
   }
 });
 
+// Cachea una respuesta pública en el CDN de Vercel. El navegador la revalida,
+// pero el CDN la sirve durante `segundos` y puede seguir entregando la versión
+// anterior mientras refresca por detrás, así que los listados dejan de golpear
+// la base en cada visita.
+const cachePublico = (res, segundos = 60) => {
+  res.set('Cache-Control', `public, max-age=0, s-maxage=${segundos}, stale-while-revalidate=300`);
+};
+
 // ─── Profesores ──────────────────────────────────────────────────────────────
 const requireDB = async (res) => {
   await initDB();
@@ -679,6 +729,7 @@ app.get('/api/profesores', async (req, res) => {
         )
       );
     }
+    cachePublico(res, 60);
     res.json({ success: true, data: { profesores: data }, profesores: data });
   } catch (e) {
     console.error('Error buscando profesores:', e);
@@ -696,6 +747,7 @@ app.get('/api/profesores/destacados', async (req, res) => {
       limit: 8
     });
     const data = profes.map(shapeProfesor);
+    cachePublico(res, 60);
     res.json({ success: true, data: { profesores: data }, profesores: data });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Error al obtener destacados' });
@@ -971,6 +1023,7 @@ app.get('/api/servicios', async (req, res) => {
         x.categoria.toLowerCase().includes(s)
       );
     }
+    cachePublico(res, 60);
     res.json({ success: true, data: { servicios: data }, servicios: data });
   } catch (e) {
     console.error('Error buscando servicios:', e);
@@ -1275,6 +1328,345 @@ app.get('/api/reservas/mis-reservas', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── Notificaciones ──────────────────────────────────────────────────────────
+const shapeNotificacion = (n) => {
+  const j = n.toJSON ? n.toJSON() : n;
+  return {
+    id: j.id,
+    title: j.titulo,
+    message: j.mensaje || '',
+    type: j.tipo || 'general',
+    icon: j.icono || 'bell',
+    color: j.color || 'blue',
+    actionUrl: j.url || '',
+    read: !!j.leida,
+    timestamp: j.createdAt
+  };
+};
+
+// Crea una notificación sin romper el flujo que la origina si algo falla.
+const crearNotificacion = async (usuario, datos) => {
+  try {
+    if (!Notificacion || !usuario) return null;
+    return await Notificacion.create({
+      usuario,
+      titulo: datos.titulo,
+      mensaje: datos.mensaje || '',
+      tipo: datos.tipo || 'general',
+      icono: datos.icono || 'bell',
+      color: datos.color || 'blue',
+      url: datos.url || ''
+    });
+  } catch (e) {
+    console.warn('⚠️ No se pudo crear la notificación:', e.message);
+    return null;
+  }
+};
+
+app.get('/api/notificaciones', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const notis = await Notificacion.findAll({
+      where: { usuario: req.userId },
+      order: [['createdAt', 'DESC']],
+      limit: 30
+    });
+    const data = notis.map(shapeNotificacion);
+    const noLeidas = data.filter(n => !n.read).length;
+    res.json({ success: true, data: { notificaciones: data, noLeidas }, notificaciones: data });
+  } catch (e) {
+    console.error('Error obteniendo notificaciones:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener las notificaciones' });
+  }
+});
+
+// Marcar todas como leídas. Va antes de /:id para que no la capture esa ruta.
+app.put('/api/notificaciones/leer-todas', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    await Notificacion.update({ leida: true }, { where: { usuario: req.userId, leida: false } });
+    res.json({ success: true, message: 'Notificaciones marcadas como leídas' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error al marcar las notificaciones' });
+  }
+});
+
+app.put('/api/notificaciones/:id/leer', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const n = await Notificacion.findByPk(req.params.id);
+    if (!n) return res.status(404).json({ success: false, message: 'Notificación no encontrada' });
+    if (n.usuario !== req.userId) return res.status(403).json({ success: false, message: 'No autorizado' });
+    await n.update({ leida: true });
+    res.json({ success: true, data: { notificacion: shapeNotificacion(n) } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error al marcar la notificación' });
+  }
+});
+
+app.delete('/api/notificaciones', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    await Notificacion.destroy({ where: { usuario: req.userId } });
+    res.json({ success: true, message: 'Notificaciones eliminadas' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error al eliminar las notificaciones' });
+  }
+});
+
+// ─── Clases reservadas ───────────────────────────────────────────────────────
+
+// Una reserva es una transacción de tipo 'clase' ya aprobada. Se expone con los
+// datos de la contraparte para que cada lado vea con quién es la clase.
+const shapeReserva = (t, contraparte) => {
+  const j = t.toJSON ? t.toJSON() : t;
+  const estado = j.estado === 'aprobado' ? 'confirmada'
+    : j.estado === 'rechazado' ? 'cancelada'
+    : 'pendiente';
+  return {
+    id: j.id,
+    titulo: j.titulo || 'Clase',
+    materia: j.categoria || '',
+    categoria: j.categoria || '',
+    descripcion: j.descripcion || '',
+    fecha: j.fecha || '',
+    hora: j.hora || '',
+    duracion: j.duracion || 1,
+    precio: Number(j.precio) || 0,
+    estado,
+    profesorId: j.profesorId || null,
+    estudianteId: j.usuario || null,
+    profesor: contraparte?.profesor || '',
+    estudiante: contraparte?.estudiante || '',
+    created_at: j.createdAt
+  };
+};
+
+// Resuelve los nombres de los usuarios referenciados por un grupo de reservas.
+const nombresDeUsuarios = async (ids) => {
+  const limpios = [...new Set(ids.filter(Boolean))];
+  if (!limpios.length) return {};
+  const users = await User.findAll({ where: { id: limpios }, attributes: ['id', 'nombre'] });
+  const mapa = {};
+  users.forEach(u => { mapa[u.id] = u.nombre; });
+  return mapa;
+};
+
+// Clases que el alumno autenticado compró.
+app.get('/api/clases/estudiante/mis-clases', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const txs = await Transaccion.findAll({
+      where: { usuario: req.userId, tipo: 'clase' },
+      order: [['createdAt', 'DESC']]
+    });
+    const profes = await nombresDeUsuarios(txs.map(t => t.profesorId));
+    const clases = txs.map(t => shapeReserva(t, { profesor: profes[t.profesorId] || 'Profesor' }));
+    res.json({ success: true, data: { clases }, clases });
+  } catch (e) {
+    console.error('Error obteniendo clases del estudiante:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus clases' });
+  }
+});
+
+// Clases que le reservaron al profesor autenticado. Solo las pagadas, para que
+// no vea reservas que quedaron a medio pagar.
+app.get('/api/clases/profesor/mis-clases', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const txs = await Transaccion.findAll({
+      where: { profesorId: req.userId, tipo: 'clase', estado: 'aprobado' },
+      order: [['createdAt', 'DESC']]
+    });
+    const alumnos = await nombresDeUsuarios(txs.map(t => t.usuario));
+    const clases = txs.map(t => shapeReserva(t, { estudiante: alumnos[t.usuario] || 'Estudiante' }));
+    res.json({ success: true, data: { clases }, clases });
+  } catch (e) {
+    console.error('Error obteniendo clases del profesor:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener tus clases' });
+  }
+});
+
+// Horas ya ocupadas de un profesor en una fecha. Se consulta al reservar para
+// no ofrecer una franja que otro alumno ya pagó.
+const horasOcupadas = async (profesorId, fecha) => {
+  const txs = await Transaccion.findAll({
+    where: { profesorId, fecha, tipo: 'clase', estado: ['aprobado', 'pendiente'] },
+    attributes: ['hora', 'duracion', 'estado', 'createdAt']
+  });
+  const ocupadas = new Set();
+  const ahora = Date.now();
+  txs.forEach(t => {
+    // Una reserva pendiente bloquea la franja solo 30 minutos, el tiempo de
+    // completar el pago; si no, un checkout abandonado la dejaría inutilizable.
+    if (t.estado === 'pendiente' && ahora - new Date(t.createdAt).getTime() > 30 * 60 * 1000) return;
+    const [h, m] = String(t.hora || '').split(':').map(Number);
+    if (!Number.isFinite(h)) return;
+    const inicio = h * 60 + (Number(m) || 0);
+    const horas = Number(t.duracion) || 1;
+    for (let x = inicio; x < inicio + horas * 60; x += 30) {
+      ocupadas.add(`${String(Math.floor(x / 60)).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`);
+    }
+  });
+  return [...ocupadas].sort();
+};
+
+// Avisa a las dos partes cuando una reserva queda pagada. El alumno recibe la
+// confirmación del pago y el profesor, el aviso de que le reservaron la clase.
+const notificarReservaPagada = async (tx) => {
+  const j = tx.toJSON ? tx.toJSON() : tx;
+  const cuando = [j.fecha, j.hora].filter(Boolean).join(' a las ');
+  const esClase = j.tipo === 'clase';
+
+  if (j.usuario) {
+    await crearNotificacion(j.usuario, {
+      titulo: 'Pago confirmado',
+      mensaje: esClase
+        ? `Tu clase "${j.titulo}"${cuando ? ` del ${cuando}` : ''} quedó confirmada.`
+        : `Tu compra de "${j.titulo}" quedó confirmada.`,
+      tipo: 'pago',
+      icono: 'check',
+      color: 'green',
+      url: esClase ? '/mis-clases' : '/mis-compras'
+    });
+  }
+
+  if (esClase && j.profesorId) {
+    let alumno = 'Un estudiante';
+    try {
+      const u = j.usuario ? await User.findByPk(j.usuario, { attributes: ['nombre'] }) : null;
+      if (u?.nombre) alumno = u.nombre;
+    } catch { /* se usa el genérico */ }
+    await crearNotificacion(j.profesorId, {
+      titulo: 'Te reservaron una clase',
+      mensaje: `${alumno} reservó y pagó "${j.titulo}"${cuando ? ` para el ${cuando}` : ''}.`,
+      tipo: 'reserva',
+      icono: 'calendar',
+      color: 'blue',
+      url: '/mis-clases'
+    });
+  }
+};
+
+app.get('/api/clases/horarios-ocupados', async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const profesorId = Number(req.query.profesorId);
+    const fecha = String(req.query.fecha || '');
+    if (!Number.isFinite(profesorId) || !fecha) {
+      return res.status(400).json({ success: false, message: 'Se requieren profesorId y fecha' });
+    }
+    const ocupadas = await horasOcupadas(profesorId, fecha);
+    res.json({ success: true, data: { ocupadas }, ocupadas });
+  } catch (e) {
+    console.error('Error obteniendo horarios ocupados:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener los horarios ocupados' });
+  }
+});
+
+// Detalle de una reserva. Solo la ven el alumno que la compró y el profesor que
+// la dicta. Va al final del bloque para no capturar las rutas fijas anteriores
+// de /api/clases, que Express evalúa en orden.
+app.get('/api/clases/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const t = await Transaccion.findByPk(req.params.id);
+    if (!t || t.tipo !== 'clase') {
+      return res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    }
+    if (t.usuario !== req.userId && t.profesorId !== req.userId) {
+      return res.status(403).json({ success: false, message: 'No autorizado' });
+    }
+    const nombres = await nombresDeUsuarios([t.usuario, t.profesorId]);
+    const clase = shapeReserva(t, {
+      profesor: nombres[t.profesorId] || 'Profesor',
+      estudiante: nombres[t.usuario] || 'Estudiante'
+    });
+    res.json({ success: true, data: { clase }, clase });
+  } catch (e) {
+    console.error('Error obteniendo el detalle de la clase:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener la clase' });
+  }
+});
+
+// ─── Videollamada ────────────────────────────────────────────────────────────
+// La sala se aloja en Jitsi Meet, que no requiere servidor propio ni cuenta.
+// Como cualquiera con el nombre de la sala podría entrar, el nombre se deriva
+// con HMAC de un secreto del servidor: es impredecible y solo se le entrega a
+// las dos personas autorizadas, dentro de la ventana horaria de la clase.
+const SALA_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_prod';
+
+const nombreSala = (claseId) =>
+  'easyclase-' + crypto.createHmac('sha256', SALA_SECRET).update(`clase:${claseId}`).digest('hex').slice(0, 24);
+
+// Ventana de acceso: desde 10 minutos antes hasta que termina la clase (con 15
+// minutos de gracia). Se calcula en el servidor porque el navegador es
+// manipulable y esto es lo que protege el acceso a la sala.
+const ventanaClase = (tx) => {
+  const [anio, mes, dia] = String(tx.fecha || '').split('-').map(Number);
+  const [hh, mm] = String(tx.hora || '').split(':').map(Number);
+  if (!Number.isFinite(anio) || !Number.isFinite(hh)) return null;
+  // Las horas se guardan en hora local de Colombia (UTC-5), sin cambio horario.
+  const inicioUTC = Date.UTC(anio, (mes || 1) - 1, dia || 1, hh + 5, mm || 0);
+  const duracion = (Number(tx.duracion) || 1) * 60 * 60 * 1000;
+  return {
+    abre: inicioUTC - 10 * 60 * 1000,
+    cierra: inicioUTC + duracion + 15 * 60 * 1000
+  };
+};
+
+app.get('/api/clases/:id/videollamada', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const t = await Transaccion.findByPk(req.params.id);
+    if (!t || t.tipo !== 'clase') {
+      return res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    }
+    if (t.usuario !== req.userId && t.profesorId !== req.userId) {
+      return res.status(403).json({ success: false, message: 'No tienes acceso a esta clase' });
+    }
+    if (t.estado !== 'aprobado') {
+      return res.status(402).json({ success: false, message: 'La clase todavía no está pagada' });
+    }
+
+    const ventana = ventanaClase(t);
+    if (!ventana) {
+      return res.status(400).json({ success: false, message: 'La clase no tiene fecha y hora válidas' });
+    }
+    const ahora = Date.now();
+    if (ahora < ventana.abre) {
+      const minutos = Math.ceil((ventana.abre - ahora) / 60000);
+      return res.status(425).json({
+        success: false,
+        message: minutos > 60
+          ? `La videollamada se abre 10 minutos antes de la clase.`
+          : `La videollamada se abre en ${minutos} minuto(s).`,
+        disponibleEn: minutos
+      });
+    }
+    if (ahora > ventana.cierra) {
+      return res.status(410).json({ success: false, message: 'Esta clase ya terminó' });
+    }
+
+    const usuario = await User.findByPk(req.userId, { attributes: ['nombre'] });
+    res.json({
+      success: true,
+      data: {
+        sala: nombreSala(t.id),
+        dominio: 'meet.jit.si',
+        nombreUsuario: usuario?.nombre || 'Participante',
+        esProfesor: t.profesorId === req.userId,
+        titulo: t.titulo,
+        // Milisegundos que quedan, para cerrar la sala al terminar la clase.
+        terminaEn: ventana.cierra - ahora
+      }
+    });
+  } catch (e) {
+    console.error('Error autorizando videollamada:', e);
+    res.status(500).json({ success: false, message: 'Error al abrir la videollamada' });
+  }
+});
+
 // ─── Pagos (Checkout Pro) ────────────────────────────────────────────────────
 
 // Diagnóstico: medios de pago habilitados para la cuenta vendedora, con el
@@ -1364,7 +1756,8 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
       });
     }
 
-    const { titulo, precio, cantidad, email, referencia, descripcion, metadata } = req.body || {};
+    const b = req.body || {};
+    const { titulo, precio, cantidad, email, referencia, descripcion, metadata } = b;
 
     // Validaciones mínimas del ítem.
     const unitPrice = Number(precio);
@@ -1384,6 +1777,27 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
         success: false,
         message: `El total debe ser de al menos $${MONTO_MINIMO_COBRO.toLocaleString('es-CO')} COP para poder pagar con tarjeta.`
       });
+    }
+
+    // Al reservar una clase, comprobar que la franja siga libre. La validación
+    // del navegador no basta: dos alumnos pueden llegar al pago a la vez.
+    const profesorIdNum = Number(b.profesorId);
+    const duracionHoras = Number(b.duracion) > 0 ? Math.floor(Number(b.duracion)) : 1;
+    if (b.tipo === 'clase' && Number.isFinite(profesorIdNum) && b.fecha && b.hora) {
+      try {
+        await initDB();
+        if (dbReady) {
+          const ocupadas = await horasOcupadas(profesorIdNum, String(b.fecha));
+          if (ocupadas.includes(String(b.hora))) {
+            return res.status(409).json({
+              success: false,
+              message: 'Ese horario acaba de ser reservado por otro estudiante. Elige otra hora.'
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ No se pudo verificar el horario:', e.message);
+      }
     }
 
     const preferenceBody = {
@@ -1428,7 +1842,6 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
     try {
       await initDB();
       if (Transaccion) {
-        const b = req.body || {};
         await Transaccion.create({
           usuario: getUserIdOptional(req),
           tipo: b.tipo === 'clase' ? 'clase' : 'servicio',
@@ -1442,7 +1855,8 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
           servicioId: Number.isFinite(Number(b.servicioId)) ? Number(b.servicioId) : null,
           profesorId: Number.isFinite(Number(b.profesorId)) ? Number(b.profesorId) : null,
           fecha: b.fecha ? String(b.fecha) : '',
-          hora: b.hora ? String(b.hora) : ''
+          hora: b.hora ? String(b.hora) : '',
+          duracion: duracionHoras
         });
       }
     } catch (e) {
@@ -1724,10 +2138,20 @@ app.post('/api/pagos/webhook', async (req, res) => {
             const nuevoEstado = payment.status === 'approved' ? 'aprobado'
               : payment.status === 'rejected' ? 'rechazado'
               : 'pendiente';
+            const referencia = String(payment.external_reference);
+            // Se mira el estado previo para no volver a notificar si Mercado
+            // Pago reenvía la misma notificación (los webhooks se reintentan).
+            const previa = await Transaccion.findOne({ where: { referencia } });
+            const yaEstabaAprobada = previa?.estado === 'aprobado';
+
             await Transaccion.update(
               { estado: nuevoEstado, paymentId: String(payment.id) },
-              { where: { referencia: String(payment.external_reference) } }
+              { where: { referencia } }
             );
+
+            if (nuevoEstado === 'aprobado' && previa && !yaEstabaAprobada) {
+              await notificarReservaPagada(previa);
+            }
           }
         } catch (e) {
           console.warn('⚠️ No se pudo actualizar la transacción desde el webhook:', e.message);
