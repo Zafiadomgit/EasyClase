@@ -1309,6 +1309,19 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
       },
       auto_return: 'approved',
       notification_url: `${FRONTEND_URL}/api/pagos/webhook`,
+      // Medios de pago. Se dejan sin exclusiones para que el checkout ofrezca
+      // tarjeta de crédito/débito además de la cuenta de Mercado Pago.
+      //
+      // IMPORTANTE: no agregar `purpose: 'wallet_purchase'`. Ese valor obliga a
+      // que el comprador inicie sesión con una cuenta de Mercado Pago y oculta
+      // el pago como invitado con tarjeta. Al omitirlo, el pago como invitado
+      // queda habilitado, que es el comportamiento por defecto de Checkout Pro.
+      payment_methods: {
+        excluded_payment_types: [],
+        excluded_payment_methods: [],
+        installments: 12,
+        default_installments: 1
+      },
       ...(email ? { payer: { email: String(email) } } : {}),
       ...(referencia ? { external_reference: String(referencia) } : {}),
       ...(metadata && typeof metadata === 'object' ? { metadata } : {})
