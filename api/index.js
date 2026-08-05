@@ -1500,7 +1500,8 @@ const plantillaCorreo = (titulo, cuerpo, boton) => `
 </div>`;
 
 const enviarCorreo = async ({ para, asunto, titulo, cuerpo, boton }) => {
-  if (!RESEND_API_KEY || !para) return false;
+  if (!RESEND_API_KEY) return { ok: false, detalle: 'Falta RESEND_API_KEY' };
+  if (!para) return { ok: false, detalle: 'Sin destinatario' };
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -1516,15 +1517,50 @@ const enviarCorreo = async ({ para, asunto, titulo, cuerpo, boton }) => {
       })
     });
     if (!r.ok) {
-      console.warn('⚠️ Resend respondió', r.status, await r.text());
-      return false;
+      const detalle = await r.text();
+      console.warn('⚠️ Resend respondió', r.status, detalle);
+      return { ok: false, estado: r.status, detalle };
     }
-    return true;
+    return { ok: true };
   } catch (e) {
     console.warn('⚠️ No se pudo enviar el correo:', e.message);
-    return false;
+    return { ok: false, detalle: e.message };
   }
 };
+
+// Diagnóstico de correo: envía uno de prueba y devuelve el error exacto de
+// Resend si falla. Sirve sobre todo para detectar la restricción de las cuentas
+// nuevas, que solo pueden escribir a la dirección con la que se registraron
+// mientras no se verifique un dominio propio.
+app.get('/api/admin/correo/diagnostico', adminMiddleware, async (req, res) => {
+  const destino = String(req.query.destino || '').trim();
+  if (!destino) {
+    return res.status(400).json({ success: false, message: 'Indica ?destino=correo@ejemplo.com' });
+  }
+
+  const remitenteEsDePruebas = EMAIL_REMITENTE.includes('resend.dev');
+  const resultado = await enviarCorreo({
+    para: destino,
+    asunto: 'Prueba de configuración de EasyClase',
+    titulo: 'El correo está configurado',
+    cuerpo: 'Si estás leyendo esto, EasyClase puede enviar correos correctamente.'
+  });
+
+  res.json({
+    success: resultado.ok,
+    data: {
+      apiKeyConfigurada: !!RESEND_API_KEY,
+      remitente: EMAIL_REMITENTE,
+      remitenteEsDePruebas,
+      destino,
+      enviado: resultado.ok,
+      error: resultado.ok ? null : (resultado.detalle || 'desconocido'),
+      aviso: remitenteEsDePruebas
+        ? 'Con el remitente de pruebas de Resend solo llegan correos a la dirección con la que creaste la cuenta. Verifica un dominio en resend.com/domains y cambia EMAIL_REMITENTE para escribir a tus usuarios.'
+        : null
+    }
+  });
+});
 
 // ─── Notificaciones ──────────────────────────────────────────────────────────
 const shapeNotificacion = (n) => {
