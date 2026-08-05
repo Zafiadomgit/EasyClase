@@ -434,14 +434,37 @@ const aplicarPrecioDesdeClases = (profesor) => {
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Secreto con el que se firman los tokens de sesión.
+//
+// Antes había un valor por defecto escrito en el código. Como este repositorio
+// es público, cualquiera podía leerlo y, si la variable no estaba configurada,
+// firmarse un token con el id de usuario que quisiera: entrar como cualquier
+// persona, incluido el administrador. En producción ahora se falla en cerrado
+// en vez de aceptar un secreto conocido.
+const EN_PRODUCCION = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+const JWT_SECRET = process.env.JWT_SECRET || (EN_PRODUCCION ? null : 'dev_secret_solo_desarrollo');
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET no está configurada: la autenticación queda deshabilitada por seguridad.');
+}
+
+const sinSecreto = (res) => {
+  res.status(503).json({
+    success: false,
+    message: 'El servidor no está configurado correctamente (falta JWT_SECRET).'
+  });
+  return true;
+};
+
 const generateToken = (userId) =>
-  jwt.sign({ userId }, process.env.JWT_SECRET || 'dev_secret_change_in_prod', { expiresIn: '7d' });
+  jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 
 const authMiddleware = (req, res, next) => {
+  if (!JWT_SECRET) return sinSecreto(res);
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ success: false, message: 'Token requerido' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod');
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.userId;
     next();
   } catch {
@@ -455,7 +478,8 @@ const getUserIdOptional = (req) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
   try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod').userId;
+    if (!JWT_SECRET) return null;
+    return jwt.verify(token, JWT_SECRET).userId;
   } catch {
     return null;
   }
@@ -463,10 +487,11 @@ const getUserIdOptional = (req) => {
 
 // Middleware de administrador: exige token válido Y que el usuario sea admin.
 const adminMiddleware = async (req, res, next) => {
+  if (!JWT_SECRET) return sinSecreto(res);
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ success: false, message: 'Token requerido' });
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret_change_in_prod');
+    const decoded = jwt.verify(token, JWT_SECRET);
     await initDB();
     if (!dbReady || !User) return res.status(503).json({ success: false, message: 'Base de datos no disponible' });
     const user = await User.findByPk(decoded.userId);
@@ -488,7 +513,10 @@ app.get('/api/status', async (req, res) => {
   const cs = process.env.DATABASE_URL;
   out.hasDatabaseUrl = !!cs;
 
-  if (cs) {
+  // El detalle de la conexión (host, usuario, base y huella de la contraseña)
+  // solo se entrega con ?debug=<JWT_SECRET>: es información que ayuda a atacar
+  // la base y este endpoint es público porque lo usa el monitor de keep-alive.
+  if (cs && JWT_SECRET && req.query.debug === JWT_SECRET) {
     try {
       const u = new URL(cs);
       out.dbUrl = {
@@ -1796,7 +1824,7 @@ app.get('/api/clases/:id', authMiddleware, async (req, res) => {
 // Como cualquiera con el nombre de la sala podría entrar, el nombre se deriva
 // con HMAC de un secreto del servidor: es impredecible y solo se le entrega a
 // las dos personas autorizadas, dentro de la ventana horaria de la clase.
-const SALA_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_prod';
+const SALA_SECRET = JWT_SECRET || 'sala_sin_secreto';
 
 // Proveedor de video, configurable sin tocar código:
 //   - Por defecto, la instancia pública meet.jit.si: gratis, sin cuota de
@@ -1966,7 +1994,7 @@ app.get('/api/admin/videollamadas/uso', adminMiddleware, async (req, res) => {
 // monto mínimo que exige cada uno. Sirve para saber por qué el checkout no
 // ofrece tarjeta: si el importe del cobro es menor que min_allowed_amount,
 // Mercado Pago oculta ese medio de pago. No expone el access token.
-app.get('/api/pagos/medios-disponibles', async (req, res) => {
+app.get('/api/pagos/medios-disponibles', adminMiddleware, async (req, res) => {
   try {
     if (!MP_ACCESS_TOKEN) {
       return res.status(503).json({ success: false, message: 'Falta la variable de entorno MP_ACCESS_TOKEN.' });
@@ -2232,7 +2260,9 @@ app.post('/api/pagos/crear-preferencia', async (req, res) => {
 
 // Consultar el estado de un pago por su ID (útil tras la redirección de vuelta
 // desde Mercado Pago para confirmar la operación).
-app.get('/api/pagos/:id', async (req, res) => {
+// Solo el comprador de esa transacción (o un administrador) puede consultarla:
+// siendo pública, cualquiera podía recorrer ids y ver importes y referencias.
+app.get('/api/pagos/:id', authMiddleware, async (req, res) => {
   try {
     const mp = getMercadoPago();
     if (!mp) {
@@ -2240,6 +2270,19 @@ app.get('/api/pagos/:id', async (req, res) => {
         success: false,
         message: 'Mercado Pago no está configurado. Falta la variable de entorno MP_ACCESS_TOKEN.'
       });
+    }
+
+    await initDB();
+    if (dbReady && Transaccion) {
+      const propia = await Transaccion.findOne({
+        where: { paymentId: String(req.params.id), usuario: req.userId }
+      });
+      if (!propia) {
+        const quien = await User.findByPk(req.userId, { attributes: ['tipoUsuario'] });
+        if (!['admin', 'superadmin'].includes(quien?.tipoUsuario)) {
+          return res.status(403).json({ success: false, message: 'No autorizado' });
+        }
+      }
     }
 
     const payment = await mp.payment.get({ id: req.params.id });
