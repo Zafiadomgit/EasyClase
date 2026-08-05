@@ -42,7 +42,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 app.use(express.json());
 
 // ─── DB setup (Neon PostgreSQL) ───────────────────────────────────────────────
-let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, Notificacion, dbReady = false, lastDbError = null;
+let sequelize, User, Servicio, Transaccion, Plantilla, Disponibilidad, Review, Retiro, Notificacion, AccesoVideollamada, dbReady = false, lastDbError = null;
 
 const initDB = async () => {
   if (dbReady) return;
@@ -172,6 +172,17 @@ const initDB = async () => {
       leida: { type: DataTypes.BOOLEAN, defaultValue: false }
     }, { tableName: 'notificaciones', timestamps: true, indexes: [{ fields: ['usuario'] }] });
 
+    // Registro de entradas a videollamada, para medir el consumo real.
+    // La métrica que factura la mayoría de proveedores de video (Jitsi JaaS,
+    // Daily) son los usuarios activos por mes, así que se guarda el mes ya
+    // calculado y se cuentan usuarios distintos, no sesiones.
+    AccesoVideollamada = sequelize.define('AccesoVideollamada', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      usuario: { type: DataTypes.INTEGER, allowNull: false },
+      claseId: { type: DataTypes.INTEGER, allowNull: true },
+      mes: { type: DataTypes.STRING(7), allowNull: false } // 'YYYY-MM'
+    }, { tableName: 'accesos_videollamada', timestamps: true, indexes: [{ fields: ['mes'] }, { fields: ['usuario'] }] });
+
     // Plantillas de clase creadas por un profesor (clases en vivo ofrecidas).
     Plantilla = sequelize.define('Plantilla', {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -233,7 +244,8 @@ const initDB = async () => {
       Disponibilidad.sync({ alter: true }),
       Review.sync({ alter: true }),
       Retiro.sync({ alter: true }),
-      Notificacion.sync({ alter: true })
+      Notificacion.sync({ alter: true }),
+      AccesoVideollamada.sync({ alter: true })
     ]);
     // Los seeds sí van en orden: los servicios de ejemplo necesitan que los
     // profesores existan.
@@ -1596,8 +1608,27 @@ app.get('/api/clases/:id', authMiddleware, async (req, res) => {
 // las dos personas autorizadas, dentro de la ventana horaria de la clase.
 const SALA_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_prod';
 
-const nombreSala = (claseId) =>
-  'easyclase-' + crypto.createHmac('sha256', SALA_SECRET).update(`clase:${claseId}`).digest('hex').slice(0, 24);
+// Proveedor de video, configurable sin tocar código:
+//   - Por defecto, la instancia pública meet.jit.si: gratis, sin cuota de
+//     usuarios, pero sin garantía de servicio.
+//   - Con JITSI_TENANT (el "magic cookie" de Jitsi JaaS) se usa 8x8.vc, que sí
+//     ofrece soporte y SLA, con 25 usuarios activos al mes en el plan gratuito.
+// El tenant viaja en el HTML del navegador, así que no es un secreto; aun así
+// se toma del entorno para no fijarlo en un repositorio público.
+const JITSI_TENANT = (process.env.JITSI_TENANT || '').trim();
+const JITSI_DOMINIO = JITSI_TENANT ? '8x8.vc' : 'meet.jit.si';
+
+const scriptJitsi = () => JITSI_TENANT
+  ? `https://8x8.vc/${JITSI_TENANT}/external_api.js`
+  : 'https://meet.jit.si/external_api.js';
+
+// El nombre es impredecible: se deriva con HMAC de un secreto del servidor.
+// En JaaS toda sala debe ir prefijada por el tenant.
+const nombreSala = (claseId) => {
+  const sala = 'easyclase-' + crypto.createHmac('sha256', SALA_SECRET)
+    .update(`clase:${claseId}`).digest('hex').slice(0, 24);
+  return JITSI_TENANT ? `${JITSI_TENANT}/${sala}` : sala;
+};
 
 // Ventana de acceso: desde 10 minutos antes hasta que termina la clase (con 15
 // minutos de gracia). Se calcula en el servidor porque el navegador es
@@ -1649,11 +1680,25 @@ app.get('/api/clases/:id/videollamada', authMiddleware, async (req, res) => {
     }
 
     const usuario = await User.findByPk(req.userId, { attributes: ['nombre'] });
+
+    // Se registra la entrada para poder medir los usuarios activos del mes.
+    // Es best-effort: si falla, la clase debe poder empezar igual.
+    try {
+      await AccesoVideollamada.create({
+        usuario: req.userId,
+        claseId: t.id,
+        mes: new Date().toISOString().slice(0, 7)
+      });
+    } catch (e) {
+      console.warn('⚠️ No se pudo registrar el acceso a la videollamada:', e.message);
+    }
+
     res.json({
       success: true,
       data: {
         sala: nombreSala(t.id),
-        dominio: 'meet.jit.si',
+        dominio: JITSI_DOMINIO,
+        script: scriptJitsi(),
         nombreUsuario: usuario?.nombre || 'Participante',
         esProfesor: t.profesorId === req.userId,
         titulo: t.titulo,
@@ -1664,6 +1709,64 @@ app.get('/api/clases/:id/videollamada', authMiddleware, async (req, res) => {
   } catch (e) {
     console.error('Error autorizando videollamada:', e);
     res.status(500).json({ success: false, message: 'Error al abrir la videollamada' });
+  }
+});
+
+// Consumo de videollamadas: usuarios distintos que entraron a una sala en cada
+// mes. Es la métrica con la que facturan los proveedores de video, así que sirve
+// para saber con antelación cuándo conviene pasar a un plan de pago.
+//
+// La instancia pública de Jitsi que usamos hoy no cobra por usuarios, pero
+// tampoco ofrece garantía de servicio; el umbral de referencia es el del plan
+// gratuito de Jitsi JaaS (25 usuarios activos al mes), configurable con
+// LIMITE_USUARIOS_VIDEO.
+const LIMITE_USUARIOS_VIDEO = Number(process.env.LIMITE_USUARIOS_VIDEO) || 25;
+
+app.get('/api/admin/videollamadas/uso', adminMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const mesActual = new Date().toISOString().slice(0, 7);
+
+    // Usuarios distintos por mes, en una sola consulta.
+    const [filas] = await sequelize.query(
+      `SELECT mes,
+              COUNT(DISTINCT usuario) AS usuarios,
+              COUNT(*) AS sesiones
+         FROM accesos_videollamada
+        GROUP BY mes
+        ORDER BY mes DESC
+        LIMIT 12`
+    );
+
+    const historico = filas.map(f => ({
+      mes: f.mes,
+      usuariosActivos: Number(f.usuarios),
+      sesiones: Number(f.sesiones)
+    }));
+    const actual = historico.find(h => h.mes === mesActual)
+      || { mes: mesActual, usuariosActivos: 0, sesiones: 0 };
+    const porcentaje = Math.round((actual.usuariosActivos / LIMITE_USUARIOS_VIDEO) * 100);
+
+    res.json({
+      success: true,
+      data: {
+        mes: mesActual,
+        usuariosActivos: actual.usuariosActivos,
+        sesiones: actual.sesiones,
+        limite: LIMITE_USUARIOS_VIDEO,
+        porcentaje,
+        // Aviso escalonado para no enterarse el día que se rompe.
+        nivel: porcentaje >= 100 ? 'superado' : porcentaje >= 80 ? 'critico' : porcentaje >= 50 ? 'atencion' : 'ok',
+        proveedor: JITSI_TENANT ? 'Jitsi JaaS (8x8.vc)' : 'meet.jit.si (instancia pública)',
+        // En JaaS el límite es real y se factura; en la instancia pública es
+        // solo una referencia de volumen, porque no hay cuota de usuarios.
+        limiteFacturable: !!JITSI_TENANT,
+        historico
+      }
+    });
+  } catch (e) {
+    console.error('Error obteniendo el uso de videollamadas:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener el uso de videollamadas' });
   }
 });
 
