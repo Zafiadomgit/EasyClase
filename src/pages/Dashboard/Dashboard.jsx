@@ -124,18 +124,17 @@ const Dashboard = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true)
-      // Obtener clases del usuario usando el servicio local
+      // Las clases se piden al servidor. Antes salían del localStorage, así que
+      // el profesor nunca veía las reservas hechas por un alumno en otro equipo.
       try {
-        // Usar un userId consistente
-        const userId = user?.id || localStorage.getItem('easyclase_user_id') || 'user_' + Date.now()
-
-        // Guardar el userId en localStorage para consistencia
-        if (!localStorage.getItem('easyclase_user_id')) {
-          localStorage.setItem('easyclase_user_id', userId)
-        }
-
-        const proximasClases = await claseServiceLocal.obtenerProximasClases(userId)
-        setClases(proximasClases)
+        const endpoint = isProfesor()
+          ? '/api/clases/profesor/mis-clases'
+          : '/api/clases/estudiante/mis-clases'
+        const respuesta = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        const datos = await respuesta.json()
+        setClases(datos.success ? (datos.data?.clases || datos.clases || []) : [])
       } catch (clasesError) {
         setClases([])
       }
@@ -282,11 +281,17 @@ const Dashboard = () => {
 
 
 
-  // Filtrar clases por estado
-  const proximasClases = clases.filter(clase =>
-    ['solicitada', 'confirmada'].includes(clase.estado) &&
-    new Date(clase.fecha) >= new Date()
-  )
+  // Filtrar clases por estado. La fecha se arma en horario local junto con la
+  // hora: comparar solo 'YYYY-MM-DD' lo interpreta como UTC y hacía desaparecer
+  // las clases del mismo día.
+  const proximasClases = clases.filter(clase => {
+    if (!['solicitada', 'confirmada'].includes(clase.estado)) return false
+    if (!clase.fecha) return false
+    const [anio, mes, dia] = String(clase.fecha).split('-').map(Number)
+    const [hh, mm] = String(clase.hora || '23:59').split(':').map(Number)
+    const inicio = new Date(anio, (mes || 1) - 1, dia || 1, hh || 0, mm || 0)
+    return inicio >= new Date()
+  })
 
   const clasesCompletadas = clases.filter(clase => clase.estado === 'completada')
 

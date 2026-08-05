@@ -29,9 +29,32 @@ const ReservarClase = () => {
   const [error, setError] = useState('')
   const [fechaSeleccionada, setFechaSeleccionada] = useState('')
   const [horaSeleccionada, setHoraSeleccionada] = useState('')
+  const [horasOcupadas, setHorasOcupadas] = useState([])
   const [tipoAgenda, setTipoAgenda] = useState('') // 'individual' o 'grupal'
   const [cantidadHoras, setCantidadHoras] = useState(1) // Cantidad de horas que quiere comprar
   const [reservando, setReservando] = useState(false)
+
+  // Horas que ya tienen una reserva pagada (o un pago en curso) con ese
+  // profesor ese día: no se pueden volver a vender.
+  useEffect(() => {
+    const profesorId = clase?.profesor?.id
+    if (!fechaSeleccionada || !profesorId) {
+      setHorasOcupadas([])
+      return
+    }
+    let activo = true
+    const cargar = async () => {
+      try {
+        const r = await fetch(`/api/clases/horarios-ocupados?profesorId=${profesorId}&fecha=${fechaSeleccionada}`)
+        const d = await r.json()
+        if (activo) setHorasOcupadas(d?.data?.ocupadas || d?.ocupadas || [])
+      } catch {
+        if (activo) setHorasOcupadas([])
+      }
+    }
+    cargar()
+    return () => { activo = false }
+  }, [fechaSeleccionada, clase])
 
   // Las horas ofrecidas salen de la disponibilidad que el profesor configuró
   // para ese día de la semana, no de una lista fija de 06:00 a 22:00.
@@ -55,8 +78,12 @@ const ReservarClase = () => {
         }
       })
 
-    return [...slots].sort().map(v => ({ value: v, label: v }))
-  }, [fechaSeleccionada, clase])
+    // Se descartan las franjas que otro alumno ya reservó.
+    return [...slots]
+      .filter(v => !horasOcupadas.includes(v))
+      .sort()
+      .map(v => ({ value: v, label: v }))
+  }, [fechaSeleccionada, clase, horasOcupadas])
 
   // Si al cambiar de fecha la hora elegida ya no está disponible, se limpia.
   useEffect(() => {
@@ -121,47 +148,27 @@ const ReservarClase = () => {
     }
   }
 
-  const verificarEstadoHorario = async () => {
-    try {
-      const response = await fetch(`/api/clases/verificar-horario.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&hora=${horaSeleccionada}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setEstadoHorario(data.data.estado) // 'disponible', 'individual', 'grupal'
-        setAlumnosInscritos(data.data.alumnosInscritos || 0)
-      } else {
-        setEstadoHorario('disponible')
-        setAlumnosInscritos(0)
-      }
-    } catch (error) {
-      console.error('Error al verificar horario:', error)
-      setEstadoHorario('disponible')
-      setAlumnosInscritos(0)
-    }
+  // Las horas ocupadas ya no llegan a estar en el selector, así que una hora
+  // elegible siempre está libre. (Antes esto consultaba archivos .php que no
+  // existen en esta API de Node y siempre caía al valor por defecto.)
+  const verificarEstadoHorario = () => {
+    setEstadoHorario('disponible')
+    setAlumnosInscritos(0)
   }
 
-  const verificarDisponibilidadMultiple = async () => {
-    try {
-      const response = await fetch(`/api/clases/verificar-disponibilidad-multiple.php?profesorId=${clase?.profesor?.id}&fecha=${fechaSeleccionada}&horaInicio=${horaSeleccionada}&cantidadHoras=4`)
-      const data = await response.json()
+  // Cuántas horas seguidas se pueden contratar desde la hora elegida: se cuentan
+  // las franjas de 30 min consecutivas que siguen libres y dentro de la
+  // disponibilidad del profesor, para no vender más allá de su horario.
+  const verificarDisponibilidadMultiple = () => {
+    const libres = new Set(opcionesHora.map(o => o.value))
+    const inicio = aMinutos(horaSeleccionada)
+    let seguidas = 0
+    while (seguidas < 8 && libres.has(aHora(inicio + seguidas * 30))) seguidas++
 
-      if (data.success) {
-        setDisponibilidadMultiple(data.data)
-        setMaxHorasDisponibles(data.data.maxHorasDisponibles)
-
-        // Si la cantidad de horas seleccionada es mayor a la disponible, ajustarla
-        if (cantidadHoras > data.data.maxHorasDisponibles) {
-          setCantidadHoras(data.data.maxHorasDisponibles)
-        }
-      } else {
-        setDisponibilidadMultiple(null)
-        setMaxHorasDisponibles(4)
-      }
-    } catch (error) {
-      console.error('Error verificando disponibilidad múltiple:', error)
-      setDisponibilidadMultiple(null)
-      setMaxHorasDisponibles(4)
-    }
+    const maxHoras = Math.max(1, Math.floor(seguidas / 2))
+    setMaxHorasDisponibles(maxHoras)
+    setDisponibilidadMultiple({ maxHorasDisponibles: maxHoras })
+    if (cantidadHoras > maxHoras) setCantidadHoras(maxHoras)
   }
 
   const reservar = async () => {

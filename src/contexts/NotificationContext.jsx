@@ -18,12 +18,14 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0)
 
   // Función para cargar notificaciones persistentes del usuario actual
-  const loadPersistentNotifications = (userId) => {
+  // Combina las notificaciones del servidor (las que cruzan entre cuentas) con
+  // las locales de este navegador.
+  const loadPersistentNotifications = async (userId) => {
     if (!userId) return
-    
-    const userNotifications = notificationService.getNotifications(userId)
+
+    const userNotifications = await notificationService.getAllNotifications(userId)
     setPersistentNotifications(userNotifications)
-    setUnreadCount(notificationService.getUnreadCount(userId))
+    setUnreadCount(userNotifications.filter(n => !n.read).length)
   }
 
   // Función para agregar notificación persistente
@@ -40,7 +42,8 @@ export const NotificationProvider = ({ children }) => {
   // Función para marcar como leída
   const markAsRead = (userId, notificationId) => {
     if (!userId) return
-    
+
+    notificationService.markServerAsRead(notificationId)
     notificationService.markAsRead(userId, notificationId)
     setPersistentNotifications(prev => 
       prev.map(notification => 
@@ -55,7 +58,8 @@ export const NotificationProvider = ({ children }) => {
   // Función para marcar todas como leídas
   const markAllAsRead = (userId) => {
     if (!userId) return
-    
+
+    notificationService.markAllServerAsRead()
     notificationService.markAllAsRead(userId)
     setPersistentNotifications(prev => 
       prev.map(notification => ({ ...notification, read: true }))

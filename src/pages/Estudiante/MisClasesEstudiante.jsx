@@ -12,30 +12,16 @@ const MisClasesEstudiante = () => {
     cargarClases()
   }, [])
 
+  // Las clases se leen del servidor: antes se combinaban con localStorage, así
+  // que una compra hecha en otro navegador o dispositivo no aparecía.
   const cargarClases = async () => {
     try {
       setLoading(true)
-      
-      // Cargar desde localStorage (clases reservadas)
-      const clasesLocales = JSON.parse(localStorage.getItem('misClasesEstudiante') || '[]')
-      
-      // También intentar cargar desde API si existe
-      try {
-        const response = await fetch('/api/clases/estudiante/mis-clases.php')
-        const data = await response.json()
-        
-        if (data.success && data.clases) {
-          // Combinar clases de API con las locales
-          const clasesCombinadas = [...clasesLocales, ...data.clases]
-          setClases(clasesCombinadas)
-        } else {
-          setClases(clasesLocales)
-        }
-      } catch (apiError) {
-        // Si falla la API, usar solo las locales
-        console.log('API no disponible, usando clases locales')
-        setClases(clasesLocales)
-      }
+      const response = await fetch('/api/clases/estudiante/mis-clases', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      })
+      const data = await response.json()
+      setClases(data.success ? (data.data?.clases || data.clases || []) : [])
     } catch (error) {
       console.error('Error cargando clases:', error)
       setClases([])

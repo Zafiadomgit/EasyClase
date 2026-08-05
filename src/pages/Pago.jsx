@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Pago = () => {
+  // Faltaba declararlo: los botones que llaman a navigate() lanzaban
+  // ReferenceError al pulsarlos.
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [reservaData, setReservaData] = useState(null)
   const [formData, setFormData] = useState({
@@ -75,6 +79,8 @@ const Pago = () => {
           profesorId: reservaData.profesorId,
           fecha: reservaData.fecha,
           hora: reservaData.hora,
+          // Necesaria para bloquear todas las franjas que ocupa la clase.
+          duracion: reservaData.duracionHoras || 1,
           referencia: `${referencia}_${Date.now()}`
         })
       })
@@ -85,6 +91,10 @@ const Pago = () => {
       if (data.success && initPoint) {
         // Redirigir al checkout de Mercado Pago.
         window.location.href = initPoint
+      } else if (response.status === 409) {
+        // Otro estudiante reservó ese horario mientras se llenaba el formulario.
+        alert(data.message || 'Ese horario ya fue reservado. Elige otra hora.')
+        navigate(-1)
       } else {
         alert('Error al crear el pago: ' + (data.message || 'Error desconocido'))
       }
