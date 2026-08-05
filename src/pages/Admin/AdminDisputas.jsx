@@ -7,52 +7,12 @@ const AdminDisputas = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterEstado, setFilterEstado] = useState('todas')
 
-  // Datos de ejemplo
+  // No existe backend de disputas todavía. Antes se mostraban tres casos
+  // inventados (Ana García, Carlos Mendez...) como si fueran reales, lo que
+  // daba una lectura falsa del estado de la plataforma.
   useEffect(() => {
-    const disputasEjemplo = [
-      {
-        id: 1,
-        estudiante: 'Ana García',
-        profesor: 'Carlos Mendez',
-        clase: 'JavaScript Básico',
-        motivo: 'Profesor no se presentó a la clase',
-        descripcion: 'El profesor no se conectó a la videollamada en el horario acordado. Esperé 30 minutos.',
-        fecha: '2024-01-20',
-        estado: 'pendiente',
-        prioridad: 'alta',
-        monto: 100000
-      },
-      {
-        id: 2,
-        estudiante: 'Luis Martinez',
-        profesor: 'María López',
-        clase: 'Excel Avanzado',
-        motivo: 'Contenido no coincide con lo prometido',
-        descripcion: 'La clase fue muy básica, no avanzada como se anunció en el perfil.',
-        fecha: '2024-01-18',
-        estado: 'resuelto',
-        prioridad: 'media',
-        monto: 50000,
-        resolucion: 'Reembolso del 50% otorgado'
-      },
-      {
-        id: 3,
-        estudiante: 'Sofia Rodriguez',
-        profesor: 'Carlos Mendez',
-        clase: 'React Hooks',
-        motivo: 'Problemas técnicos',
-        descripcion: 'La videollamada se cortó múltiples veces y no se pudo completar la clase.',
-        fecha: '2024-01-19',
-        estado: 'en_revision',
-        prioridad: 'baja',
-        monto: 150000
-      }
-    ]
-    
-    setTimeout(() => {
-      setDisputas(disputasEjemplo)
-      setLoading(false)
-    }, 1000)
+    setDisputas([])
+    setLoading(false)
   }, [])
 
   const filteredDisputas = disputas.filter(disputa => {

@@ -1530,6 +1530,31 @@ app.get('/api/clases/horarios-ocupados', async (req, res) => {
   }
 });
 
+// Detalle de una reserva. Solo la ven el alumno que la compró y el profesor que
+// la dicta. Va al final del bloque para no capturar las rutas fijas anteriores
+// de /api/clases, que Express evalúa en orden.
+app.get('/api/clases/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!(await requireDB(res))) return;
+    const t = await Transaccion.findByPk(req.params.id);
+    if (!t || t.tipo !== 'clase') {
+      return res.status(404).json({ success: false, message: 'Clase no encontrada' });
+    }
+    if (t.usuario !== req.userId && t.profesorId !== req.userId) {
+      return res.status(403).json({ success: false, message: 'No autorizado' });
+    }
+    const nombres = await nombresDeUsuarios([t.usuario, t.profesorId]);
+    const clase = shapeReserva(t, {
+      profesor: nombres[t.profesorId] || 'Profesor',
+      estudiante: nombres[t.usuario] || 'Estudiante'
+    });
+    res.json({ success: true, data: { clase }, clase });
+  } catch (e) {
+    console.error('Error obteniendo el detalle de la clase:', e);
+    res.status(500).json({ success: false, message: 'Error al obtener la clase' });
+  }
+});
+
 // ─── Pagos (Checkout Pro) ────────────────────────────────────────────────────
 
 // Diagnóstico: medios de pago habilitados para la cuenta vendedora, con el

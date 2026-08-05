@@ -293,14 +293,30 @@ const Dashboard = () => {
     return inicio >= new Date()
   })
 
-  const clasesCompletadas = clases.filter(clase => clase.estado === 'completada')
+  // Una clase se da por dictada cuando ya pasó su fecha y hora. Antes se
+  // buscaba el estado 'completada', que la API nunca devuelve, así que los
+  // contadores quedaban siempre en cero.
+  const clasesCompletadas = clases.filter(clase => {
+    if (clase.estado === 'cancelada' || !clase.fecha) return false
+    const [anio, mes, dia] = String(clase.fecha).split('-').map(Number)
+    const [hh, mm] = String(clase.hora || '00:00').split(':').map(Number)
+    return new Date(anio, (mes || 1) - 1, dia || 1, hh || 0, mm || 0) < new Date()
+  })
+
+  const sumaPrecios = (lista) =>
+    lista.reduce((total, clase) => total + (Number(clase.precio) || 0), 0)
 
   const estadisticas = {
     totalClases: clasesCompletadas.length,
-    horasTotales: clasesCompletadas.reduce((total, clase) => total + clase.duracion, 0),
-    gastoTotal: isEstudiante() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0,
-    ingresoTotal: isProfesor() ? clasesCompletadas.reduce((total, clase) => total + clase.total, 0) : 0
+    horasTotales: clasesCompletadas.reduce((total, clase) => total + (Number(clase.duracion) || 0), 0),
+    gastoTotal: isEstudiante() ? sumaPrecios(clasesCompletadas) : 0,
+    ingresoTotal: isProfesor() ? sumaPrecios(clasesCompletadas) : 0
   }
+
+  // Historial real: las últimas clases ya dictadas, con la contraparte.
+  const historialReal = [...clasesCompletadas]
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+    .slice(0, 3)
 
   if (loading) {
     return (
@@ -650,21 +666,19 @@ const Dashboard = () => {
                   {userType === 'estudiante' ? 'Últimas Clases' : 'Actividad Reciente'}
                 </h3>
 
-                {userType === 'estudiante' && data.historialClases.length > 0 ? (
+                {historialReal.length > 0 ? (
                   <div className="space-y-3">
-                    {data.historialClases.map((clase, index) => (
-                      <div key={index} className="text-sm">
-                        <p className="font-medium text-secondary-900">{clase.materia}</p>
-                        <p className="text-secondary-600">Prof. {clase.profesor}</p>
-                        <div className="flex items-center mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${i < clase.calificacion ? 'text-yellow-400 fill-current' : 'text-secondary-300'
-                                }`}
-                            />
-                          ))}
-                        </div>
+                    {historialReal.map((clase) => (
+                      <div key={clase.id} className="text-sm">
+                        <p className="font-medium text-secondary-900">{clase.titulo}</p>
+                        <p className="text-secondary-600">
+                          {userType === 'estudiante'
+                            ? `Prof. ${clase.profesor || 'Profesor'}`
+                            : clase.estudiante || 'Estudiante'}
+                        </p>
+                        <p className="text-secondary-500 text-xs mt-1">
+                          {clase.fecha}{clase.hora ? ` · ${clase.hora}` : ''}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -681,40 +695,36 @@ const Dashboard = () => {
                   {userType === 'estudiante' ? 'Tu Progreso' : 'Rendimiento'}
                 </h3>
 
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-secondary-600">
-                        {userType === 'estudiante' ? 'Horas completadas' : 'Meta mensual'}
-                      </span>
-                      <span className="text-secondary-900">
-                        {userType === 'estudiante' ? '18/25' : '85/100'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-secondary-200 rounded-full h-2">
-                      <div
-                        className="bg-primary-600 h-2 rounded-full"
-                        style={{ width: userType === 'estudiante' ? '72%' : '85%' }}
-                      ></div>
-                    </div>
+                {/* Métricas reales. Antes eran barras fijas (18/25, 85/100,
+                    4.9/5.0) que se mostraban idénticas a todos los usuarios. */}
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">
+                      {userType === 'estudiante' ? 'Clases tomadas' : 'Clases dictadas'}
+                    </span>
+                    <span className="text-secondary-900 font-medium">{estadisticas.totalClases}</span>
                   </div>
 
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-secondary-600">
-                        {userType === 'estudiante' ? 'Objetivos logrados' : 'Satisfacción estudiantes'}
-                      </span>
-                      <span className="text-secondary-900">
-                        {userType === 'estudiante' ? '7/10' : '4.9/5.0'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-secondary-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: userType === 'estudiante' ? '70%' : '98%' }}
-                      ></div>
-                    </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">Horas acumuladas</span>
+                    <span className="text-secondary-900 font-medium">{estadisticas.horasTotales}</span>
                   </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">Próximas clases</span>
+                    <span className="text-secondary-900 font-medium">{proximasClases.length}</span>
+                  </div>
+
+                  {userType !== 'estudiante' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-secondary-600">Calificación</span>
+                      <span className="text-secondary-900 font-medium">
+                        {Number(user?.calificacionPromedio) > 0
+                          ? `${Number(user.calificacionPromedio).toFixed(1)}/5.0`
+                          : 'Sin reseñas aún'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

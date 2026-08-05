@@ -14,8 +14,7 @@ export const useRealNotifications = () => {
     // Función para verificar clases próximas
     const checkUpcomingClasses = async () => {
       try {
-        // Simular obtención de clases próximas (reemplazar con API real)
-        const proximasClases = await getUpcomingClasses(user.id)
+        const proximasClases = await getUpcomingClasses(user)
         const ahora = new Date()
         
         proximasClases.forEach(clase => {
@@ -109,19 +108,27 @@ export const useRealNotifications = () => {
   }
 }
 
-// Función temporal para simular clases próximas (reemplazar con API real)
-const getUpcomingClasses = async (userId) => {
-  // Simular datos de clases próximas
-  const ahora = new Date()
-  const proximaClase = new Date(ahora.getTime() + 15 * 60000) // 15 minutos en el futuro
-  
-  return [
-    {
-      id: 'clase-001',
-      tema: 'Matemáticas Avanzadas',
-      fecha: proximaClase.toISOString().split('T')[0],
-      hora: proximaClase.toTimeString().slice(0, 5),
-      profesorId: userId
-    }
-  ]
+// Clases reales del usuario. Antes esto devolvía siempre una clase inventada
+// ("Matemáticas Avanzadas" a 15 minutos vista), así que a cualquier usuario le
+// llegaba el aviso de una clase que no existía.
+const getUpcomingClasses = async (user) => {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token || !user?.id) return []
+    const endpoint = user.tipoUsuario === 'profesor'
+      ? '/api/clases/profesor/mis-clases'
+      : '/api/clases/estudiante/mis-clases'
+    const response = await fetch(endpoint, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    const clases = data?.data?.clases || data?.clases || []
+    return clases
+      .filter(c => c.estado === 'confirmada' && c.fecha && c.hora)
+      .map(c => ({ id: c.id, tema: c.titulo, fecha: c.fecha, hora: c.hora }))
+  } catch (error) {
+    console.error('Error obteniendo próximas clases:', error)
+    return []
+  }
 }

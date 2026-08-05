@@ -39,15 +39,24 @@ const DisponibilidadProfesor = ({ onComplete, isOnboarding = false }) => {
   const cargarDisponibilidad = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/disponibilidad', {
+      // /api/disponibilidad no existe; el endpoint real es /api/profesor/horarios,
+      // el mismo que usa el panel de disponibilidad y que alimenta la reserva.
+      const response = await fetch('/api/profesor/horarios', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
       const data = await response.json()
-      
+
       if (data.success) {
-        setDisponibilidad(data.data.disponibilidad || [])
+        const horarios = data.data?.horarios || data.horarios || []
+        setDisponibilidad(horarios.map(h => ({
+          diaSemana: h.dia,
+          horaInicio: h.horaInicio,
+          horaFin: h.horaFin,
+          duracionClase: 60,
+          tiempoEntreClases: 15
+        })))
       }
     } catch (error) {
       console.error('Error cargando disponibilidad:', error)
@@ -79,13 +88,22 @@ const DisponibilidadProfesor = ({ onComplete, isOnboarding = false }) => {
   const guardarDisponibilidad = async () => {
     try {
       setSaving(true)
-      const response = await fetch('/api/disponibilidad', {
+      // El backend espera { horarios: [{ dia, horaInicio, horaFin, disponible }] }
+      // y reemplaza el set completo del profesor.
+      const response = await fetch('/api/profesor/horarios', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ disponibilidad })
+        body: JSON.stringify({
+          horarios: disponibilidad.map(d => ({
+            dia: d.diaSemana,
+            horaInicio: d.horaInicio,
+            horaFin: d.horaFin,
+            disponible: true
+          }))
+        })
       })
       
       const data = await response.json()
