@@ -312,31 +312,50 @@ const seedAdmin = async () => {
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
     if (!email || !password) return; // sin credenciales configuradas no se crea admin
-    const existing = await User.findOne({ where: { email } });
+    const emailNormalizado = String(email).trim().toLowerCase();
+    const existing = await User.findOne({ where: { email: emailNormalizado } });
 
     // Antes se calculaba el hash de bcrypt en cada arranque en frío, incluso
     // cuando la contraseña no había cambiado; es una operación deliberadamente
     // costosa. Ahora solo se rehashea si hace falta.
+    let adminId;
     if (existing) {
       const alDia = existing.tipoUsuario === 'admin'
         && existing.activo
         && await bcrypt.compare(password, existing.password || '');
-      if (alDia) return;
-      await existing.update({
-        tipoUsuario: 'admin',
-        password: await bcrypt.hash(password, 10),
-        activo: true
-      });
+      if (!alDia) {
+        await existing.update({
+          tipoUsuario: 'admin',
+          password: await bcrypt.hash(password, 10),
+          activo: true
+        });
+      }
+      adminId = existing.id;
     } else {
-      await User.create({
+      const creado = await User.create({
         nombre: 'Administrador',
-        email,
+        email: emailNormalizado,
         password: await bcrypt.hash(password, 10),
         tipoUsuario: 'admin',
         activo: true
       });
+      adminId = creado.id;
     }
-    console.log('🛡️ Usuario admin asegurado:', email);
+
+    // ADMIN_EMAIL es la única cuenta con permisos de administración: cualquier
+    // otra que los tuviera se degrada a estudiante. Así, cambiar la variable
+    // revoca de verdad al administrador anterior en vez de dejar dos con
+    // acceso al panel. Se hace después de asegurar la nueva, para no quedarse
+    // sin ninguna si algo falla antes.
+    const revocados = await User.update(
+      { tipoUsuario: 'estudiante' },
+      { where: { tipoUsuario: ['admin', 'superadmin'], id: { [Sequelize.Op.ne]: adminId } } }
+    );
+    if (revocados[0] > 0) {
+      console.log(`🛡️ Revocados ${revocados[0]} administradores anteriores`);
+    }
+
+    console.log('🛡️ Usuario admin asegurado:', emailNormalizado);
   } catch (e) {
     console.warn('⚠️ Seed admin omitido:', e.message);
   }
