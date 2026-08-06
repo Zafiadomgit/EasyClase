@@ -342,20 +342,25 @@ const seedAdmin = async () => {
       adminId = creado.id;
     }
 
-    // ADMIN_EMAIL es la única cuenta con permisos de administración: cualquier
-    // otra que los tuviera se degrada a estudiante. Así, cambiar la variable
-    // revoca de verdad al administrador anterior en vez de dejar dos con
-    // acceso al panel. Se hace después de asegurar la nueva, para no quedarse
-    // sin ninguna si algo falla antes.
-    const revocados = await User.update(
-      { tipoUsuario: 'estudiante' },
-      { where: { tipoUsuario: ['admin', 'superadmin'], id: { [Sequelize.Op.ne]: adminId } } }
-    );
-    if (revocados[0] > 0) {
-      console.log(`🛡️ Revocados ${revocados[0]} administradores anteriores`);
-    }
-
     console.log('🛡️ Usuario admin asegurado:', emailNormalizado);
+
+    // ADMIN_EMAIL es la única cuenta con permisos de administración: cualquier
+    // otra que los tuviera se degrada a estudiante, para que cambiar la
+    // variable revoque de verdad al administrador anterior.
+    //
+    // Va en su propio try: antes un fallo aquí abortaba todo el seed y dejaba
+    // sin crear la cuenta de administrador. Y solo se filtra por 'admin',
+    // porque es el único valor de administración que admite el enum de la
+    // columna; incluir 'superadmin' hacía que Postgres rechazara la consulta.
+    try {
+      const [revocados] = await User.update(
+        { tipoUsuario: 'estudiante' },
+        { where: { tipoUsuario: 'admin', id: { [Sequelize.Op.ne]: adminId } } }
+      );
+      if (revocados > 0) console.log(`🛡️ Revocados ${revocados} administradores anteriores`);
+    } catch (e) {
+      console.warn('⚠️ No se pudieron revocar administradores anteriores:', e.message);
+    }
   } catch (e) {
     console.warn('⚠️ Seed admin omitido:', e.message);
   }
