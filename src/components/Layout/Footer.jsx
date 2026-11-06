@@ -212,6 +212,32 @@ const Footer = () => {
               </div>
             </div>
           </div>
+
+          {/* Crédito del estudio que hizo la plataforma (enlace con UTM para medir las visitas que llegan desde aquí) */}
+          <div className="mt-6 flex justify-center md:justify-start">
+            <a
+              href="https://lumen-ruddy-beta.vercel.app/?utm_source=easyclase&utm_medium=referral&utm_campaign=credito"
+              target="_blank"
+              rel="noopener"
+              aria-label="Diseñado por Lumen Studio (se abre en una pestaña nueva)"
+              className="lumen-credit group inline-flex items-center gap-1.5 text-xs text-secondary-500 hover:text-white transition-colors"
+            >
+              <span>Diseñado por</span>
+              <svg
+                viewBox="0 0 64 64"
+                width="16"
+                height="16"
+                aria-hidden="true"
+                focusable="false"
+                className="shrink-0 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
+              >
+                <circle cx="32" cy="32" r="28" fill="currentColor" />
+                <path d="M32 14c8 9 12 15 12 21.5a12 12 0 0 1-24 0C20 29 24 23 32 14z" fill="#f2a93b" />
+                <path d="M32 30c3 3.5 4.5 6 4.5 8.5a4.5 4.5 0 0 1-9 0c0-2.5 1.5-5 4.5-8.5z" fill="#fff4dc" />
+              </svg>
+              <strong className="font-semibold text-secondary-300 group-hover:text-white">Lumen Studio</strong>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
