@@ -117,8 +117,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="mailto:administrador@easyclaseapp.com" className="text-secondary-300 hover:text-white transition-colors text-sm">
-                  administrador@easyclaseapp.com
+                <a href="mailto:hola@easyclase.com" className="text-secondary-300 hover:text-white transition-colors text-sm">
+                  hola@easyclase.com
                 </a>
               </li>
             </ul>
@@ -204,7 +204,7 @@ const Footer = () => {
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-secondary-400" />
-                <span className="text-secondary-400 text-sm">administrador@easyclaseapp.com</span>
+                <span className="text-secondary-400 text-sm">hola@easyclase.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-secondary-400" />
